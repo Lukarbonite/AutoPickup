@@ -1,0 +1,40 @@
+{
+	"schemaVersion": 1,
+	"id": "auto-pickup",
+	"version": "${version}",
+	"name": "Auto Pickup",
+	"description": "Auto Pickup mod by lukehinojosa",
+	"authors": [
+		"lukehinojosa"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/auto-pickup/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.lukehinojosa.autopickup.AutoPickup"
+		],
+		"fabric-datagen": [
+			"com.lukehinojosa.autopickup.AutoPickupDataGenerator"
+		],
+		"client": [
+			"com.lukehinojosa.autopickup.AutoPickupClient"
+		]
+	},
+	"mixins": [
+		"auto-pickup.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.5",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
