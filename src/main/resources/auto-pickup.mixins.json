@@ -3,7 +3,7 @@
 	"package": "com.lukehinojosa.autopickup.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"ExampleMixin"
+		"BlockMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
