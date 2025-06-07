@@ -2,8 +2,10 @@
 	"required": true,
 	"package": "com.lukehinojosa.autopickup.mixin",
 	"compatibilityLevel": "JAVA_21",
+	"plugin": "com.example.autopickup.mixin.plugin.AutoPickupMixinPlugin",
 	"mixins": [
-		"BlockMixin"
+		"BlockMixin",
+		"compat.VeinMinerEventMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
