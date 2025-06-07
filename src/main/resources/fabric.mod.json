@@ -17,12 +17,6 @@
 	"entrypoints": {
 		"main": [
 			"com.lukehinojosa.autopickup.AutoPickup"
-		],
-		"fabric-datagen": [
-			"com.lukehinojosa.autopickup.AutoPickupDataGenerator"
-		],
-		"client": [
-			"com.lukehinojosa.autopickup.AutoPickupClient"
 		]
 	},
 	"mixins": [

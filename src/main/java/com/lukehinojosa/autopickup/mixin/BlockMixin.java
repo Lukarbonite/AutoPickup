@@ -1,15 +1,16 @@
-package com.lukehinojosa.autopickup.mixin; // Or your actual mixin package
+package com.lukehinojosa.autopickup.mixin;
 
 import com.lukehinojosa.autopickup.AutoPickup;
+import com.lukehinojosa.autopickup.AutoPickupApi;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld; // Still needed for world.getGameRules() and Block.getDroppedStacks if it requires ServerWorld
-import net.minecraft.world.World; // Changed here
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -20,27 +21,21 @@ import java.util.List;
 @Mixin(Block.class)
 public abstract class BlockMixin {
 
-    // Updated signature: Lnet/minecraft/world/World; instead of Lnet/minecraft/server/world/ServerWorld;
     @Inject(method = "dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/item/ItemStack;)V",
             at = @At("HEAD"),
             cancellable = true)
     private static void autopickup_onDropStacks(BlockState state, World world, BlockPos pos, BlockEntity blockEntity, Entity entity, ItemStack tool, CallbackInfo ci) {
-        // Check if we are on the server side and the world is a ServerWorld for game rules and specific drop calculation
-        if (!(world instanceof ServerWorld serverWorld)) { // Perform instanceof check and cast
-            return; // Not a ServerWorld, so let vanilla handle it (e.g., client side block breaking effects)
+        if (!(world instanceof ServerWorld serverWorld)) {
+            return;
         }
 
-        // Now use serverWorld for operations requiring it
+        // The gamerule is checked within the API, but an early exit here is efficient.
         if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
             return;
         }
 
         if (entity instanceof PlayerEntity player) {
-            if (player.isSpectator()) {
-                return;
-            }
-
-            // Block.getDroppedStacks often expects a ServerWorld
+            // Calculate the drops as vanilla would.
             List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
             if (drops.isEmpty()) {
@@ -48,13 +43,15 @@ public abstract class BlockMixin {
                 return;
             }
 
-            for (ItemStack itemStack : drops) {
-                if (!itemStack.isEmpty()) {
-                    if (!player.getInventory().insertStack(itemStack.copy())) {
-                        Block.dropStack(serverWorld, pos, itemStack); // Use serverWorld here too for consistency
-                    }
-                }
+            // Use our own API to attempt the pickup.
+            List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
+
+            // Drop any items that couldn't be picked up.
+            for (ItemStack stack : remainingDrops) {
+                Block.dropStack(serverWorld, pos, stack);
             }
+
+            // We have handled all drop logic, so cancel the original method.
             ci.cancel();
         }
     }
