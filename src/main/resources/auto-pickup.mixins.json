@@ -3,7 +3,8 @@
 	"package": "com.lukehinojosa.autopickup.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"BlockMixin"
+		"BlockMixin",
+		"VeinMinerEventMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
