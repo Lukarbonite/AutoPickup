@@ -1,63 +1,70 @@
 package com.lukehinojosa.autopickup.mixin;
 
-import com.llamalad7.mixinextras.sugar.Local;
 import com.lukehinojosa.autopickup.AutoPickupApi;
 import de.miraculixx.veinminer.VeinMinerEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.Entity;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
 import java.util.List;
 
-/**
- * Mixin to add compatibility with the Veinminer mod.
- * This mixin targets Veinminer's custom drop logic directly.
- * It will safely fail to apply if Veinminer is not installed.
- */
 @Mixin(value = VeinMinerEvent.class, remap = false)
 public abstract class VeinMinerEventMixin {
 
     /**
-     * Redirects the call to Block.popResource within Veinminer's drop logic.
-     * This allows us to intercept every item drop from a veinmine action.
-     * The method signature here MUST use Yarn mappings to match the development environment.
-     *
-     * @param world The world where the drop occurs.
-     * @param pos The position of the drop.
-     * @param stack The ItemStack being dropped.
-     * @param breaker The entity that broke the block, captured from the local variables.
+     * Injects into Veinminer's private destroyBlock method.
+     * It runs BEFORE the original code, calculates the drops itself, processes them,
+     * and then replaces the block with air. This causes the original method to find no
+     * block, calculate no drops, and effectively cedes control of item dropping to us.
      */
-    @Redirect(
-            method = "improvedDropResources(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/util/math/BlockPos;)V",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/block/Block;dropStack(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/item/ItemStack;)V"
-            )
+    @Inject(
+            // This targets the private method using its Intermediary signature from the bytecode.
+            method = "destroyBlock(Lnet/minecraft/class_2680;Lnet/minecraft/class_1799;Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;)V",
+            at = @At("HEAD"),
+            cancellable = true
     )
-    private void autopickup_redirectVeinminerDrops(World world, BlockPos pos, ItemStack stack, @Local(name = "breaker") Entity breaker) {
-        // Only act if the breaker is a player
-        if (breaker instanceof PlayerEntity player) {
-            // Use our existing API to attempt the pickup.
-            // The API handles the gamerule check and inventory insertion.
-            List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, Collections.singletonList(stack));
-
-            // If the item was not picked up (e.g., inventory full), then we perform the original action.
-            if (!remainingItems.isEmpty()) {
-                Block.dropStack(world, pos, remainingItems.get(0));
-            }
-            // If the item was picked up, we do nothing, effectively cancelling the drop.
-        } else {
-            // If the breaker is not a player (e.g., TNT), perform the original action.
-            Block.dropStack(world, pos, stack);
+    private void autopickup_hijackVeinminerBlockDestroy(
+            BlockState blockState, // This is a yarn-mapped type
+            ItemStack item,
+            World world,
+            BlockPos position,
+            PlayerEntity player,
+            BlockPos initialSource,
+            CallbackInfo ci
+    ) {
+        // We only care about the server
+        if (world.isClient() || !(world instanceof ServerWorld serverWorld)) {
+            return;
         }
+
+        // Get drops before the block is destroyed
+        List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, item);
+
+        // Process drops with our API
+        List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
+
+        // Drop any items that were not picked up
+        for (ItemStack stack : remainingItems) {
+            Block.dropStack(world, position, stack);
+        }
+
+        // Play the block break effect
+        world.syncWorldEvent(2001, position, Block.getRawIdFromState(blockState));
+
+        // Now, we destroy the block by setting it to air and notifying neighbors.
+        // This is the "bypass" part. The original method will now do nothing.
+        world.setBlockState(position, Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
+
+        // We have completely taken over, so cancel the original method.
+        ci.cancel();
     }
 }
