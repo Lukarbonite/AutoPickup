@@ -50,7 +50,7 @@ That's it! The mod is purely server-side, but it will also work in single-player
 Auto Pickup is designed to be highly compatible with the modded ecosystem.
 
 *   **Veinminer:** This mod includes a built-in, no-hassle compatibility layer for [MiraculixxT's Veinminer](https://modrinth.com/datapack/veinminer) 2.4.2. All items broken as part of a veinmine action will be correctly processed by Auto Pickup.
-*   **Other Mods:** It should work seamlessly with most mods that use standard block-breaking and drop mechanics. If you find an incompatibility, please [open an issue](https://github.com/lukehinojosa/autopickup/issues)!
+*   **Other Mods:** It should work seamlessly with most mods that use standard block-breaking and drop mechanics. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
 
@@ -72,7 +72,7 @@ repositories {
 
 dependencies {
     // ...
-    modCompileOnly "com.lukehinojosa:auto-pickup:x.x.x" // Replace with the correct group/version
+    modCompileOnly "com.lukarbonite:auto-pickup:x.x.x" // Replace with the correct group/version
 }
 ```
 
@@ -81,7 +81,7 @@ dependencies {
 First, check if the mod is loaded. Then, pass your calculated drops to the API. It will return a list of any items that could not be picked up.
 
 ```java
-import com.lukehinojosa.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupApi;
 import net.fabricmc.loader.api.FabricLoader;
 
 // ...

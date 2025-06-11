@@ -1,6 +1,6 @@
-package com.lukehinojosa.autopickup.mixin;
+package com.lukarbonite.autopickup.mixin;
 
-import com.lukehinojosa.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupApi;
 import de.miraculixx.veinminer.VeinMinerEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;

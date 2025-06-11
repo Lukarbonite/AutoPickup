@@ -3,9 +3,9 @@
 	"id": "auto-pickup",
 	"version": "${version}",
 	"name": "Auto Pickup",
-	"description": "Auto Pickup mod by lukehinojosa",
+	"description": "Auto Pickup mod by lukarbonite",
 	"authors": [
-		"lukehinojosa"
+		"lukarbonite"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -16,7 +16,7 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.lukehinojosa.autopickup.AutoPickup"
+			"com.lukarbonite.autopickup.AutoPickup"
 		]
 	},
 	"mixins": [

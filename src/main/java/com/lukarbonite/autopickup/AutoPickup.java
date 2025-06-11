@@ -1,4 +1,4 @@
-package com.lukehinojosa.autopickup;
+package com.lukarbonite.autopickup;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;

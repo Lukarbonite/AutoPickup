@@ -1,4 +1,4 @@
-package com.lukehinojosa.autopickup;
+package com.lukarbonite.autopickup;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;

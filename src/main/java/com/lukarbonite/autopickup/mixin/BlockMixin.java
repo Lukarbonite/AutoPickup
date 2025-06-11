@@ -1,7 +1,7 @@
-package com.lukehinojosa.autopickup.mixin;
+package com.lukarbonite.autopickup.mixin;
 
-import com.lukehinojosa.autopickup.AutoPickup;
-import com.lukehinojosa.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupApi;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
