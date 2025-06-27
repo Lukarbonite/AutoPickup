@@ -1,7 +1,7 @@
 # Auto Pickup for Fabric
 
 ![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)
-![Minecraft](https://img.shields.io/badge/minecraft-1.21.5-green?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.21.6-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items from broken blocks directly into your inventory. No more chasing drops, no more lost items.
