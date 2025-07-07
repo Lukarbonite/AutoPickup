@@ -10,7 +10,7 @@
 
 *   **Instant Collection:** Items from broken blocks are instantly added to your inventory.
 *   **Lag-Free:** The mod is purely server-side and prevents item entities from ever being created in the world, which can help reduce server lag.
-*   **Smart Handling:** If your inventory is full, items will be dropped at your feet as they would be in vanilla Minecraft.
+*   **Smart Handling:** If your inventory is full, items will be **ejected from your player** with a "spitting" effect, similar to when items are left in a crafting table and your inventory is full upon exiting.
 *   **Simple Configuration:** Easily enable or disable the feature for all players using a single gamerule.
 *   **High Compatibility:** Designed to work with vanilla mechanics and other mods.
 
@@ -98,7 +98,7 @@ public void yourCustomDropMethod(PlayerEntity player, List<ItemStack> yourCalcul
     // Drop any items that weren't picked up (e.g., inventory full)
     for (ItemStack stack : remainingDrops) {
         // Your logic to drop items in the world
-        Block.dropStack(player.getWorld(), player.getBlockPos(), stack);
+        player.dropItem(stack, true);
     }
 }
 ```

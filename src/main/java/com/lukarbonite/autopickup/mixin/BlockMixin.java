@@ -48,7 +48,7 @@ public abstract class BlockMixin {
 
             // Drop any items that couldn't be picked up.
             for (ItemStack stack : remainingDrops) {
-                Block.dropStack(serverWorld, pos, stack);
+                player.dropItem(stack, true);
             }
 
             // We have handled all drop logic, so cancel the original method.

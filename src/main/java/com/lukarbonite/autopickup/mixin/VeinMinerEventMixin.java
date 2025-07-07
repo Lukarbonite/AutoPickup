@@ -54,7 +54,7 @@ public abstract class VeinMinerEventMixin {
 
         // Drop any items that were not picked up
         for (ItemStack stack : remainingItems) {
-            Block.dropStack(world, position, stack);
+            player.dropItem(stack, true);
         }
 
         // Play the block break effect
