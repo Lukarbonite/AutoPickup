@@ -1,5 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
+import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import de.miraculixx.veinminer.VeinMinerEvent;
 import net.minecraft.block.Block;
@@ -23,8 +24,8 @@ public abstract class VeinMinerEventMixin {
     /**
      * Injects into Veinminer's private destroyBlock method.
      * It runs BEFORE the original code, calculates the drops itself, processes them,
-     * and then replaces the block with air. This causes the original method to find no
-     * block, calculate no drops, and effectively cedes control of item dropping to us.
+     * handles experience pickup, and then replaces the block with air. This causes
+     * the original method to cede control of item and experience dropping to us.
      */
     @Inject(
             // This targets the private method using its Intermediary signature from the bytecode.
@@ -41,21 +42,34 @@ public abstract class VeinMinerEventMixin {
             BlockPos initialSource,
             CallbackInfo ci
     ) {
-        // We only care about the server
         if (world.isClient() || !(world instanceof ServerWorld serverWorld)) {
             return;
         }
 
-        // Get drops before the block is destroyed
-        List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, item);
-
-        // Process drops with our API
-        List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
-
-        // Drop any items that were not picked up
-        for (ItemStack stack : remainingItems) {
-            player.dropItem(stack, true);
+        // If the gamerule is off, let VeinMiner handle drops normally.
+        if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
+            return;
         }
+
+        AutoPickupApi.setBlockBreaker(player);
+        try {
+            // Get drops before the block is destroyed
+            List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, item);
+
+            // Process drops with our API
+            List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
+
+            // Drop any items that were not picked up
+            for (ItemStack stack : remainingItems) {
+                player.dropItem(stack, true);
+            }
+
+            // This triggers experience drop logic, which our BlockDropExperienceMixin will intercept.
+            blockState.onStacksDropped(serverWorld, position, item, true);
+        } finally {
+            AutoPickupApi.clearBlockBreaker();
+        }
+
 
         // Play the block break effect
         world.syncWorldEvent(2001, position, Block.getRawIdFromState(blockState));

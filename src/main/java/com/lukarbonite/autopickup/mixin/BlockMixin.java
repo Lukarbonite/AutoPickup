@@ -29,26 +29,33 @@ public abstract class BlockMixin {
             return;
         }
 
-        // The gamerule is checked within the API, but an early exit here is efficient.
+        // If the gamerule is off, do nothing and let vanilla's logic run.
         if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
             return;
         }
 
         if (entity instanceof PlayerEntity player) {
-            // Calculate the drops as vanilla would.
-            List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
+            // Set the player context for the experience-capturing mixin.
+            AutoPickupApi.setBlockBreaker(player);
+            try {
+                // Calculate the drops as vanilla would.
+                List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            if (drops.isEmpty()) {
-                ci.cancel();
-                return;
-            }
+                // Use our own API to attempt item pickup.
+                List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
 
-            // Use our own API to attempt the pickup.
-            List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
+                // Drop any items that couldn't be picked up.
+                for (ItemStack stack : remainingDrops) {
+                    player.dropItem(stack, true);
+                }
 
-            // Drop any items that couldn't be picked up.
-            for (ItemStack stack : remainingDrops) {
-                player.dropItem(stack, true);
+                // This vanilla method triggers experience drop logic for blocks like ores.
+                // Our BlockDropExperienceMixin will intercept the call to dropExperience within it.
+                state.onStacksDropped(serverWorld, pos, tool, true);
+
+            } finally {
+                // Always clear the context afterwards.
+                AutoPickupApi.clearBlockBreaker();
             }
 
             // We have handled all drop logic, so cancel the original method.

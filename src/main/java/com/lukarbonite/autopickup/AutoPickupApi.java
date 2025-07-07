@@ -13,6 +13,34 @@ import java.util.List;
  */
 public final class AutoPickupApi {
 
+    // A ThreadLocal to hold the player who is breaking a block.
+    // This allows us to pass this context to deeper method calls without changing method signatures.
+    private static final ThreadLocal<PlayerEntity> blockBreaker = new ThreadLocal<>();
+
+    /**
+     * Sets the player for the current thread's block-breaking context.
+     * @param player The player breaking the block.
+     */
+    public static void setBlockBreaker(PlayerEntity player) {
+        blockBreaker.set(player);
+    }
+
+    /**
+     * Clears the player from the current thread's block-breaking context.
+     */
+    public static void clearBlockBreaker() {
+        blockBreaker.remove();
+    }
+
+    /**
+     * Gets the player from the current thread's block-breaking context.
+     * @return The player, or null if not set.
+     */
+    public static PlayerEntity getBlockBreaker() {
+        return blockBreaker.get();
+    }
+
+
     /**
      * Attempts to add a list of item stacks directly to the player's inventory.
      * This is the primary integration point for mods with custom block-breaking logic.
