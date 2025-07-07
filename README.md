@@ -1,7 +1,7 @@
 # Auto Pickup for Fabric
 
 ![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)
-![Minecraft](https://img.shields.io/badge/minecraft-1.21.6-green?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.21.7-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items from broken blocks directly into your inventory. No more chasing drops, no more lost items.
@@ -49,7 +49,7 @@ That's it! The mod is purely server-side, but it will also work in single-player
 
 Auto Pickup is designed to be highly compatible with the modded ecosystem.
 
-*   **Veinminer:** This mod includes a built-in, no-hassle compatibility layer for [MiraculixxT's Veinminer](https://modrinth.com/datapack/veinminer) 2.4.2. All items broken as part of a veinmine action will be correctly processed by Auto Pickup.
+*   **Veinminer:** This mod includes a built-in, no-hassle compatibility layer for [MiraculixxT's Veinminer](https://modrinth.com/datapack/veinminer). All items broken as part of a veinmine action will be correctly processed by Auto Pickup.
 *   **Other Mods:** It should work seamlessly with most mods that use standard block-breaking and drop mechanics. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
