@@ -5,6 +5,7 @@
 	"mixins": [
 		"BlockMixin",
 		"BlockDropExperienceMixin",
+		"MobLootMixin",
 		"VeinMinerEventMixin"
 	],
 	"injectors": {
