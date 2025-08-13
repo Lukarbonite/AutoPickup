@@ -21,7 +21,7 @@ public class BlockDropExperienceMixin {
 
         // If a player broke the block and the gamerule is on, give them the XP directly.
         if (player != null && !world.isClient() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
-            player.addExperience(size);
+            AutoPickupApi.tryPickupExperience(player, size);
             // Cancel the original method to prevent the ExperienceOrbEntity from spawning.
             ci.cancel();
         }

@@ -32,7 +32,7 @@ dependencies {
 	implementation "io.github.llamalad7:mixinextras-fabric:0.4.1"
 	annotationProcessor "io.github.llamalad7:mixinextras-fabric:0.4.1"
 
-	modCompileOnly('de.miraculixx:veinminer-fabric:2.4.2')
+    modCompileOnly(files("libs/veinminer-fabric-2.4.9.jar"))
 }
 
 processResources {
