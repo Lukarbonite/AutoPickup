@@ -19,8 +19,10 @@ public class BlockDropExperienceMixin {
         // Check if there is a player context from our other mixins.
         PlayerEntity player = AutoPickupApi.getBlockBreaker();
 
-        // If a player broke the block and the gamerule is on, give them the XP directly.
-        if (player != null && !world.isClient() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
+        // If a player broke the block and the gamerules are on, give them the XP directly.
+        if (player != null && !world.isClient()
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
             AutoPickupApi.tryPickupExperience(player, size);
             // Cancel the original method to prevent the ExperienceOrbEntity from spawning.
             ci.cancel();

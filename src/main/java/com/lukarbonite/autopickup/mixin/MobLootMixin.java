@@ -35,7 +35,9 @@ public abstract class MobLootMixin {
     )
     private void autopickup_redirectExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
         // We get the player from the 'attacker' parameter passed to the original method. This is safe.
-        if (attacker instanceof PlayerEntity player && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+        if (attacker instanceof PlayerEntity player
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
             AutoPickupApi.tryPickupExperience(player, amount);
         } else {
             // If the killer isn't a player or the rule is off, spawn the orb normally.
