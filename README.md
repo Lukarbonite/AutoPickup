@@ -1,50 +1,65 @@
 # Auto Pickup for Fabric
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.7-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.8-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items and experience directly into your inventory from broken blocks and slain mobs. No more chasing drops, no more lost items.
 
 ## ✨ Features
 
-*   **Instant Collection:** Items and experience from broken blocks and mob drops are instantly added to your inventory and experience bar.
-*   **Automatic Experience:** Experience orbs are collected directly, without ever spawning as entities.
-*   **Lag-Free:** Prevents item and experience orb entities from spawning in the world, which can help reduce server lag.
-*   **Smart Handling:** If your inventory is full, items will be **ejected from your player** with a "spitting" effect.
-*   **Separate Controls:** Independent gamerules for block drops and mob loot give you fine-grained control over the mod's behavior.
-*   **High Compatibility:** Designed to work with vanilla mechanics and other mods.
+*   **Seamless Collection:** Items from broken blocks and mob drops are instantly added to your inventory.
+*   **Correct Mending Order:** Experience is applied *after* tool durability damage, ensuring Mending works correctly with tools and mods like Veinminer.
+*   **Automatic Experience:** Experience orbs are collected directly by a caching system, without ever spawning as entities in the world.
+*   **Lag-Free:** Prevents item and experience orb entities from spawning, which can help reduce server lag.
+*   **Smart Handling:** If your inventory is full, any items that cannot be picked up will be safely dropped at your feet.
+*   **Granular Control:** Three independent gamerules for blocks, mobs, and experience give you fine-grained control over the mod's behavior.
+*   **High Compatibility:** Designed to work seamlessly with vanilla mechanics and other mods.
 
 ![OneBlock](https://github.com/user-attachments/assets/5e3afe38-de87-4a3a-a0fa-3de2fa9a7a8f)
 
 ## ⚙️ Configuration via GameRules
 
-The mod is controlled by two separate gamerules, which can be changed by any server operator or in single-player worlds with cheats enabled.
+The mod is controlled by three separate gamerules, which can be changed by any server operator or in single-player worlds with cheats enabled.
 
 ### Block Drops
 
-This controls auto pickup from blocks. It is **on by default**.
+This controls auto pickup for items from blocks. It is **on by default**.
 
-*   **To enable Auto Pickup for blocks (Default):**
+*   **To enable (Default):**
     ```
     /gamerule autoPickup true
     ```
 
-*   **To disable Auto Pickup for blocks:**
+*   **To disable:**
     ```
     /gamerule autoPickup false
     ```
 
 ### Mob Loot
 
-This controls auto pickup from mobs killed by a player. It is **off by default**.
+This controls auto pickup for items from mobs killed by a player. It is **off by default**.
 
-*   **To enable Auto Pickup for mob loot:**
+*   **To enable:**
     ```
     /gamerule autoPickupMobLoot true
     ```
 
-*   **To disable Auto Pickup for mob loot (Default):**
+*   **To disable (Default):**
     ```
     /gamerule autoPickupMobLoot false
+    ```
+
+### Experience
+
+This controls auto pickup for all experience orbs. It is **on by default**.
+
+*   **To enable (Default):**
+    ```
+    /gamerule autoPickupXp true
+    ```
+
+*   **To disable:**
+    ```
+    /gamerule autoPickupXp false
     ```
 
 ## 📦 Installation
@@ -62,14 +77,18 @@ That's it! The mod is purely server-side, but it will also work in single-player
 
 Auto Pickup is designed to be highly compatible with the modded ecosystem.
 
-*   **Veinminer:** This mod includes a built-in, no-hassle compatibility layer for [MiraculixxT's Veinminer](https://modrinth.com/datapack/veinminer). All items and experience from blocks broken as part of a veinmine action will be correctly processed.
+*   **Veinminer:** This mod includes deep, built-in compatibility for [Miraculixx's Veinminer](https://modrinth.com/datapack/veinminer). All items and experience from blocks broken as part of a veinmine action will be correctly picked up, and the Mending enchantment will be applied properly after all durability damage is dealt.
 *   **Other Mods:** It should work seamlessly with most mods that use standard block-breaking and loot-dropping mechanics. Similarly, drops from most vanilla and modded mobs are also supported. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
 
 ## 👩‍💻 For Developers: Using the API
 
-If your mod features custom logic for breaking blocks or dropping items, you can easily integrate with Auto Pickup to provide your users with a seamless experience.
+Good news! The API is now much simpler, and in most cases, you don't need to do anything at all.
+
+Auto Pickup is designed to be "zero-config" for other developers. It achieves compatibility by hooking into fundamental vanilla methods (`Block.dropStacks` and `LivingEntity.dropExperience`). As long as your mod uses these standard methods for handling drops, Auto Pickup will work with it automatically.
+
+If you still wish to check if the mod is loaded or want to use the API for specific cases, you can do so.
 
 **1. Add Auto Pickup as a Dependency (build.gradle)**
 
@@ -77,54 +96,28 @@ It is recommended to use `modCompileOnly` so your mod doesn't require Autopickup
 
 ```groovy
 repositories {
-    // ...
+    // ... your repositories
 }
 
 dependencies {
-    // ...
-    modCompileOnly "com.lukarbonite:auto-pickup:x.x.x" // Replace with the correct group/version
+    // ... your dependencies
+    // Get the version from the Modrinth page
+    modCompileOnly(files("libs/auto-pickup-x.x.x.jar"))
 }
 ```
 
 **2. Using the API**
 
-The `AutoPickupApi` class provides simple, static methods to process drops for different contexts.
+The `AutoPickupApi` class provides simple, static methods to process drops and experience. Always check if the mod is loaded before using the API.
 
-### API for Block Drops
+### Item Pickup
 
-To ensure both items and experience from your custom blocks are automatically picked up, you need to provide a "context" for who is breaking the block.
+These methods attempt to add items to a player's inventory and return a list of items that could not be picked up.
 
-Use `AutoPickupApi.setBlockBreaker(player)` before your drop logic and `AutoPickupApi.clearBlockBreaker()` in a `finally` block to ensure it's always cleaned up.
-
-```java
-import com.lukarbonite.autopickup.AutoPickupApi;
-import net.fabricmc.loader.api.FabricLoader;
-
-// ...
-
-public void yourFullDropMethod(BlockState state, ServerWorld world, BlockPos pos, PlayerEntity player, ItemStack tool) {
-    if (!FabricLoader.getInstance().isModLoaded("auto-pickup")) { /* Your default drop logic */ return; }
-
-    AutoPickupApi.setBlockBreaker(player);
-    try {
-        List<ItemStack> drops = Block.getDroppedStacks(state, world, pos, null, player, tool);
-        List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-
-        for (ItemStack stack : remainingDrops) {
-            player.dropItem(stack, true);
-        }
-        // Trigger vanilla experience drop logic (which Auto Pickup will intercept via the context)
-        state.onStacksDropped(world, pos, tool, true);
-    } finally {
-        // IMPORTANT: Always clear the context
-        AutoPickupApi.clearBlockBreaker();
-    }
-}
-```
-
-### API for Mob Loot
-
-Handling drops from custom mobs is even simpler.
+*   `AutoPickupApi.tryPickup(PlayerEntity player, List<ItemStack> drops)`
+    *   For items from **blocks**. Respects the `autoPickup` gamerule.
+*   `AutoPickupApi.tryPickupFromMob(PlayerEntity player, List<ItemStack> drops)`
+    *   For items from **mobs**. Respects the `autoPickupMobLoot` gamerule.
 
 ```java
 import com.lukarbonite.autopickup.AutoPickupApi;
@@ -146,7 +139,48 @@ public void yourCustomMobDropMethod(PlayerEntity player, List<ItemStack> yourMob
     }
 }
 ```
-*Note: Experience from custom mobs is handled automatically as long as they extend `LivingEntity` and use the vanilla experience-dropping methods.*
+
+### Experience Pickup & Mending
+
+This method handles giving experience to the player and ensures the Mending logic is applied correctly.
+
+*   `AutoPickupApi.tryPickupExperience(PlayerEntity player, int experience)`
+    *   Gives experience and handles Mending. Respects the `autoPickupXp` gamerule. This is useful for custom sources of experience, like quest rewards.
+
+### Block Breaker Context (Advanced)
+
+This is the most important feature for compatibility with custom block-breaking logic. Auto Pickup's mixins need to know *which player* caused a block to break to correctly process drops and experience. For custom logic (e.g., a magic spell that breaks blocks), you must provide this context.
+
+*   `AutoPickupApi.setBlockBreaker(PlayerEntity player)`: Sets the current player context.
+*   `AutoPickupApi.clearBlockBreaker()`: **Crucially**, clears the context.
+*   `AutoPickupApi.getBlockBreaker()`: Gets the current player context, if any.
+
+**Always wrap your drop logic in a `try...finally` block to guarantee the context is cleared.**
+
+```java
+import com.lukarbonite.autopickup.AutoPickupApi;
+import net.fabricmc.loader.api.FabricLoader;
+
+// ...
+
+public void yourFullDropMethod(BlockState state, ServerWorld world, BlockPos pos, PlayerEntity player, ItemStack tool) {
+    // Fallback to your default logic if Auto Pickup isn't installed
+    if (!FabricLoader.getInstance().isModLoaded("auto-pickup")) {
+        // ... your default drop logic ...
+        return;
+    }
+
+    // This is the core pattern for compatibility
+    AutoPickupApi.setBlockBreaker(player);
+    try {
+        // Let vanilla (and thus, Auto Pickup's mixins) handle the drops
+        Block.dropStacks(state, world, pos, null, player, tool);
+    } finally {
+        // IMPORTANT: Always clear the context to prevent bugs and memory leaks
+        AutoPickupApi.clearBlockBreaker();
+    }
+}
+```
 
 ## 📜 License
 
