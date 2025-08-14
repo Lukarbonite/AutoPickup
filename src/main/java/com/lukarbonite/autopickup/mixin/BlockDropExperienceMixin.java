@@ -2,7 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.lukarbonite.autopickup.VeinminerCompat; // Import the new compat class
+import com.lukarbonite.autopickup.ExperienceCache; // Import the new handler
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -23,12 +23,10 @@ public class BlockDropExperienceMixin {
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
 
-            // Always funnel the experience into our compatibility handler.
-            // It will manage caching and timing for both single and vein-mined blocks.
-            VeinminerCompat.onBlockBroken(player, size);
+            // Always funnel the experience into the universal handler.
+            ExperienceCache.add(player, size);
 
-            // Cancel the original method to prevent the ExperienceOrbEntity from spawning.
-            // Our compat handler is now responsible for giving the XP to the player later.
+            // Cancel the original method. The handler is now responsible for the XP.
             ci.cancel();
         }
     }

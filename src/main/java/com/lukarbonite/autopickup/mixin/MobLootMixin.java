@@ -2,7 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.lukarbonite.autopickup.MobLootCompat; // Import the new compat class
+import com.lukarbonite.autopickup.ExperienceCache; // Import the new handler
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.LivingEntity;
@@ -29,7 +29,6 @@ import java.util.Optional;
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    // This mixin redirects the spawning of experience orbs.
     @Redirect(
             method = "dropExperience(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/Entity;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
@@ -38,21 +37,21 @@ public abstract class MobLootMixin {
         if (attacker instanceof PlayerEntity player
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
-            // Instead of applying XP now, cache it for the end of the tick.
-            MobLootCompat.cacheExperience(player, amount);
+
+            // Funnel mob XP into the universal handler.
+            ExperienceCache.add(player, amount);
         } else {
-            // If conditions aren't met, spawn the orb normally.
             ExperienceOrbEntity.spawn(world, pos, amount);
         }
     }
 
-    // This inject for item loot remains unchanged and is correct.
     @Inject(
             method = "dropLoot(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;Z)V",
             at = @At("HEAD"),
             cancellable = true
     )
     private void autopickup_onDropLoot(ServerWorld world, DamageSource damageSource, boolean causedByPlayer, CallbackInfo ci) {
+        // ... (this method's body does not need to be changed)
         LivingEntity thisEntity = (LivingEntity) (Object) this;
         Entity attacker = damageSource.getAttacker();
 
