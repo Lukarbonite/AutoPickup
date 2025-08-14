@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.VeinminerCompat; // Import the new compat class
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -15,16 +16,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class BlockDropExperienceMixin {
 
     @Inject(method = "dropExperience", at = @At("HEAD"), cancellable = true)
-    private void autopickup_captureExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
-        // Check if there is a player context from our other mixins.
+    private void autopickup_captureAndCacheExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
         PlayerEntity player = AutoPickupApi.getBlockBreaker();
 
-        // If a player broke the block and the gamerules are on, give them the XP directly.
         if (player != null && !world.isClient()
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
-            AutoPickupApi.tryPickupExperience(player, size);
+
+            // Always funnel the experience into our compatibility handler.
+            // It will manage caching and timing for both single and vein-mined blocks.
+            VeinminerCompat.onBlockBroken(player, size);
+
             // Cancel the original method to prevent the ExperienceOrbEntity from spawning.
+            // Our compat handler is now responsible for giving the XP to the player later.
             ci.cancel();
         }
     }

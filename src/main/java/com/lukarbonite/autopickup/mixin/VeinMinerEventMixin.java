@@ -22,20 +22,17 @@ import java.util.List;
 public abstract class VeinMinerEventMixin {
 
     /**
-     * Injects into Veinminer's private destroyBlock method.
-     * It runs BEFORE the original code, calculates the drops itself, processes them,
-     * handles experience pickup, and then replaces the block with air. This causes
-     * the original method to cede control of item and experience dropping to us.
+     * Injects into Veinminer's private destroyBlock method, which is called for every
+     * subsequent block in a vein. This gives us full control over the drop and experience logic.
      */
     @Inject(
-            // This targets the private method using its Intermediary signature from the bytecode.
             method = "destroyBlock(Lnet/minecraft/class_2680;Lnet/minecraft/class_1799;Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;)V",
             at = @At("HEAD"),
             cancellable = true
     )
     private void autopickup_hijackVeinminerBlockDestroy(
-            BlockState blockState, // This is a yarn-mapped type
-            ItemStack item,
+            BlockState blockState, // This is a mapped name, which is fine for the method body
+            ItemStack tool,
             World world,
             BlockPos position,
             PlayerEntity player,
@@ -46,36 +43,35 @@ public abstract class VeinMinerEventMixin {
             return;
         }
 
-        // If the gamerule is off, let VeinMiner handle drops normally.
+        // If the gamerule is off, let VeinMiner handle drops normally by not cancelling.
         if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
             return;
         }
 
+        // Set the player context so our other mixins can identify the block breaker.
         AutoPickupApi.setBlockBreaker(player);
         try {
-            // Get drops before the block is destroyed
-            List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, item);
+            // Get drops before the block is destroyed.
+            List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, tool);
 
-            // Process drops with our API
+            // Process drops with our API.
             List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
 
-            // Drop any items that were not picked up
+            // Drop any items that were not picked up.
             for (ItemStack stack : remainingItems) {
                 player.dropItem(stack, true);
             }
 
-            // This triggers experience drop logic, which our BlockDropExperienceMixin will intercept.
-            blockState.onStacksDropped(serverWorld, position, item, true);
+            // This vanilla method contains the call to dropExperience, which our BlockDropExperienceMixin will intercept.
+            // This is called AFTER Veinminer applies durability damage but BEFORE we destroy the block.
+            blockState.onStacksDropped(serverWorld, position, tool, true);
         } finally {
+            // Always clear the context.
             AutoPickupApi.clearBlockBreaker();
         }
 
-
-        // Play the block break effect
+        // Replicate the final logic from Veinminer's method: play effect and destroy block.
         world.syncWorldEvent(2001, position, Block.getRawIdFromState(blockState));
-
-        // Now, we destroy the block by setting it to air and notifying neighbors.
-        // This is the "bypass" part. The original method will now do nothing.
         world.setBlockState(position, Blocks.AIR.getDefaultState(), Block.NOTIFY_LISTENERS);
 
         // We have completely taken over, so cancel the original method.

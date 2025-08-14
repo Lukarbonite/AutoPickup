@@ -1,14 +1,15 @@
 {
-	"required": true,
-	"package": "com.lukarbonite.autopickup.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"BlockMixin",
-		"BlockDropExperienceMixin",
-		"MobLootMixin",
-		"VeinMinerEventMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+  "required": true,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "BlockMixin",
+    "BlockDropExperienceMixin",
+    "MobLootMixin",
+    "VeinMinerEventMixin",
+    "ServerTickMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

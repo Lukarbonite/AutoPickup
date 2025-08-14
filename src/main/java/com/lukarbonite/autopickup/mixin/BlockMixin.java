@@ -21,21 +21,29 @@ import java.util.List;
 @Mixin(Block.class)
 public abstract class BlockMixin {
 
-    @Inject(method = "dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/item/ItemStack;)V",
+    /**
+     * This mixin hijacks the entire dropStacks method when a block is broken by a player.
+     * It performs all auto-pickup logic and then cancels the original method to prevent
+     * items from dropping normally. This approach is compatible with mods like Veinminer
+     * that call this vanilla method for each block they break.
+     */
+    @Inject(
+            method = "dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/item/ItemStack;)V",
             at = @At("HEAD"),
-            cancellable = true)
+            cancellable = true
+    )
     private static void autopickup_onDropStacks(BlockState state, World world, BlockPos pos, BlockEntity blockEntity, Entity entity, ItemStack tool, CallbackInfo ci) {
         if (!(world instanceof ServerWorld serverWorld)) {
             return;
         }
 
-        // If the gamerule is off, do nothing and let vanilla's logic run.
+        // If the gamerule is off, let vanilla's logic run.
         if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
             return;
         }
 
         if (entity instanceof PlayerEntity player) {
-            // Set the player context for the experience-capturing mixin.
+            // Set the player context so our experience-capturing mixin knows who is breaking the block.
             AutoPickupApi.setBlockBreaker(player);
             try {
                 // Calculate the drops as vanilla would.
@@ -51,6 +59,7 @@ public abstract class BlockMixin {
 
                 // This vanilla method triggers experience drop logic for blocks like ores.
                 // Our BlockDropExperienceMixin will intercept the call to dropExperience within it.
+                // This correctly happens *after* the tool has taken damage from Veinminer.
                 state.onStacksDropped(serverWorld, pos, tool, true);
 
             } finally {

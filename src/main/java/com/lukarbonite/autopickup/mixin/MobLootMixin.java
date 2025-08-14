@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.MobLootCompat; // Import the new compat class
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.LivingEntity;
@@ -33,19 +34,19 @@ public abstract class MobLootMixin {
             method = "dropExperience(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/Entity;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
     )
-    private void autopickup_redirectExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
-        // We get the player from the 'attacker' parameter passed to the original method. This is safe.
+    private void autopickup_redirectAndCacheExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
         if (attacker instanceof PlayerEntity player
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
-            AutoPickupApi.tryPickupExperience(player, amount);
+            // Instead of applying XP now, cache it for the end of the tick.
+            MobLootCompat.cacheExperience(player, amount);
         } else {
-            // If the killer isn't a player or the rule is off, spawn the orb normally.
+            // If conditions aren't met, spawn the orb normally.
             ExperienceOrbEntity.spawn(world, pos, amount);
         }
     }
 
-    // This mixin hijacks the entire loot drop process.
+    // This inject for item loot remains unchanged and is correct.
     @Inject(
             method = "dropLoot(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;Z)V",
             at = @At("HEAD"),
@@ -53,19 +54,16 @@ public abstract class MobLootMixin {
     )
     private void autopickup_onDropLoot(ServerWorld world, DamageSource damageSource, boolean causedByPlayer, CallbackInfo ci) {
         LivingEntity thisEntity = (LivingEntity) (Object) this;
-        // Get the attacker directly from the damage source parameter. This is the safest way and avoids NoSuchMethodError.
         Entity attacker = damageSource.getAttacker();
 
-        // Check if the attacker is a player and our other conditions are met.
         if (attacker instanceof PlayerEntity player && !player.isSpectator() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
             if (optional.isEmpty()) {
-                return; // Nothing to drop.
+                return;
             }
 
             LootTable lootTable = world.getServer().getReloadableRegistries().getLootTable(optional.get());
 
-            // Build the context correctly.
             LootWorldContext.Builder builder = new LootWorldContext.Builder(world)
                     .add(LootContextParameters.THIS_ENTITY, thisEntity)
                     .add(LootContextParameters.ORIGIN, thisEntity.getPos())
@@ -79,19 +77,15 @@ public abstract class MobLootMixin {
 
             LootWorldContext lootContext = builder.build(LootContextTypes.ENTITY);
 
-            // Generate the loot into a temporary list.
             List<ItemStack> generatedLoot = new ArrayList<>();
             lootTable.generateLoot(lootContext, thisEntity.getLootTableSeed(), generatedLoot::add);
 
-            // Give the items to the player.
             List<ItemStack> remainingItems = AutoPickupApi.tryPickupFromMob(player, generatedLoot);
 
-            // Drop any leftovers at the player.
             for (ItemStack stack : remainingItems) {
                 player.dropItem(stack, true);
             }
 
-            // Cancel the original method.
             ci.cancel();
         }
     }
