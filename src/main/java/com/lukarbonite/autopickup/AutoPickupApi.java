@@ -1,10 +1,12 @@
 package com.lukarbonite.autopickup;
 
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
@@ -47,7 +49,6 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getWorld();
-        // Check if the world is a ServerWorld to safely access gamerules.
         if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             return drops;
@@ -63,29 +64,21 @@ public final class AutoPickupApi {
         return unpickedItems;
     }
 
-    /**
-     * Attempts to repair items with the Mending enchantment before giving the experience to the player.
-     * This method replicates the logic of an experience orb being collected by a player with mending gear.
-     * @param player The player picking up the experience.
-     * @param experience The amount of experience picked up.
-     */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
         if (experience <= 0) {
             return;
         }
 
-        // Correctly type the Optional to match the return type of getEntry()
-        Optional<RegistryEntry.Reference<net.minecraft.enchantment.Enchantment>> mendingEntryOptional = player.getWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING.getValue());
+        // FIX: Removed .get() because getRegistryManager().get() returns the Registry directly in this version.
+        Registry<Enchantment> enchantmentRegistry = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT);
+        Optional<RegistryEntry.Reference<Enchantment>> mendingEntryOptional = enchantmentRegistry.getEntry(Enchantments.MENDING);
 
-        // If Mending doesn't exist for some reason, just give the XP directly.
         if (mendingEntryOptional.isEmpty()) {
             player.addExperience(experience);
             return;
         }
-        RegistryEntry<net.minecraft.enchantment.Enchantment> mendingEntry = mendingEntryOptional.get();
+        RegistryEntry<Enchantment> mendingEntry = mendingEntryOptional.get();
 
-        // Find all equipped items that are damaged and have Mending.
-        // This includes armor and held items.
         List<ItemStack> mendableItems = new ArrayList<>();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
@@ -97,24 +90,18 @@ public final class AutoPickupApi {
         }
 
         if (mendableItems.isEmpty()) {
-            // No items to mend, so give all XP to the player.
             player.addExperience(experience);
             return;
         }
 
-        // Pick one random applicable item to repair.
         ItemStack itemToMend = mendableItems.get(player.getRandom().nextInt(mendableItems.size()));
 
-        // In vanilla, 1 point of experience repairs 2 points of durability.
         int repairValue = Math.min(experience * 2, itemToMend.getDamage());
         itemToMend.setDamage(itemToMend.getDamage() - repairValue);
 
-        // Calculate how much experience was actually consumed.
-        // We use ceiling division (e.g., (value + 1) / 2) to ensure that repairing 1 durability costs 1 XP.
         int xpConsumed = (repairValue + 1) / 2;
         int remainingXp = experience - xpConsumed;
 
-        // Add any leftover experience to the player's experience bar.
         if (remainingXp > 0) {
             player.addExperience(remainingXp);
         }
