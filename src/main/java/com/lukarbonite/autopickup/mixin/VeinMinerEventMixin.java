@@ -31,7 +31,7 @@ public abstract class VeinMinerEventMixin {
             cancellable = true
     )
     private void autopickup_hijackVeinminerBlockDestroy(
-            BlockState blockState, // This is a mapped name, which is fine for the method body
+            BlockState blockState,
             ItemStack tool,
             World world,
             BlockPos position,
@@ -43,27 +43,28 @@ public abstract class VeinMinerEventMixin {
             return;
         }
 
-        // If the gamerule is off, let VeinMiner handle drops normally by not cancelling.
-        if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
-            return;
-        }
-
-        // Set the player context so our other mixins can identify the block breaker.
+        // Set the player context immediately for the experience mixin.
         AutoPickupApi.setBlockBreaker(player);
         try {
-            // Get drops before the block is destroyed.
+            // Calculate drops.
             List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, tool);
 
-            // Process drops with our API.
-            List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
+            // Check if item pickup is enabled.
+            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
 
-            // Drop any items that were not picked up.
-            for (ItemStack stack : remainingItems) {
-                player.dropItem(stack, true);
+            if (shouldPickupItems) {
+                List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
+                for (ItemStack stack : remainingItems) {
+                    player.dropItem(stack, true);
+                }
+            } else {
+                for (ItemStack stack : drops) {
+                    player.dropItem(stack, true);
+                }
             }
 
-            // This vanilla method contains the call to dropExperience, which our BlockDropExperienceMixin will intercept.
-            // This is called AFTER Veinminer applies durability damage but BEFORE we destroy the block.
+            // Manually call onStacksDropped to trigger the experience drop.
             blockState.onStacksDropped(serverWorld, position, tool, true);
         } finally {
             // Always clear the context.

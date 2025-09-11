@@ -12,19 +12,31 @@ public class AutoPickup implements ModInitializer {
     public static final String MOD_ID = "auto-pickup";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    // ... (gamerule definitions remain the same) ...
+    // Master gamerule. If this is false, nothing will be auto-picked up.
     public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_GAMERULE_KEY =
             GameRuleRegistry.register(
                     "autoPickup",
                     GameRules.Category.PLAYER,
                     GameRuleFactory.createBooleanRule(true) // Default value is true
             );
+
+    // Gamerule for block drops
+    public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_BLOCKS_GAMERULE_KEY =
+            GameRuleRegistry.register(
+                    "autoPickupBlocks",
+                    GameRules.Category.PLAYER,
+                    GameRuleFactory.createBooleanRule(true) // Default value is true
+            );
+
+    // Gamerule for mob loot.
     public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY =
             GameRuleRegistry.register(
                     "autoPickupMobLoot",
                     GameRules.Category.PLAYER,
                     GameRuleFactory.createBooleanRule(false) // Default value is false
             );
+
+    // Gamerule for experience.
     public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_XP_GAMERULE_KEY =
             GameRuleRegistry.register(
                     "autoPickupXp",

@@ -30,8 +30,10 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getWorld();
+        // Check master rule first, then the specific block rule.
         if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
+                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
             return drops;
         }
         List<ItemStack> unpickedItems = new ArrayList<>();
@@ -47,8 +49,9 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getWorld();
-        // Check if the world is a ServerWorld to safely access gamerules.
+        // Check master rule first, then the specific mob loot rule.
         if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
+                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             return drops;
         }
@@ -70,7 +73,11 @@ public final class AutoPickupApi {
      * @param experience The amount of experience picked up.
      */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
-        if (experience <= 0) {
+        World world = player.getWorld();
+        // Check master rule first, then the specific XP rule.
+        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld serverWorld)
+                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
             return;
         }
 

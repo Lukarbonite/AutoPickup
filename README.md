@@ -10,32 +10,46 @@
 *   **Automatic Experience:** Experience orbs are collected directly by a caching system, without ever spawning as entities in the world.
 *   **Lag-Free:** Prevents item and experience orb entities from spawning, which can help reduce server lag.
 *   **Smart Handling:** If your inventory is full, any items that cannot be picked up will be safely dropped at your feet.
-*   **Granular Control:** Three independent gamerules for blocks, mobs, and experience give you fine-grained control over the mod's behavior.
+*   **Granular Control:** A master switch and three independent gamerules give you fine-grained control over the mod's behavior.
 *   **High Compatibility:** Designed to work seamlessly with vanilla mechanics and other mods.
 
 ![OneBlock](https://github.com/user-attachments/assets/5e3afe38-de87-4a3a-a0fa-3de2fa9a7a8f)
 
 ## ⚙️ Configuration via GameRules
 
-The mod is controlled by three separate gamerules, which can be changed by any server operator or in single-player worlds with cheats enabled.
+The mod is controlled by a master gamerule and three specific sub-rules. These can be changed by any server operator or in single-player worlds with cheats enabled.
 
-### Block Drops
+### Master Switch (Global)
 
-This controls auto pickup for items from blocks. It is **on by default**.
+This gamerule acts as a master switch for the entire mod. If it is set to `false`, **all** auto pickup features will be disabled, regardless of the other rules.
 
 *   **To enable (Default):**
     ```
     /gamerule autoPickup true
     ```
 
-*   **To disable:**
+*   **To disable (Overrides all other rules):**
     ```
     /gamerule autoPickup false
     ```
 
+### Block Drops
+
+This controls auto pickup for items from blocks. It is **on by default**. It is only active if the master `autoPickup` rule is `true`.
+
+*   **To enable (Default):**
+    ```
+    /gamerule autoPickupBlocks true
+    ```
+
+*   **To disable:**
+    ```
+    /gamerule autoPickupBlocks false
+    ```
+
 ### Mob Loot
 
-This controls auto pickup for items from mobs killed by a player. It is **off by default**.
+This controls auto pickup for items from mobs killed by a player. It is **off by default**. It is only active if the master `autoPickup` rule is `true`.
 
 *   **To enable:**
     ```
@@ -49,7 +63,7 @@ This controls auto pickup for items from mobs killed by a player. It is **off by
 
 ### Experience
 
-This controls auto pickup for all experience orbs. It is **on by default**.
+This controls auto pickup for all experience orbs. It is **on by default**. It is only active if the master `autoPickup` rule is `true`.
 
 *   **To enable (Default):**
     ```
@@ -115,9 +129,11 @@ The `AutoPickupApi` class provides simple, static methods to process drops and e
 These methods attempt to add items to a player's inventory and return a list of items that could not be picked up.
 
 *   `AutoPickupApi.tryPickup(PlayerEntity player, List<ItemStack> drops)`
-    *   For items from **blocks**. Respects the `autoPickup` gamerule.
+    * For items from **blocks**.
+    * Respects the `autoPickup` and `autoPickupBlocks` gamerules.
 *   `AutoPickupApi.tryPickupFromMob(PlayerEntity player, List<ItemStack> drops)`
-    *   For items from **mobs**. Respects the `autoPickupMobLoot` gamerule.
+    * For items from **mobs**.
+    * Respects the `autoPickup` and `autoPickupMobLoot` gamerules.
 
 ```java
 import com.lukarbonite.autopickup.AutoPickupApi;
@@ -145,7 +161,9 @@ public void yourCustomMobDropMethod(PlayerEntity player, List<ItemStack> yourMob
 This method handles giving experience to the player and ensures the Mending logic is applied correctly.
 
 *   `AutoPickupApi.tryPickupExperience(PlayerEntity player, int experience)`
-    *   Gives experience and handles Mending. Respects the `autoPickupXp` gamerule. This is useful for custom sources of experience, like quest rewards.
+    * Gives experience and handles Mending.
+    * Respects the `autoPickup` and `autoPickupXp` gamerules.
+    * Useful for custom sources of experience, like quest rewards.
 
 ### Block Breaker Context (Advanced)
 

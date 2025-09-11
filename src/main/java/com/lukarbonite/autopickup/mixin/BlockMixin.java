@@ -21,54 +21,51 @@ import java.util.List;
 @Mixin(Block.class)
 public abstract class BlockMixin {
 
-    /**
-     * This mixin hijacks the entire dropStacks method when a block is broken by a player.
-     * It performs all auto-pickup logic and then cancels the original method to prevent
-     * items from dropping normally. This approach is compatible with mods like Veinminer
-     * that call this vanilla method for each block they break.
-     */
     @Inject(
             method = "dropStacks(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/entity/BlockEntity;Lnet/minecraft/entity/Entity;Lnet/minecraft/item/ItemStack;)V",
             at = @At("HEAD"),
             cancellable = true
     )
     private static void autopickup_onDropStacks(BlockState state, World world, BlockPos pos, BlockEntity blockEntity, Entity entity, ItemStack tool, CallbackInfo ci) {
-        if (!(world instanceof ServerWorld serverWorld)) {
+        if (!(world instanceof ServerWorld serverWorld) || !(entity instanceof PlayerEntity player)) {
             return;
         }
 
-        // If the gamerule is off, let vanilla's logic run.
-        if (!serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
-            return;
-        }
+        // Set the player context immediately. This is crucial for the experience mixin.
+        AutoPickupApi.setBlockBreaker(player);
+        try {
+            // Calculate drops as vanilla would.
+            List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-        if (entity instanceof PlayerEntity player) {
-            // Set the player context so our experience-capturing mixin knows who is breaking the block.
-            AutoPickupApi.setBlockBreaker(player);
-            try {
-                // Calculate the drops as vanilla would.
-                List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
+            // Check if item pickup is enabled.
+            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
 
-                // Use our own API to attempt item pickup.
+            if (shouldPickupItems) {
+                // Use our API to attempt item pickup.
                 List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-
                 // Drop any items that couldn't be picked up.
                 for (ItemStack stack : remainingDrops) {
-                    player.dropItem(stack, true);
+                    Block.dropStack(world, pos, stack);
                 }
-
-                // This vanilla method triggers experience drop logic for blocks like ores.
-                // Our BlockDropExperienceMixin will intercept the call to dropExperience within it.
-                // This correctly happens *after* the tool has taken damage from Veinminer.
-                state.onStacksDropped(serverWorld, pos, tool, true);
-
-            } finally {
-                // Always clear the context afterwards.
-                AutoPickupApi.clearBlockBreaker();
+            } else {
+                // If item pickup is disabled, drop all items normally.
+                for (ItemStack stack : drops) {
+                    Block.dropStack(world, pos, stack);
+                }
             }
 
-            // We have handled all drop logic, so cancel the original method.
-            ci.cancel();
+            // Manually call onStacksDropped. This is what triggers the dropExperience call.
+            // Our BlockDropExperienceMixin will intercept it, and it will now work because
+            // the block breaker context is correctly set.
+            state.onStacksDropped(serverWorld, pos, tool, true);
+
+        } finally {
+            // Always clear the context afterwards.
+            AutoPickupApi.clearBlockBreaker();
         }
+
+        // We have handled all drop logic (items and experience), so cancel the original method.
+        ci.cancel();
     }
 }

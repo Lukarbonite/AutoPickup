@@ -2,7 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.lukarbonite.autopickup.ExperienceCache; // Import the new handler
+import com.lukarbonite.autopickup.ExperienceCache;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +19,7 @@ public class BlockDropExperienceMixin {
     private void autopickup_captureAndCacheExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
         PlayerEntity player = AutoPickupApi.getBlockBreaker();
 
+        // Check master rule first, then the specific XP rule.
         if (player != null && !world.isClient()
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {

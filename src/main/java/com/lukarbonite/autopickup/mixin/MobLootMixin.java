@@ -2,7 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.lukarbonite.autopickup.ExperienceCache; // Import the new handler
+import com.lukarbonite.autopickup.ExperienceCache;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.LivingEntity;
@@ -34,11 +34,11 @@ public abstract class MobLootMixin {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
     )
     private void autopickup_redirectAndCacheExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
+        // Check master rule first, then the specific XP rule.
         if (attacker instanceof PlayerEntity player
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
                 && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
 
-            // Funnel mob XP into the universal handler.
             ExperienceCache.add(player, amount);
         } else {
             ExperienceOrbEntity.spawn(world, pos, amount);
@@ -51,11 +51,13 @@ public abstract class MobLootMixin {
             cancellable = true
     )
     private void autopickup_onDropLoot(ServerWorld world, DamageSource damageSource, boolean causedByPlayer, CallbackInfo ci) {
-        // ... (this method's body does not need to be changed)
         LivingEntity thisEntity = (LivingEntity) (Object) this;
         Entity attacker = damageSource.getAttacker();
 
-        if (attacker instanceof PlayerEntity player && !player.isSpectator() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+        // Check master rule first, then the specific mob loot rule.
+        if (attacker instanceof PlayerEntity player && !player.isSpectator()
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
             if (optional.isEmpty()) {
                 return;
