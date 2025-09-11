@@ -1,13 +1,12 @@
 # Auto Pickup for Fabric
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.8-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.2--8-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items and experience directly into your inventory from broken blocks and slain mobs. No more chasing drops, no more lost items.
 
 ## ✨ Features
 
 *   **Seamless Collection:** Items from broken blocks and mob drops are instantly added to your inventory.
-*   **Correct Mending Order:** Experience is applied *after* tool durability damage, ensuring Mending works correctly with tools and mods like Veinminer.
 *   **Automatic Experience:** Experience orbs are collected directly by a caching system, without ever spawning as entities in the world.
 *   **Lag-Free:** Prevents item and experience orb entities from spawning, which can help reduce server lag.
 *   **Smart Handling:** If your inventory is full, any items that cannot be picked up will be safely dropped at your feet.
@@ -78,6 +77,7 @@ That's it! The mod is purely server-side, but it will also work in single-player
 Auto Pickup is designed to be highly compatible with the modded ecosystem.
 
 *   **Veinminer:** This mod includes deep, built-in compatibility for [Miraculixx's Veinminer](https://modrinth.com/datapack/veinminer). All items and experience from blocks broken as part of a veinmine action will be correctly picked up, and the Mending enchantment will be applied properly after all durability damage is dealt.
+*   **Architectury API Mods:** Broad support is included for mods built on the Architectury API. If a mod uses the standard `BlockEvent.BREAK` to handle its block breaking, Auto Pickup will automatically detect it. This provides seamless compatibility for mods like [iamkaf's Liteminer](https://modrinth.com/mod/liteminer) without needing a specific integration.
 *   **Other Mods:** It should work seamlessly with most mods that use standard block-breaking and loot-dropping mechanics. Similarly, drops from most vanilla and modded mobs are also supported. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)

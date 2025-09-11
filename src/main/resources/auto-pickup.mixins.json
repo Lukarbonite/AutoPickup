@@ -7,7 +7,8 @@
     "BlockDropExperienceMixin",
     "MobLootMixin",
     "VeinMinerEventMixin",
-    "ServerTickMixin"
+    "ServerTickMixin",
+    "ServerWorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
