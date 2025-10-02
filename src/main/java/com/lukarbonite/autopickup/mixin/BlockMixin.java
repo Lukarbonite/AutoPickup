@@ -31,41 +31,27 @@ public abstract class BlockMixin {
             return;
         }
 
-        // Set the player context immediately. This is crucial for the experience mixin.
+        // Set the context.
         AutoPickupApi.setBlockBreaker(player);
-        try {
-            // Calculate drops as vanilla would.
-            List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            // Check if item pickup is enabled.
-            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+        List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            if (shouldPickupItems) {
-                // Use our API to attempt item pickup.
-                List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-                // Drop any items that couldn't be picked up.
-                for (ItemStack stack : remainingDrops) {
-                    Block.dropStack(world, pos, stack);
-                }
-            } else {
-                // If item pickup is disabled, drop all items normally.
-                for (ItemStack stack : drops) {
-                    Block.dropStack(world, pos, stack);
-                }
+        boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+
+        if (shouldPickupItems) {
+            List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
+            for (ItemStack stack : remainingDrops) {
+                Block.dropStack(world, pos, stack);
             }
-
-            // Manually call onStacksDropped. This is what triggers the dropExperience call.
-            // Our BlockDropExperienceMixin will intercept it, and it will now work because
-            // the block breaker context is correctly set.
-            state.onStacksDropped(serverWorld, pos, tool, true);
-
-        } finally {
-            // Always clear the context afterwards.
-            AutoPickupApi.clearBlockBreaker();
+        } else {
+            for (ItemStack stack : drops) {
+                Block.dropStack(world, pos, stack);
+            }
         }
 
-        // We have handled all drop logic (items and experience), so cancel the original method.
+        state.onStacksDropped(serverWorld, pos, tool, true);
+
         ci.cancel();
     }
 }

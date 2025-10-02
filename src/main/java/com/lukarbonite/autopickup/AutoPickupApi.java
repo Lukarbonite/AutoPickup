@@ -21,15 +21,17 @@ public final class AutoPickupApi {
     public static void setBlockBreaker(PlayerEntity player) {
         blockBreaker.set(player);
     }
+
     public static void clearBlockBreaker() {
         blockBreaker.remove();
     }
+
     public static PlayerEntity getBlockBreaker() {
         return blockBreaker.get();
     }
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
-        World world = player.getWorld();
+        World world = player.getEntityWorld();
         // Check master rule first, then the specific block rule.
         if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
@@ -48,7 +50,7 @@ public final class AutoPickupApi {
     }
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
-        World world = player.getWorld();
+        World world = player.getEntityWorld();
         // Check master rule first, then the specific mob loot rule.
         if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
@@ -73,7 +75,7 @@ public final class AutoPickupApi {
      * @param experience The amount of experience picked up.
      */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
-        World world = player.getWorld();
+        World world = player.getEntityWorld();
         // Check master rule first, then the specific XP rule.
         if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld serverWorld)
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
@@ -82,7 +84,7 @@ public final class AutoPickupApi {
         }
 
         // Correctly type the Optional to match the return type of getEntry()
-        Optional<RegistryEntry.Reference<net.minecraft.enchantment.Enchantment>> mendingEntryOptional = player.getWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING.getValue());
+        Optional<RegistryEntry.Reference<net.minecraft.enchantment.Enchantment>> mendingEntryOptional = player.getEntityWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING.getValue());
 
         // If Mending doesn't exist for some reason, just give the XP directly.
         if (mendingEntryOptional.isEmpty()) {

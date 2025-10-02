@@ -8,8 +8,8 @@
 		"lukarbonite"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/Lukarbonite/AutoPickup",
+		"sources": "https://github.com/Lukarbonite/AutoPickup"
 	},
 	"license": "AGPL-3.0-only",
 	"icon": "assets/auto-pickup/icon.png",
@@ -24,7 +24,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.16.12",
-		"minecraft": "~1.21.2",
+		"minecraft": "~1.21.9",
 		"java": ">=21",
 		"fabric-api": "*"
 	},

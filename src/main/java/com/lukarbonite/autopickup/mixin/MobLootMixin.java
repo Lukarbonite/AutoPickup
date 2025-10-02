@@ -67,7 +67,7 @@ public abstract class MobLootMixin {
 
             LootWorldContext.Builder builder = new LootWorldContext.Builder(world)
                     .add(LootContextParameters.THIS_ENTITY, thisEntity)
-                    .add(LootContextParameters.ORIGIN, thisEntity.getPos())
+                    .add(LootContextParameters.ORIGIN, thisEntity.getEntityPos())
                     .add(LootContextParameters.DAMAGE_SOURCE, damageSource)
                     .addOptional(LootContextParameters.ATTACKING_ENTITY, damageSource.getAttacker())
                     .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, damageSource.getSource());

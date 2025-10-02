@@ -5,8 +5,8 @@
   "mixins": [
     "BlockMixin",
     "BlockDropExperienceMixin",
+    "ServerPlayerInteractionManagerMixin",
     "MobLootMixin",
-    "VeinMinerEventMixin",
     "ServerTickMixin",
     "ServerWorldMixin"
   ],
