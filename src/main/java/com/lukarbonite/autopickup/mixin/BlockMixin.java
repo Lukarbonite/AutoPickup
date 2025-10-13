@@ -31,27 +31,32 @@ public abstract class BlockMixin {
             return;
         }
 
-        // Set the context.
-        AutoPickupApi.setBlockBreaker(player);
+        // Begin or refresh per-player mining session and record this exact block position.
+        com.lukarbonite.autopickup.AutoPickupSessions.begin(player);
+        com.lukarbonite.autopickup.AutoPickupSessions.addBreak(player, pos);
+        com.lukarbonite.autopickup.AutoPickupSessions.beginDropContext(player, pos);
+        try {
+            List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-        List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
+            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
 
-        boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
-
-        if (shouldPickupItems) {
-            List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-            for (ItemStack stack : remainingDrops) {
-                Block.dropStack(world, pos, stack);
+            if (shouldPickupItems) {
+                List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
+                for (ItemStack stack : remainingDrops) {
+                    Block.dropStack(world, pos, stack);
+                }
+            } else {
+                for (ItemStack stack : drops) {
+                    Block.dropStack(world, pos, stack);
+                }
             }
-        } else {
-            for (ItemStack stack : drops) {
-                Block.dropStack(world, pos, stack);
-            }
+
+            state.onStacksDropped(serverWorld, pos, tool, true);
+
+            ci.cancel();
+        } finally {
+            com.lukarbonite.autopickup.AutoPickupSessions.endDropContext(player);
         }
-
-        state.onStacksDropped(serverWorld, pos, tool, true);
-
-        ci.cancel();
     }
 }

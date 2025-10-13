@@ -24,6 +24,8 @@ public class ServerPlayerInteractionManagerMixin {
      */
     @Inject(method = "tryBreakBlock", at = @At("HEAD"))
     private void autopickup_onTryBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        AutoPickupApi.setBlockBreaker(this.player);
+        // Start or refresh a per-player mining session and record this break position.
+        com.lukarbonite.autopickup.AutoPickupSessions.begin(this.player);
+        com.lukarbonite.autopickup.AutoPickupSessions.addBreak(this.player, pos);
     }
 }

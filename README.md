@@ -1,6 +1,6 @@
 # Auto Pickup for Fabric
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.9-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.9--10-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items and experience directly into your inventory from broken blocks and slain mobs. No more chasing drops, no more lost items.
 
@@ -90,8 +90,8 @@ That's it! The mod is purely server-side, but it will also work in single-player
 
 Auto Pickup is designed for maximum compatibility by hooking into fundamental Minecraft mechanics. This approach means it works automatically with most mods without needing specific integrations for each one.
 
-*   **Broad Compatibility:** Mods with complex block-breaking logic, such as **[Liteminer](https://modrinth.com/mod/liteminer)** and **[Veinminer](https://modrinth.com/datapack/veinminer)**, are now automatically supported. Because Auto Pickup detects the player at the very start of the block-breaking process, all items and experience from the entire operation are correctly collected.
-*   **General Mod Support:** It should work seamlessly with most other mods that use standard block-breaking and loot-dropping mechanics. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
+*   **Veinminer/Liteminer Ready:** Mods with complex chain mining (e.g., **[Liteminer](https://modrinth.com/mod/liteminer)** and **[Veinminer](https://modrinth.com/datapack/veinminer)**) are supported. Auto Pickup maintains a per‑player mining session and a tight, scoped drop context during each broken block’s vanilla drop generation. This ensures drops are attributed only to the correct player without siphoning unrelated items or entities that happen to occur later in the tick.
+*   **General Mod Support:** Works with most mods that use vanilla block‑breaking and loot hooks. If you find an incompatibility, please [open an issue](https://github.com/lukarbonite/autopickup/issues)!
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
 
@@ -153,40 +153,27 @@ public void giveQuestReward(PlayerEntity player, List<ItemStack> rewards, int xp
 }
 ```
 
-### Block Breaker Context (Advanced)
+### Advanced Integration Notes
 
-This feature is for mods with **highly custom block-breaking logic** that does not trigger vanilla's `ServerPlayerInteractionManager.tryBreakBlock` (e.g., a magic spell that replaces blocks with air and spawns items manually).
+Auto Pickup now attributes block drops using a short‑lived, per‑player drop context that exists only while vanilla is generating the block’s drops. This prevents unrelated items (e.g., from farms, player hand‑drops, or animal‑produced items) from being siphoned into miners’ inventories.
 
-In these rare cases, you must provide the player context so Auto Pickup knows who is responsible for the drops.
+If your mod doesn’t use vanilla block breaking and instead grants items directly (e.g., quest rewards, GUIs, commands, spells), you don’t need any special context — just call:
 
-*   `AutoPickupApi.setBlockBreaker(PlayerEntity player)`: Sets the current player context. The context is automatically cleared at the end of the server tick.
+- `AutoPickupApi.tryPickup(PlayerEntity player, List<ItemStack> drops)`
+- `AutoPickupApi.tryPickupFromMob(PlayerEntity player, List<ItemStack> drops)`
+- `AutoPickupApi.tryPickupExperience(PlayerEntity player, int experience)`
 
-**The correct pattern is to set the context once at the start of your operation. DO NOT clear it yourself.**
+These will insert what they can and return any remaining stacks for you to drop or handle.
 
-```java
-import com.lukarbonite.autopickup.AutoPickupApi;
-import net.fabricmc.loader.api.FabricLoader;
+Legacy note: `AutoPickupApi.setBlockBreaker(...)` is retained for backward compatibility but is no longer used by Auto Pickup’s interception logic. Prefer the methods above for custom item/XP grants.
 
-// ...
+### Behavior Notes / FAQ
 
-public void yourMagicSpellThatBreaksBlocks(ServerWorld world, BlockPos center, PlayerEntity caster) {
-    // If Auto Pickup is loaded, set the context at the beginning of your operation.
-    if (FabricLoader.getInstance().isModLoaded("auto-pickup")) {
-        AutoPickupApi.setBlockBreaker(caster);
-    }
-
-    // ... your custom logic to break multiple blocks and spawn ItemEntities ...
-    // For example:
-    for (BlockPos pos : getBlocksInSpellRadius(center)) {
-        // Auto Pickup's ServerWorldMixin will now see the context and
-        // automatically pick up this item for the 'caster'.
-        world.spawnEntity(new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.DIAMOND)));
-        world.setBlockState(pos, Blocks.AIR.getDefaultState());
-    }
-
-    // You are done. The context will be cleared automatically at the end of the tick.
-}
-```
+- Items a player deliberately drops (Q: “Can another player mining nearby steal my hand‑dropped items?”) — No. Player‑dropped items are never intercepted.
+- Items produced by entities (e.g., a chicken laying an egg) — Not intercepted.
+- Farm/storage outputs (e.g., cactus farms, droppers, water streams) — Not intercepted unless the items are direct results of the player’s current block break, which they aren’t, so they will remain in the world.
+- Veinminer/Liteminer — Supported. Each broken block participates in a fresh, tight drop context, so all directly‑caused block drops are still auto‑inserted.
+- Multiple players breaking at once — Supported. Drop ownership is per‑player and scoped to their own break contexts; there is no cross‑pickup.
 
 ## 📜 License
 

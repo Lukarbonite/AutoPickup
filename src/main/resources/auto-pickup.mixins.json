@@ -8,7 +8,8 @@
     "ServerPlayerInteractionManagerMixin",
     "MobLootMixin",
     "ServerTickMixin",
-    "ServerWorldMixin"
+    "ServerWorldMixin",
+    "WorldBreakBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -17,7 +17,9 @@ public class BlockDropExperienceMixin {
 
     @Inject(method = "dropExperience", at = @At("HEAD"), cancellable = true)
     private void autopickup_captureAndCacheExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
-        PlayerEntity player = AutoPickupApi.getBlockBreaker();
+        // Attribute block XP to the nearest active mining session at this position.
+        net.minecraft.util.math.Vec3d posCenter = new net.minecraft.util.math.Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        PlayerEntity player = com.lukarbonite.autopickup.AutoPickupSessions.findOwner(posCenter);
 
         // Check master rule first, then the specific XP rule.
         if (player != null && !world.isClient()

@@ -25,16 +25,32 @@ public abstract class ServerWorldMixin {
      */
     @Inject(method = "spawnEntity", at = @At("HEAD"), cancellable = true)
     private void autopickup_interceptItemSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
-        // Check if the entity is an ItemEntity and if a block breaker is set by our compat handlers.
         if (entity instanceof ItemEntity itemEntity) {
-            PlayerEntity player = AutoPickupApi.getBlockBreaker();
             ServerWorld world = (ServerWorld) (Object) this;
 
-            if (player != null && !player.isSpectator() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
+            // Skip items with an owner: player hand-drops, entity-produced items (e.g., chicken eggs)
+            Entity ownerEntity = itemEntity.getOwner();
+            if (ownerEntity != null) {
+                return;
+            }
+
+            // Only intercept if we are within an active player drop-context
+            net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
+            PlayerEntity owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerInDropContext(spawnPos);
+
+            // Same-tick tiny-radius fallback if no active drop context matched (for mods that spawn ItemEntity directly)
+            if (owner == null) {
+                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerSameTickTight(spawnPos);
+            }
+
+            if (owner != null
+                    && !owner.isSpectator()
+                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
                 ItemStack stackToPickup = itemEntity.getStack();
 
                 // Use the API to attempt to pick up the item.
-                List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, Collections.singletonList(stackToPickup));
+                List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));
 
                 // If the list is empty, it means the entire stack was picked up.
                 if (remainingItems.isEmpty()) {
