@@ -7,7 +7,9 @@
     "BlockDropExperienceMixin",
     "ServerPlayerInteractionManagerMixin",
     "MobLootMixin",
-    "VeinMinerEventMixin",
+    "compat.veinminer.VeinMinerEventMixin",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
     "ServerTickMixin",
     "ServerWorldMixin",
     "WorldBreakBlockMixin"

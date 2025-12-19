@@ -1,4 +1,4 @@
-package com.lukarbonite.autopickup.mixin;
+package com.lukarbonite.autopickup.mixin.compat.veinminer;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
