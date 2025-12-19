@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import de.miraculixx.veinminer.VeinMinerEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -49,6 +50,13 @@ public abstract class VeinMinerEventMixin {
 
             // Set the player context immediately for the experience mixin.
             AutoPickupApi.setBlockBreaker(player);
+
+            // Register this block break with the session tracker.
+            // This ensures that when onStacksDropped -> dropExperience is called,
+            // BlockDropExperienceMixin can correctly identify the player owner
+            // even if this block is far from the player entity.
+            AutoPickupSessions.addBreak(player, position);
+
             try {
                 // Calculate drops.
                 List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, tool);
@@ -72,8 +80,6 @@ public abstract class VeinMinerEventMixin {
                 blockState.onStacksDropped(serverWorld, position, tool, true);
 
                 // Play the break sound/particles (LevelEvent 2001).
-                // Note: VeinMinerEvent handles class_4770 (AbstractFireBlock) with event 1009,
-                // but standard block breaking uses 2001.
                 world.syncWorldEvent(2001, position, Block.getRawIdFromState(blockState));
 
             } finally {
