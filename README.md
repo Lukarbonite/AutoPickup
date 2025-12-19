@@ -11,7 +11,7 @@
 *   **Lag-Free:** Prevents item and experience orb entities from spawning, which can help reduce server lag.
 *   **Smart Handling:** If your inventory is full, any items that cannot be picked up will be safely dropped at your feet.
 *   **Granular Control:** A master switch and three independent gamerules give you fine-grained control over the mod's behavior.
-*   **Broad Mod Compatibility:** Automatically works with most mods, including complex ones like Liteminer and Veinminer, with no extra configuration.
+*   **Broad Mod Compatibility:** Automatically works with most mods. Officially supports Liteminer, Veinminer, and Tree Harvester.
 
 ![OneBlock](https://github.com/user-attachments/assets/5e3afe38-de87-4a3a-a0fa-3de2fa9a7a8f)
 
