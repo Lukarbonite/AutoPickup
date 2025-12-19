@@ -2,9 +2,9 @@ package com.lukarbonite.autopickup;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleBuilder;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.rule.GameRule;
-import net.minecraft.world.rule.GameRuleCategory;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.gamerules.GameRule;
+import net.minecraft.world.level.gamerules.GameRuleCategory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,25 +16,25 @@ public class AutoPickup implements ModInitializer {
     public static final GameRule<Boolean> AUTO_PICKUP_GAMERULE_KEY =
             GameRuleBuilder.forBoolean(true)
                     .category(GameRuleCategory.PLAYER)
-                    .buildAndRegister(Identifier.of(MOD_ID, "auto_pickup"));
+                    .buildAndRegister(Identifier.fromNamespaceAndPath(MOD_ID, "auto_pickup"));
 
     // Gamerule for block drops
     public static final GameRule<Boolean> AUTO_PICKUP_BLOCKS_GAMERULE_KEY =
             GameRuleBuilder.forBoolean(true)
                     .category(GameRuleCategory.PLAYER)
-                    .buildAndRegister(Identifier.of(MOD_ID, "auto_pickup_blocks"));
+                    .buildAndRegister(Identifier.fromNamespaceAndPath(MOD_ID, "auto_pickup_blocks"));
 
     // Gamerule for mob loot.
     public static final GameRule<Boolean> AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY =
             GameRuleBuilder.forBoolean(false)
                     .category(GameRuleCategory.PLAYER)
-                    .buildAndRegister(Identifier.of(MOD_ID, "auto_pickup_mob_loot"));
+                    .buildAndRegister(Identifier.fromNamespaceAndPath(MOD_ID, "auto_pickup_mob_loot"));
 
     // Gamerule for experience.
     public static final GameRule<Boolean> AUTO_PICKUP_XP_GAMERULE_KEY =
             GameRuleBuilder.forBoolean(true)
                     .category(GameRuleCategory.PLAYER)
-                    .buildAndRegister(Identifier.of(MOD_ID, "auto_pickup_xp"));
+                    .buildAndRegister(Identifier.fromNamespaceAndPath(MOD_ID, "auto_pickup_xp"));
 
     @Override
     public void onInitialize() {

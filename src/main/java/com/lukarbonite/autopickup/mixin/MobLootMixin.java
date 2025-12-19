@@ -36,8 +36,8 @@ public abstract class MobLootMixin {
     private void autopickup_redirectAndCacheExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
         // Check master rule first, then the specific XP rule.
         if (attacker instanceof PlayerEntity player
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+                && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
 
             ExperienceCache.add(player, amount);
         } else {
@@ -56,8 +56,8 @@ public abstract class MobLootMixin {
 
         // Check master rule first, then the specific mob loot rule.
         if (attacker instanceof PlayerEntity player && !player.isSpectator()
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+                && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
             if (optional.isEmpty()) {
                 return;

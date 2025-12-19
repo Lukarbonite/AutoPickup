@@ -38,8 +38,8 @@ public abstract class BlockMixin {
         try {
             List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+            boolean shouldPickupItems = serverWorld.getGameRules().getValue(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && serverWorld.getGameRules().getValue(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
 
             if (shouldPickupItems) {
                 List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
