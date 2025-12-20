@@ -1,5 +1,7 @@
 package com.lukarbonite.autopickup;
 
+import com.lukarbonite.autopickup.compat.travelersbackpack.TravelersBackpackCompat;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
@@ -38,12 +40,30 @@ public final class AutoPickupApi {
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
             return drops;
         }
+
         List<ItemStack> unpickedItems = new ArrayList<>();
+        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
+
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
-                if (!player.getInventory().insertStack(stack)) {
+            if (stack.isEmpty()) continue;
+
+            // 1. Try Traveler's Backpack (if loaded)
+            if (hasTravelersBackpack) {
+                stack = TravelersBackpackCompat.tryPickup(player, stack);
+                if (stack.isEmpty()) continue; // Fully picked up by backpack
+            }
+
+            // 2. Try Vanilla Inventory
+            // insertStack returns true if it changed the stack (moved items).
+            // We must check if the stack is empty afterwards to see if it was FULLY picked up.
+            if (player.getInventory().insertStack(stack)) {
+                // Some items were picked up. If any remain, add them to unpicked.
+                if (!stack.isEmpty()) {
                     unpickedItems.add(stack);
                 }
+            } else {
+                // No items were picked up (inventory full)
+                unpickedItems.add(stack);
             }
         }
         return unpickedItems;
@@ -57,12 +77,26 @@ public final class AutoPickupApi {
                 || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
             return drops;
         }
+
         List<ItemStack> unpickedItems = new ArrayList<>();
+        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
+
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
-                if (!player.getInventory().insertStack(stack)) {
+            if (stack.isEmpty()) continue;
+
+            // 1. Try Traveler's Backpack (if loaded)
+            if (hasTravelersBackpack) {
+                stack = TravelersBackpackCompat.tryPickup(player, stack);
+                if (stack.isEmpty()) continue;
+            }
+
+            // 2. Try Vanilla Inventory
+            if (player.getInventory().insertStack(stack)) {
+                if (!stack.isEmpty()) {
                     unpickedItems.add(stack);
                 }
+            } else {
+                unpickedItems.add(stack);
             }
         }
         return unpickedItems;

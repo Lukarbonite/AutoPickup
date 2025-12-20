@@ -34,6 +34,7 @@ dependencies {
 
     modCompileOnly(files("libs/veinminer-fabric-2.5.0.jar"))
     modCompileOnly(files("libs/treeharvester-1.21.10-9.3.jar"))
+    modCompileOnly(files("libs/travelersbackpack-fabric-1.21.10-10.10.1.jar"))
 }
 
 processResources {
