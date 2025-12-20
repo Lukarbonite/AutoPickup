@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin.compat.veinminer;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import de.miraculixx.veinminer.VeinMinerEvent;
@@ -61,9 +61,8 @@ public abstract class VeinMinerEventMixin {
                 // Calculate drops.
                 List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, tool);
 
-                // Check if item pickup is enabled.
-                boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                        && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+                AutoPickupConfig config = AutoPickupConfig.getInstance();
+                boolean shouldPickupItems = config.autoPickup && config.autoPickupBlocks;
 
                 if (shouldPickupItems) {
                     List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
@@ -81,7 +80,6 @@ public abstract class VeinMinerEventMixin {
 
                 // Play the break sound/particles (LevelEvent 2001).
                 world.syncWorldEvent(2001, position, Block.getRawIdFromState(blockState));
-
             } finally {
                 // Always clear the context.
                 AutoPickupApi.clearBlockBreaker();

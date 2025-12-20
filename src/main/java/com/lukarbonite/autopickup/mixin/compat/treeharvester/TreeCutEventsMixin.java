@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin.compat.treeharvester;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.block.Block;
@@ -68,10 +68,10 @@ public abstract class TreeCutEventsMixin {
         PlayerEntity player = HARVESTING_PLAYER.get();
         BlockState state = world.getBlockState(pos);
 
-        // Standard AutoPickup checks
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
         boolean shouldPickup = player != null
-                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+                && config.autoPickup
+                && config.autoPickupBlocks;
 
         if (player != null && shouldPickup) {
             // Register this position to the session so Experience Mixins (if valid) can find the owner

@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin.compat.treeharvester;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import com.natamus.treeharvester_common_fabric.data.Variables;
@@ -57,9 +57,10 @@ public abstract class LeafEventsMixin {
         Vec3d center = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         PlayerEntity player = AutoPickupSessions.findOwner(center);
 
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
         boolean shouldPickup = player != null
-                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+                && config.autoPickup
+                && config.autoPickupBlocks;
 
         if (shouldPickup) {
             BlockState state = world.getBlockState(pos);

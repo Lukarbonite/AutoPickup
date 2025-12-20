@@ -34,10 +34,11 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
-        // Check master rule first, then the specific block rule.
-        if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
+        // Check config
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+        if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
+                || !config.autoPickup
+                || !config.autoPickupBlocks) {
             return drops;
         }
 
@@ -71,10 +72,11 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
-        // Check master rule first, then the specific mob loot rule.
-        if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+
+        if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
+                || !config.autoPickup
+                || !config.autoPickupMobLoot) {
             return drops;
         }
 
@@ -110,10 +112,11 @@ public final class AutoPickupApi {
      */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
         World world = player.getEntityWorld();
-        // Check master rule first, then the specific XP rule.
-        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld serverWorld)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+
+        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)
+                || !config.autoPickup
+                || !config.autoPickupXp) {
             return;
         }
 

@@ -17,7 +17,10 @@
 	"entrypoints": {
 		"main": [
 			"com.lukarbonite.autopickup.AutoPickup"
-		]
+		],
+        "modmenu": [
+            "com.lukarbonite.autopickup.compat.ModMenuIntegration"
+        ]
 	},
 	"mixins": [
 		"auto-pickup.mixins.json"

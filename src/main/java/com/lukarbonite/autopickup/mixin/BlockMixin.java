@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -38,8 +38,8 @@ public abstract class BlockMixin {
         try {
             List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            boolean shouldPickupItems = serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                    && serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY);
+            AutoPickupConfig config = AutoPickupConfig.getInstance();
+            boolean shouldPickupItems = config.autoPickup && config.autoPickupBlocks;
 
             if (shouldPickupItems) {
                 List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);

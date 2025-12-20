@@ -1,7 +1,8 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -40,17 +41,19 @@ public abstract class ServerWorldMixin {
 
             // Only intercept if we are within an active player drop-context
             net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
-            PlayerEntity owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerInDropContext(spawnPos);
+            PlayerEntity owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
 
             // Same-tick tiny-radius fallback if no active drop context matched (for mods that spawn ItemEntity directly)
             if (owner == null) {
-                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerSameTickTight(spawnPos);
+                owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
             }
+
+            AutoPickupConfig config = AutoPickupConfig.getInstance();
 
             if (owner != null
                     && !owner.isSpectator()
-                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
+                    && config.autoPickup
+                    && config.autoPickupBlocks) {
                 ItemStack stackToPickup = itemEntity.getStack();
 
                 // Use the API to attempt to pick up the item.
@@ -84,19 +87,20 @@ public abstract class ServerWorldMixin {
             ServerWorld world = (ServerWorld) (Object) this;
             net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
 
-            // Find owner again. Usually session context is still valid.
-            PlayerEntity owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerInDropContext(spawnPos);
+            PlayerEntity owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
             if (owner == null) {
-                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerSameTickTight(spawnPos);
+                owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
             }
             if (owner == null) {
-                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwner(spawnPos);
+                owner = AutoPickupSessions.findOwner(spawnPos);
             }
+
+            AutoPickupConfig config = AutoPickupConfig.getInstance();
 
             if (owner != null
                     && !owner.isSpectator()
-                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                    && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
+                    && config.autoPickup
+                    && config.autoPickupBlocks) {
 
                 ItemStack stackToPickup = itemEntity.getStack();
                 List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));

@@ -1,7 +1,8 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.ExperienceCache;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -18,12 +19,13 @@ public class BlockDropExperienceMixin {
     private void autopickup_captureAndCacheExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
         // Attribute block XP to the nearest active mining session at this position.
         net.minecraft.util.math.Vec3d posCenter = new net.minecraft.util.math.Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        PlayerEntity player = com.lukarbonite.autopickup.AutoPickupSessions.findOwner(posCenter);
+        PlayerEntity player = AutoPickupSessions.findOwner(posCenter);
 
-        // Check master rule first, then the specific XP rule.
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+
         if (player != null && !world.isClient()
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+                && config.autoPickup
+                && config.autoPickupXp) {
 
             // Always funnel the experience into the universal handler.
             ExperienceCache.add(player, size);
