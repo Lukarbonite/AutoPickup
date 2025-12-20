@@ -18,6 +18,9 @@
 		"main": [
 			"com.lukarbonite.autopickup.AutoPickup"
 		],
+        "client": [
+            "com.lukarbonite.autopickup.client.AutoPickupClient"
+        ],
         "modmenu": [
             "com.lukarbonite.autopickup.compat.ModMenuIntegration"
         ]

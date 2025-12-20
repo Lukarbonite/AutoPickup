@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.entity.Entity;
@@ -48,12 +47,10 @@ public abstract class ServerWorldMixin {
                 owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
             }
 
-            AutoPickupConfig config = AutoPickupConfig.getInstance();
-
             if (owner != null
                     && !owner.isSpectator()
-                    && config.autoPickup
-                    && config.autoPickupBlocks) {
+                    && AutoPickupApi.isMasterEnabled(owner)
+                    && AutoPickupApi.isBlocksEnabled(owner)) {
                 ItemStack stackToPickup = itemEntity.getStack();
 
                 // Use the API to attempt to pick up the item.
@@ -95,12 +92,10 @@ public abstract class ServerWorldMixin {
                 owner = AutoPickupSessions.findOwner(spawnPos);
             }
 
-            AutoPickupConfig config = AutoPickupConfig.getInstance();
-
             if (owner != null
                     && !owner.isSpectator()
-                    && config.autoPickup
-                    && config.autoPickupBlocks) {
+                    && AutoPickupApi.isMasterEnabled(owner)
+                    && AutoPickupApi.isBlocksEnabled(owner)) {
 
                 ItemStack stackToPickup = itemEntity.getStack();
                 List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));

@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.mixin.compat.veinminer;
 
-import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import de.miraculixx.veinminer.VeinMinerEvent;
@@ -61,18 +60,11 @@ public abstract class VeinMinerEventMixin {
                 // Calculate drops.
                 List<ItemStack> drops = Block.getDroppedStacks(blockState, serverWorld, position, world.getBlockEntity(position), player, tool);
 
-                AutoPickupConfig config = AutoPickupConfig.getInstance();
-                boolean shouldPickupItems = config.autoPickup && config.autoPickupBlocks;
+                // Check Config logic handled inside tryPickup
+                List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
 
-                if (shouldPickupItems) {
-                    List<ItemStack> remainingItems = AutoPickupApi.tryPickup(player, drops);
-                    for (ItemStack stack : remainingItems) {
-                        player.dropItem(stack, true);
-                    }
-                } else {
-                    for (ItemStack stack : drops) {
-                        player.dropItem(stack, true);
-                    }
+                for (ItemStack stack : remainingItems) {
+                    player.dropItem(stack, true);
                 }
 
                 // Manually call onStacksDropped to trigger the experience drop.

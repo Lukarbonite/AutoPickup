@@ -20,25 +20,55 @@ public final class AutoPickupApi {
 
     private static final ThreadLocal<PlayerEntity> blockBreaker = new ThreadLocal<>();
 
-    public static void setBlockBreaker(PlayerEntity player) {
-        blockBreaker.set(player);
+    public static void setBlockBreaker(PlayerEntity player) { blockBreaker.set(player); }
+    public static void clearBlockBreaker() { blockBreaker.remove(); }
+    public static PlayerEntity getBlockBreaker() { return blockBreaker.get(); }
+
+    // --- Helper Methods to check config permissions ---
+
+    public static boolean isMasterEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.master() : serverConfig.autoPickup;
+        }
+        return serverConfig.autoPickup;
     }
 
-    public static void clearBlockBreaker() {
-        blockBreaker.remove();
+    public static boolean isBlocksEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.blocks() : serverConfig.autoPickupBlocks;
+        }
+        return serverConfig.autoPickupBlocks;
     }
 
-    public static PlayerEntity getBlockBreaker() {
-        return blockBreaker.get();
+    public static boolean isMobLootEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.mobLoot() : serverConfig.autoPickupMobLoot;
+        }
+        return serverConfig.autoPickupMobLoot;
     }
+
+    public static boolean isXpEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.xp() : serverConfig.autoPickupXp;
+        }
+        return serverConfig.autoPickupXp;
+    }
+
+    // --- Main API Methods ---
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
-        // Check config
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
         if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
-                || !config.autoPickup
-                || !config.autoPickupBlocks) {
+                || !isMasterEnabled(player)
+                || !isBlocksEnabled(player)) {
             return drops;
         }
 
@@ -72,11 +102,9 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
-
         if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
-                || !config.autoPickup
-                || !config.autoPickupMobLoot) {
+                || !isMasterEnabled(player)
+                || !isMobLootEnabled(player)) {
             return drops;
         }
 
@@ -115,8 +143,8 @@ public final class AutoPickupApi {
         AutoPickupConfig config = AutoPickupConfig.getInstance();
 
         if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)
-                || !config.autoPickup
-                || !config.autoPickupXp) {
+                || !isMasterEnabled(player)
+                || !isXpEnabled(player)) {
             return;
         }
 

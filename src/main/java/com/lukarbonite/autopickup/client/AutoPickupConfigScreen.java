@@ -28,7 +28,6 @@ public class AutoPickupConfigScreen extends Screen {
         int buttonHeight = 20;
         int spacing = 24;
 
-        // Start buttons lower to accommodate the title and separator
         int y = 55;
 
         // Master Toggle
@@ -57,6 +56,13 @@ public class AutoPickupConfigScreen extends Screen {
                 .build(center - 100, y, buttonWidth, buttonHeight, Text.literal("Auto Pickup XP"), (button, value) -> {
                     config.autoPickupXp = value;
                 }));
+        y += spacing;
+
+        // Allow Client Control Toggle
+        this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.allowClientControl)
+                .build(center - 100, y, buttonWidth, buttonHeight, Text.literal("Allow Client Control"), (button, value) -> {
+                    config.allowClientControl = value;
+                }));
 
         // Done Button
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.DONE, button -> this.close())
@@ -68,19 +74,17 @@ public class AutoPickupConfigScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // Background Logic
         if (this.client.world == null) {
-            // Main Menu: Sleek Opaque Gradient (Slate Blue)
+            // Main Menu: Opaque Gradient
             context.fillGradient(0, 0, this.width, this.height, 0xFF0F2027, 0xFF2C5364);
         } else {
             // In-Game: Transparent Gradient
-            // Top: Darker (Alpha B0) for readability. Bottom: Lighter (Alpha 40).
             context.fillGradient(0, 0, this.width, this.height, 0xB0000000, 0x40000000);
         }
 
         // Title Header separator line
         context.fill(0, 40, this.width, 41, 0x50FFFFFF);
 
-        // Title Text
-        // Color: 0xFFFFD700 (Alpha=FF, Red=FF, Green=D7, Blue=00)
+        // Title Text (Opaque Gold)
         context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, 20, 0xFFFFD700);
 
         // Render buttons
@@ -93,6 +97,10 @@ public class AutoPickupConfigScreen extends Screen {
     @Override
     public void close() {
         config.save();
+        // Sync to server if in world
+        if (this.client.world != null) {
+            AutoPickupClient.sendConfig();
+        }
         this.client.setScreen(parent);
     }
 }

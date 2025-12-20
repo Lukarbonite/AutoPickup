@@ -1,7 +1,7 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -31,32 +31,25 @@ public abstract class BlockMixin {
             return;
         }
 
-        // Begin or refresh per-player mining session and record this exact block position.
-        com.lukarbonite.autopickup.AutoPickupSessions.begin(player);
-        com.lukarbonite.autopickup.AutoPickupSessions.addBreak(player, pos);
-        com.lukarbonite.autopickup.AutoPickupSessions.beginDropContext(player, pos);
+        AutoPickupSessions.begin(player);
+        AutoPickupSessions.addBreak(player, pos);
+        AutoPickupSessions.beginDropContext(player, pos);
         try {
             List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, blockEntity, entity, tool);
 
-            AutoPickupConfig config = AutoPickupConfig.getInstance();
-            boolean shouldPickupItems = config.autoPickup && config.autoPickupBlocks;
+            // tryPickup now handles the config checks (Master & Blocks) internally.
+            // If disabled, it simply returns the original list.
+            List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
 
-            if (shouldPickupItems) {
-                List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-                for (ItemStack stack : remainingDrops) {
-                    Block.dropStack(world, pos, stack);
-                }
-            } else {
-                for (ItemStack stack : drops) {
-                    Block.dropStack(world, pos, stack);
-                }
+            for (ItemStack stack : remainingDrops) {
+                Block.dropStack(world, pos, stack);
             }
 
             state.onStacksDropped(serverWorld, pos, tool, true);
 
             ci.cancel();
         } finally {
-            com.lukarbonite.autopickup.AutoPickupSessions.endDropContext(player);
+            AutoPickupSessions.endDropContext(player);
         }
     }
 }

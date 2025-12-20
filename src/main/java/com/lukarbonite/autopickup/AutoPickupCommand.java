@@ -26,6 +26,9 @@ public class AutoPickupCommand {
                 .then(CommandManager.literal("xp")
                         .then(CommandManager.argument("value", BoolArgumentType.bool())
                                 .executes(ctx -> setConfig(ctx, "auto_pickup_xp", BoolArgumentType.getBool(ctx, "value")))))
+                .then(CommandManager.literal("allowClientControl")
+                        .then(CommandManager.argument("value", BoolArgumentType.bool())
+                                .executes(ctx -> setConfig(ctx, "allow_client_control", BoolArgumentType.getBool(ctx, "value")))))
         );
     }
 
@@ -38,6 +41,7 @@ public class AutoPickupCommand {
         source.sendFeedback(() -> formatStatus("Blocks", config.autoPickupBlocks), false);
         source.sendFeedback(() -> formatStatus("Mob Loot", config.autoPickupMobLoot), false);
         source.sendFeedback(() -> formatStatus("XP", config.autoPickupXp), false);
+        source.sendFeedback(() -> formatStatus("Allow Client Control", config.allowClientControl), false);
 
         return 1;
     }
@@ -53,6 +57,7 @@ public class AutoPickupCommand {
             case "auto_pickup_blocks" -> config.autoPickupBlocks = value;
             case "auto_pickup_mob_loot" -> config.autoPickupMobLoot = value;
             case "auto_pickup_xp" -> config.autoPickupXp = value;
+            case "allow_client_control" -> config.allowClientControl = value;
         }
         config.save();
         context.getSource().sendFeedback(() -> Text.literal("Set " + key + " to " + value).formatted(Formatting.GREEN), true);

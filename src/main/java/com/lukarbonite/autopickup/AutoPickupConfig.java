@@ -15,6 +15,7 @@ public class AutoPickupConfig {
     public boolean autoPickupBlocks = true;
     public boolean autoPickupMobLoot = false;
     public boolean autoPickupXp = true;
+    public boolean allowClientControl = false;
 
     private static final AutoPickupConfig INSTANCE = new AutoPickupConfig();
 
@@ -45,6 +46,7 @@ public class AutoPickupConfig {
                     case "auto_pickup_blocks" -> autoPickupBlocks = Boolean.parseBoolean(value);
                     case "auto_pickup_mob_loot" -> autoPickupMobLoot = Boolean.parseBoolean(value);
                     case "auto_pickup_xp" -> autoPickupXp = Boolean.parseBoolean(value);
+                    case "allow_client_control" -> allowClientControl = Boolean.parseBoolean(value);
                 }
             }
         } catch (IOException e) {
@@ -60,6 +62,7 @@ public class AutoPickupConfig {
         lines.add("auto_pickup_blocks = " + autoPickupBlocks);
         lines.add("auto_pickup_mob_loot = " + autoPickupMobLoot);
         lines.add("auto_pickup_xp = " + autoPickupXp);
+        lines.add("allow_client_control = " + allowClientControl);
 
         try {
             Files.write(CONFIG_PATH, lines);

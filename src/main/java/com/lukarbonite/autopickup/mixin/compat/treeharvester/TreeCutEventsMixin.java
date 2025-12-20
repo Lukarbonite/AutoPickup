@@ -70,8 +70,8 @@ public abstract class TreeCutEventsMixin {
 
         AutoPickupConfig config = AutoPickupConfig.getInstance();
         boolean shouldPickup = player != null
-                && config.autoPickup
-                && config.autoPickupBlocks;
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isBlocksEnabled(player);
 
         if (player != null && shouldPickup) {
             // Register this position to the session so Experience Mixins (if valid) can find the owner

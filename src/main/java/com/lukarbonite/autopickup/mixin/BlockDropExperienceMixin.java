@@ -1,5 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
+import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.ExperienceCache;
 import com.lukarbonite.autopickup.AutoPickupSessions;
@@ -24,13 +25,9 @@ public class BlockDropExperienceMixin {
         AutoPickupConfig config = AutoPickupConfig.getInstance();
 
         if (player != null && !world.isClient()
-                && config.autoPickup
-                && config.autoPickupXp) {
-
-            // Always funnel the experience into the universal handler.
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isXpEnabled(player)) {
             ExperienceCache.add(player, size);
-
-            // Cancel the original method. The handler is now responsible for the XP.
             ci.cancel();
         }
     }
