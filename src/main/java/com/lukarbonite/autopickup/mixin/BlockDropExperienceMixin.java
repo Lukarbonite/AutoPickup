@@ -1,7 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickup;
-import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.ExperienceCache;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
