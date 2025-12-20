@@ -12,6 +12,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -26,43 +27,83 @@ import java.util.List;
 @Mixin(targets = "com.natamus.treeharvester_common_fabric.events.TreeCutEvents")
 public abstract class TreeCutEventsMixin {
 
-    // ThreadLocal to pass the player from the main method to the Redirect
+    @Unique
     private static final ThreadLocal<PlayerEntity> HARVESTING_PLAYER = new ThreadLocal<>();
 
-    /**
-     * Capture the player entity at the start of the harvest event.
-     */
+    // --- CAPTURE PLAYER ---
+
     @Inject(
-            method = "onTreeHarvest(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/entity/BlockEntity;)Z",
-            at = @At("HEAD")
+            method = "onTreeHarvest(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;Lnet/minecraft/class_2680;Lnet/minecraft/class_2586;)Z",
+            at = @At("HEAD"),
+            remap = true,
+            require = 0
     )
-    private static void autopickup_capturePlayer(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
+    private static void capturePlayer_Intermediary(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
         HARVESTING_PLAYER.set(player);
     }
 
-    /**
-     * Clear the player entity reference when the method finishes.
-     */
     @Inject(
             method = "onTreeHarvest(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/entity/BlockEntity;)Z",
-            at = @At("RETURN")
+            at = @At("HEAD"),
+            remap = false,
+            require = 0
     )
-    private static void autopickup_releasePlayer(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
+    private static void capturePlayer_Named(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
+        HARVESTING_PLAYER.set(player);
+    }
+
+    // --- RELEASE PLAYER ---
+
+    @Inject(
+            method = "onTreeHarvest(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;Lnet/minecraft/class_2680;Lnet/minecraft/class_2586;)Z",
+            at = @At("RETURN"),
+            remap = true,
+            require = 0
+    )
+    private static void releasePlayer_Intermediary(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
         HARVESTING_PLAYER.remove();
     }
 
-    /**
-     * Redirects the call to Collective's BlockFunctions.dropBlock.
-     * This allows us to intercept the block break, calculate drops, and give them to the player via AutoPickup.
-     */
+    @Inject(
+            method = "onTreeHarvest(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/entity/BlockEntity;)Z",
+            at = @At("RETURN"),
+            remap = false,
+            require = 0
+    )
+    private static void releasePlayer_Named(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
+        HARVESTING_PLAYER.remove();
+    }
+
+    // --- HIJACK DROPS ---
+
+    @Redirect(
+            method = "onTreeHarvest(Lnet/minecraft/class_1937;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;Lnet/minecraft/class_2680;Lnet/minecraft/class_2586;)Z",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;)V"
+            ),
+            remap = true,
+            require = 0
+    )
+    private static void hijackDrop_Intermediary(World world, BlockPos pos) {
+        performHijack(world, pos);
+    }
+
     @Redirect(
             method = "onTreeHarvest(Lnet/minecraft/world/World;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;Lnet/minecraft/block/entity/BlockEntity;)Z",
             at = @At(
                     value = "INVOKE",
                     target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"
-            )
+            ),
+            remap = false,
+            require = 0
     )
-    private static void autopickup_hijackDropBlock(World world, BlockPos pos) {
+    private static void hijackDrop_Named(World world, BlockPos pos) {
+        performHijack(world, pos);
+    }
+
+    @Unique
+    private static void performHijack(World world, BlockPos pos) {
         if (world.isClient() || !(world instanceof ServerWorld serverWorld)) {
             return;
         }

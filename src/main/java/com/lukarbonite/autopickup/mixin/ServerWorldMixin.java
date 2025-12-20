@@ -20,19 +20,23 @@ public abstract class ServerWorldMixin {
 
     /**
      * Injects into the spawnEntity method to intercept item drops.
-     * This is used for compatibility with mods like Liteminer that spawn
+     * This is used for compatibility with mods like Tree Harvester that spawn
      * their item drops directly without using Block.dropStacks.
      */
     @Inject(method = "spawnEntity", at = @At("HEAD"), cancellable = true)
     private void autopickup_interceptItemSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (entity instanceof ItemEntity itemEntity) {
+
+            // Allow "delayed" items to spawn so other mods (Tree Harvester) can react to them first.
+            if (entity.getCommandTags().contains("autopickup_delayed")) {
+                return;
+            }
+
             ServerWorld world = (ServerWorld) (Object) this;
 
             // Skip items with an owner: player hand-drops, entity-produced items (e.g., chicken eggs)
             Entity ownerEntity = itemEntity.getOwner();
-            if (ownerEntity != null) {
-                return;
-            }
+            if (ownerEntity != null) return;
 
             // Only intercept if we are within an active player drop-context
             net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
@@ -63,6 +67,46 @@ public abstract class ServerWorldMixin {
                 // If some items remain (e.g., inventory full), update the entity's stack.
                 // The original spawnEntity method will then proceed with this smaller stack.
                 itemEntity.setStack(remainingItems.getFirst());
+            }
+        }
+    }
+
+    @Inject(method = "spawnEntity", at = @At("TAIL"))
+    private void autopickup_cleanupDelayedSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        // If we allowed an item to spawn via the "delayed" tag, try to pick it up now
+        // that other mods have had their chance to react to ENTITY_LOAD.
+        if (entity instanceof ItemEntity itemEntity && entity.getCommandTags().contains("autopickup_delayed")) {
+            // If the item is dead or empty, another mod (Tree Harvester) consumed it.
+            if (!itemEntity.isAlive() || itemEntity.getStack().isEmpty()) {
+                return;
+            }
+
+            ServerWorld world = (ServerWorld) (Object) this;
+            net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
+
+            // Find owner again. Usually session context is still valid.
+            PlayerEntity owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerInDropContext(spawnPos);
+            if (owner == null) {
+                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwnerSameTickTight(spawnPos);
+            }
+            if (owner == null) {
+                owner = com.lukarbonite.autopickup.AutoPickupSessions.findOwner(spawnPos);
+            }
+
+            if (owner != null
+                    && !owner.isSpectator()
+                    && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
+                    && world.getGameRules().getValue(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
+
+                ItemStack stackToPickup = itemEntity.getStack();
+                List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));
+
+                if (remainingItems.isEmpty()) {
+                    itemEntity.discard();
+                } else {
+                    itemEntity.setStack(remainingItems.getFirst());
+                    itemEntity.removeCommandTag("autopickup_delayed");
+                }
             }
         }
     }

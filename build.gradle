@@ -33,6 +33,7 @@ dependencies {
 	annotationProcessor "io.github.llamalad7:mixinextras-fabric:0.4.1"
 
     modCompileOnly(files("libs/veinminer-fabric-2.5.2.jar"))
+    modCompileOnly(files("libs/treeharvester-1.21.11-9.3.jar"))
 }
 
 processResources {
