@@ -22,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import oshi.util.tuples.Triplet;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,26 +39,11 @@ public abstract class LeafEventsMixin {
             method = "onWorldTick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;)V"
+                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock"
             ),
-            remap = true,
-            require = 0 // Allow this to fail in Dev if Named target matches instead
+            remap = false
     )
-    private static void autopickup_hijackLeafDrop_Intermediary(World world, BlockPos pos) {
-        performHijack(world, pos);
-    }
-
-    // Target for Development Environment (explicit Named signature)
-    @Redirect(
-            method = "onWorldTick",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"
-            ),
-            remap = false,
-            require = 0 // Allow this to fail in Prod
-    )
-    private static void autopickup_hijackLeafDrop_Named(World world, BlockPos pos) {
+    private static void autopickup_hijackLeafDrop(World world, BlockPos pos) {
         performHijack(world, pos);
     }
 
@@ -86,28 +73,44 @@ public abstract class LeafEventsMixin {
                 ItemStack tool = player.getMainHandStack();
                 List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, world.getBlockEntity(pos), player, tool);
 
-                if (shouldForceDropSaplings(pos)) {
-                    Iterator<ItemStack> it = drops.iterator();
-                    while (it.hasNext()) {
-                        ItemStack stack = it.next();
-                        if (isSapling(stack)) {
-                            ItemStack oneSapling = stack.split(1);
-                            spawnDelayedItem(world, pos, oneSapling);
-
-                            if (stack.isEmpty()) {
-                                it.remove();
-                            }
-                            break;
-                        }
+                // Separate saplings from other drops to handle replanting logic safely
+                List<ItemStack> saplings = new ArrayList<>();
+                Iterator<ItemStack> it = drops.iterator();
+                while (it.hasNext()) {
+                    ItemStack stack = it.next();
+                    if (isSapling(stack)) {
+                        saplings.add(stack);
+                        it.remove();
                     }
                 }
 
+                // 1. Pickup non-sapling drops (sticks, apples, etc)
                 List<ItemStack> remaining = AutoPickupApi.tryPickup(player, drops);
                 for (ItemStack stack : remaining) {
                     Block.dropStack(world, pos, stack);
                 }
 
-                // Experience (rare for leaves, but possible)
+                // 2. Handle Saplings
+                boolean plantedOne = false;
+                boolean needsReplant = shouldForceDropSaplings(pos);
+
+                for (ItemStack saplingStack : saplings) {
+                    // If we need to replant and haven't dropped one for TreeHarvester yet...
+                    if (needsReplant && !plantedOne && !saplingStack.isEmpty()) {
+                        ItemStack one = saplingStack.split(1);
+                        spawnDelayedItem(world, pos, one);
+                        plantedOne = true;
+                    }
+
+                    // Pickup whatever is left in this stack
+                    if (!saplingStack.isEmpty()) {
+                        List<ItemStack> remSap = AutoPickupApi.tryPickup(player, Collections.singletonList(saplingStack));
+                        for (ItemStack s : remSap) {
+                            Block.dropStack(world, pos, s);
+                        }
+                    }
+                }
+
                 state.onStacksDropped(serverWorld, pos, tool, true);
 
                 // Play break sound/particles
