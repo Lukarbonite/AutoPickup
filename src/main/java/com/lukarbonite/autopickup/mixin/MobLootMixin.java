@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.ExperienceCache;
 import net.minecraft.entity.Entity;
@@ -28,15 +27,14 @@ import java.util.List;
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    // Note: The signature for dropExperience was changed to dropXp in 1.21.1
     @Redirect(
             method = "dropXp",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
     )
     private void autopickup_redirectAndCacheExperience(ServerWorld world, Vec3d pos, int amount, @org.jetbrains.annotations.Nullable Entity attacker) {
         if (attacker instanceof PlayerEntity player
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isXpEnabled(player)) {
 
             ExperienceCache.add(player, amount);
         } else {
@@ -44,7 +42,6 @@ public abstract class MobLootMixin {
         }
     }
 
-    // Note: The signature for dropLoot was simplified in 1.21.1
     @Inject(
             method = "dropLoot(Lnet/minecraft/entity/damage/DamageSource;Z)V",
             at = @At("HEAD"),
@@ -59,11 +56,14 @@ public abstract class MobLootMixin {
 
         Entity attacker = damageSource.getAttacker();
 
-        if (attacker instanceof PlayerEntity player && !player.isSpectator() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
-            // Method was renamed from getLootTableKey() to getLootTable()
-            RegistryKey<LootTable> registryKey = thisEntity.getLootTable();
+        // Check master rule first, then the specific mob loot rule.
+        if (attacker instanceof PlayerEntity player && !player.isSpectator()
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isMobLootEnabled(player)) {
 
-            LootTable lootTable = world.getServer().getReloadableRegistries().getLootTable(registryKey);
+            RegistryKey<LootTable> optional = thisEntity.getLootTable();
+
+            LootTable lootTable = world.getServer().getReloadableRegistries().getLootTable(optional);
 
             LootContextParameterSet.Builder builder = new LootContextParameterSet.Builder(world)
                     .add(LootContextParameters.THIS_ENTITY, thisEntity)
