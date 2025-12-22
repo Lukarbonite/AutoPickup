@@ -1,6 +1,6 @@
 # Auto Pickup for Fabric
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.9--10-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.2--8-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items and experience directly into your inventory from broken blocks and slain mobs. No more chasing drops, no more lost items.
 
@@ -64,7 +64,7 @@ Auto Pickup is designed for maximum compatibility by hooking into fundamental Mi
 
 *   **Veinminer / Liteminer:** Fully supported. Mining a vein will instantly pick up all drops and XP.
 *   **Tree Harvester:** Fully supported. When chopping a tree, logs and other drops are picked up, while saplings needed for auto-replanting are replanted.
-*   **Traveler's Backpack:** Fully supported (1.21.9-10). If you have a backpack with the **Auto Pickup Upgrade**, items will be routed to your backpack filter first. If the backpack is full or the item isn't filtered, it falls back to your main inventory.
+*   **Traveler's Backpack:** Fully supported (1.21.2-10). If you have a backpack with the **Auto Pickup Upgrade**, items will be routed to your backpack filter first. If the backpack is full or the item isn't filtered, it falls back to your main inventory.
 *   **General Mod Support:** Works with most mods that use vanilla block‑breaking and loot hooks.
 
 ![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
