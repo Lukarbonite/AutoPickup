@@ -1,36 +1,28 @@
 package com.lukarbonite.autopickup;
 
+import com.lukarbonite.autopickup.network.AutoPickupNetworking;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
-import net.minecraft.world.GameRules;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AutoPickup implements ModInitializer {
-	public static final String MOD_ID = "auto-pickup";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+    public static final String MOD_ID = "auto-pickup";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	// Gamerule definition for block drops
-	public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_GAMERULE_KEY =
-			GameRuleRegistry.register(
-					"autoPickup",
-					GameRules.Category.PLAYER,
-					GameRuleFactory.createBooleanRule(true) // Default value is true
-			);
+    @Override
+    public void onInitialize() {
+        // Load Configuration
+        AutoPickupConfig.getInstance().load();
 
-	// Gamerule definition for mob loot
-	public static final GameRules.Key<GameRules.BooleanRule> AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY =
-			GameRuleRegistry.register(
-					"autoPickupMobLoot",
-					GameRules.Category.PLAYER,
-					GameRuleFactory.createBooleanRule(false) // Default value is false
-			);
+        // Initialize Networking
+        AutoPickupNetworking.init();
 
-	@Override
-	public void onInitialize() {
-		LOGGER.info("Auto Pickup Mod initialized!");
-		// The gamerules are registered via the static initializers of their Keys.
-		// No further action needed here for registration.
-	}
+        // Register Commands
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+            AutoPickupCommand.register(dispatcher);
+        });
+
+        LOGGER.info("Auto Pickup Mod initialized!");
+    }
 }

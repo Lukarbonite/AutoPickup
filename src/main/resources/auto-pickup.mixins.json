@@ -1,14 +1,21 @@
 {
-	"required": true,
-	"package": "com.lukarbonite.autopickup.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"BlockMixin",
-		"BlockDropExperienceMixin",
-		"MobLootMixin",
-		"VeinMinerEventMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	}
+  "required": true,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
+  "mixins": [
+    "BlockMixin",
+    "BlockDropExperienceMixin",
+    "ServerPlayerInteractionManagerMixin",
+    "MobLootMixin",
+    "ServerTickMixin",
+    "ServerWorldMixin",
+    "WorldBreakBlockMixin",
+    "compat.veinminer.VeinminerMixin",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.TreeCutEventsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
 }

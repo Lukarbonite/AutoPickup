@@ -1,7 +1,9 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupConfig;
+import com.lukarbonite.autopickup.ExperienceCache;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -15,14 +17,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class BlockDropExperienceMixin {
 
     @Inject(method = "dropExperience", at = @At("HEAD"), cancellable = true)
-    private void autopickup_captureExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
-        // Check if there is a player context from our other mixins.
-        PlayerEntity player = AutoPickupApi.getBlockBreaker();
+    private void autopickup_captureAndCacheExperience(ServerWorld world, BlockPos pos, int size, CallbackInfo ci) {
+        // Attribute block XP to the nearest active mining session at this position.
+        net.minecraft.util.math.Vec3d posCenter = new net.minecraft.util.math.Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        PlayerEntity player = AutoPickupSessions.findOwner(posCenter);
 
-        // If a player broke the block and the gamerule is on, give them the XP directly.
-        if (player != null && !world.isClient() && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)) {
-            player.addExperience(size);
-            // Cancel the original method to prevent the ExperienceOrbEntity from spawning.
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+
+        if (player != null && !world.isClient()
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isXpEnabled(player)) {
+            ExperienceCache.add(player, size);
             ci.cancel();
         }
     }
