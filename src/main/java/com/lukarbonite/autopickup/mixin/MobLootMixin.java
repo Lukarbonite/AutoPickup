@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickup;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.ExperienceCache;
 import net.minecraft.entity.Entity;
@@ -34,10 +33,9 @@ public abstract class MobLootMixin {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
     )
     private void autopickup_redirectAndCacheExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
-        // Check master rule first, then the specific XP rule.
         if (attacker instanceof PlayerEntity player
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isXpEnabled(player)) {
 
             ExperienceCache.add(player, amount);
         } else {
@@ -56,8 +54,9 @@ public abstract class MobLootMixin {
 
         // Check master rule first, then the specific mob loot rule.
         if (attacker instanceof PlayerEntity player && !player.isSpectator()
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                && world.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+                && AutoPickupApi.isMasterEnabled(player)
+                && AutoPickupApi.isMobLootEnabled(player)) {
+
             Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
             if (optional.isEmpty()) {
                 return;

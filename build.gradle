@@ -12,6 +12,10 @@ base {
 
 repositories {
 	mavenLocal()
+    maven {
+        name = "Terraformers"
+        url = "https://maven.terraformersmc.com/"
+    }
 }
 
 fabricApi {
@@ -32,8 +36,10 @@ dependencies {
 	implementation "io.github.llamalad7:mixinextras-fabric:0.4.1"
 	annotationProcessor "io.github.llamalad7:mixinextras-fabric:0.4.1"
 
-    modCompileOnly(files("libs/veinminer-fabric-2.4.9.jar"))
-    modCompileOnly(files("libs/architectury-17.0.8-fabric.jar"))
+    modCompileOnly(files("libs/veinminer-fabric-2.5.0.jar"))
+    modCompileOnly(files("libs/treeharvester-1.21.8-9.2.jar"))
+    modCompileOnly(files("libs/travelersbackpack-fabric-1.21.8-10.8.4.jar"))
+    modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
 }
 
 processResources {
