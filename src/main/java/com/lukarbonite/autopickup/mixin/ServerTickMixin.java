@@ -18,8 +18,10 @@ public class ServerTickMixin {
         // Process the experience cache at the end of the tick.
         ExperienceCache.onServerTick((MinecraftServer) (Object) this);
 
-        // Clear the block breaker context at the end of every tick.
-        // This ensures the context from mods like Liteminer doesn't leak into the next tick.
+        // Age and prune per-player mining sessions.
+        com.lukarbonite.autopickup.AutoPickupSessions.onServerTickEnd();
+
+        // Clear the legacy block breaker context at the end of every tick (harmless if unused).
         AutoPickupApi.clearBlockBreaker();
     }
 }

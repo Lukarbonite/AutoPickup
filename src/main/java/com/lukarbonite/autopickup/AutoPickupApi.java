@@ -1,5 +1,7 @@
 package com.lukarbonite.autopickup;
 
+import com.lukarbonite.autopickup.compat.travelersbackpack.TravelersBackpackCompat;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
@@ -18,30 +20,81 @@ public final class AutoPickupApi {
 
     private static final ThreadLocal<PlayerEntity> blockBreaker = new ThreadLocal<>();
 
-    public static void setBlockBreaker(PlayerEntity player) {
-        blockBreaker.set(player);
+    public static void setBlockBreaker(PlayerEntity player) { blockBreaker.set(player); }
+    public static void clearBlockBreaker() { blockBreaker.remove(); }
+    public static PlayerEntity getBlockBreaker() { return blockBreaker.get(); }
+
+    // --- Helper Methods to check config permissions ---
+
+    public static boolean isMasterEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.master() : serverConfig.autoPickup;
+        }
+        return serverConfig.autoPickup;
     }
-    public static void clearBlockBreaker() {
-        blockBreaker.remove();
+
+    public static boolean isBlocksEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.blocks() : serverConfig.autoPickupBlocks;
+        }
+        return serverConfig.autoPickupBlocks;
     }
-    public static PlayerEntity getBlockBreaker() {
-        return blockBreaker.get();
+
+    public static boolean isMobLootEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.mobLoot() : serverConfig.autoPickupMobLoot;
+        }
+        return serverConfig.autoPickupMobLoot;
     }
+
+    public static boolean isXpEnabled(PlayerEntity player) {
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        if (serverConfig.allowClientControl) {
+            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
+            return data != null ? data.xp() : serverConfig.autoPickupXp;
+        }
+        return serverConfig.autoPickupXp;
+    }
+
+    // --- Main API Methods ---
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getWorld();
-        // Check master rule first, then the specific block rule.
-        if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_BLOCKS_GAMERULE_KEY)) {
+        if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
+                || !isMasterEnabled(player)
+                || !isBlocksEnabled(player)) {
             return drops;
         }
+
         List<ItemStack> unpickedItems = new ArrayList<>();
+        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
+
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
-                if (!player.getInventory().insertStack(stack)) {
+            if (stack.isEmpty()) continue;
+
+            // 1. Try Traveler's Backpack (if loaded)
+            if (hasTravelersBackpack) {
+                stack = TravelersBackpackCompat.tryPickup(player, stack);
+                if (stack.isEmpty()) continue; // Fully picked up by backpack
+            }
+
+            // 2. Try Vanilla Inventory
+            // insertStack returns true if it changed the stack (moved items).
+            // We must check if the stack is empty afterwards to see if it was FULLY picked up.
+            if (player.getInventory().insertStack(stack)) {
+                // Some items were picked up. If any remain, add them to unpicked.
+                if (!stack.isEmpty()) {
                     unpickedItems.add(stack);
                 }
+            } else {
+                // No items were picked up (inventory full)
+                unpickedItems.add(stack);
             }
         }
         return unpickedItems;
@@ -49,18 +102,31 @@ public final class AutoPickupApi {
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getWorld();
-        // Check master rule first, then the specific mob loot rule.
-        if (world.isClient() || !(world instanceof ServerWorld serverWorld) || player.isSpectator()
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_MOB_LOOT_GAMERULE_KEY)) {
+        if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
+                || !isMasterEnabled(player)
+                || !isMobLootEnabled(player)) {
             return drops;
         }
+
         List<ItemStack> unpickedItems = new ArrayList<>();
+        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
+
         for (ItemStack stack : drops) {
-            if (!stack.isEmpty()) {
-                if (!player.getInventory().insertStack(stack)) {
+            if (stack.isEmpty()) continue;
+
+            // 1. Try Traveler's Backpack (if loaded)
+            if (hasTravelersBackpack) {
+                stack = TravelersBackpackCompat.tryPickup(player, stack);
+                if (stack.isEmpty()) continue;
+            }
+
+            // 2. Try Vanilla Inventory
+            if (player.getInventory().insertStack(stack)) {
+                if (!stack.isEmpty()) {
                     unpickedItems.add(stack);
                 }
+            } else {
+                unpickedItems.add(stack);
             }
         }
         return unpickedItems;
@@ -74,10 +140,11 @@ public final class AutoPickupApi {
      */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
         World world = player.getWorld();
-        // Check master rule first, then the specific XP rule.
-        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld serverWorld)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_GAMERULE_KEY)
-                || !serverWorld.getGameRules().getBoolean(AutoPickup.AUTO_PICKUP_XP_GAMERULE_KEY)) {
+        AutoPickupConfig config = AutoPickupConfig.getInstance();
+
+        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)
+                || !isMasterEnabled(player)
+                || !isXpEnabled(player)) {
             return;
         }
 
