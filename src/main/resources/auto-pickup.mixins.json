@@ -12,6 +12,7 @@
     "ServerWorldMixin",
     "WorldBreakBlockMixin",
     "compat.veinminer.VeinminerMixin",
+    "compat.veinminer.VeinMinerEventMixin",
     "compat.treeharvester.LeafEventsMixin",
     "compat.treeharvester.TreeCutEventsMixin"
   ],

@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup;
 
-import com.lukarbonite.autopickup.network.AutoPickupNetworking;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import org.slf4j.Logger;
@@ -14,9 +13,6 @@ public class AutoPickup implements ModInitializer {
     public void onInitialize() {
         // Load Configuration
         AutoPickupConfig.getInstance().load();
-
-        // Initialize Networking
-        AutoPickupNetworking.init();
 
         // Register Commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {

@@ -26,23 +26,37 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * Mixin for Tree Harvester's leaf decay logic.
- * Targets: com.natamus.treeharvester_common_fabric.events.LeafEvents
- */
-@Mixin(targets = "com.natamus.treeharvester_common_fabric.events.LeafEvents")
+@Mixin(targets = "com.natamus.treeharvester_common_fabric.events.LeafEvents", remap = false)
 public abstract class LeafEventsMixin {
 
-    // Target for Production / Standard Environment
+    /**
+     * Target for 1.20.4 and below
+     */
     @Redirect(
             method = "onWorldTick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock"
+                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"
             ),
-            remap = false
+            require = 0
     )
-    private static void autopickup_hijackLeafDrop(World world, BlockPos pos) {
+    private static void autopickup_hijackLeafDrop_Legacy(World world, BlockPos pos) {
+        performHijack(world, pos);
+    }
+
+    /**
+     * Target for 1.20.5+
+     * The method was renamed to 'onWorldTickLeaves'
+     */
+    @Redirect(
+            method = "onWorldTickLeaves",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V"
+            ),
+            require = 0
+    )
+    private static void autopickup_hijackLeafDrop_Modern(World world, BlockPos pos) {
         performHijack(world, pos);
     }
 
@@ -144,6 +158,7 @@ public abstract class LeafEventsMixin {
                 }
             }
         } catch (Throwable t) {
+            // Ignored
         }
         return false;
     }

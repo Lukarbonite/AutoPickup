@@ -20,38 +20,55 @@ public class AutoPickupMixinPlugin implements IMixinConfigPlugin {
     }
 
     @Override
-    public String getRefMapperConfig() {
-        return null;
-    }
-
-    @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".compat.veinminer")) {
-            return hasVeinMiner;
+        // Veinminer Logic
+        if (mixinClassName.contains(".compat.veinminer.")) {
+            if (!hasVeinMiner) return false;
+
+            // 1.20.4 and below check
+            if (mixinClassName.endsWith("VeinminerLegacyMixin")) {
+                return isClassPresent("de.miraculixx.veinminer.Veinminer");
+            }
+
+            // 1.20.5+ check
+            if (mixinClassName.endsWith("VeinminerEventMixin")) {
+                return isClassPresent("de.miraculixx.veinminer.VeinminerEvent");
+            }
         }
-        if (mixinClassName.contains(".compat.treeharvester")) {
+
+        // Tree Harvester Logic
+        if (mixinClassName.contains(".compat.treeharvester.")) {
             return hasTreeHarvester;
         }
+
         return true;
     }
 
-    @Override
-    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {
-
+    /**
+     * Helper to check if a specific class exists on the current classpath
+     * without initializing it.
+     */
+    private boolean isClassPresent(String className) {
+        try {
+            Class.forName(className, false, getClass().getClassLoader());
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
     }
 
     @Override
-    public List<String> getMixins() {
-        return null;
-    }
+    public String getRefMapperConfig() { return null; }
 
     @Override
-    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
-
-    }
+    public void acceptTargets(Set<String> myTargets, Set<String> otherTargets) {}
 
     @Override
-    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {
+    public List<String> getMixins() { return null; }
 
-    }
+    @Override
+    public void preApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
+
+    @Override
+    public void postApply(String targetClassName, ClassNode targetClass, String mixinClassName, IMixinInfo mixinInfo) {}
 }

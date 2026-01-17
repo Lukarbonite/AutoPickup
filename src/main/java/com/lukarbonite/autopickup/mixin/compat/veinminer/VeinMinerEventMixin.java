@@ -2,7 +2,7 @@ package com.lukarbonite.autopickup.mixin.compat.veinminer;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
-import de.miraculixx.veinminer.Veinminer;
+import de.miraculixx.veinminer.VeinMinerEvent;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -18,15 +18,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-@Mixin(targets = "de.miraculixx.veinminer.Veinminer", remap = false)
-public abstract class VeinminerMixin {
+@Mixin(targets = "de.miraculixx.veinminer.VeinMinerEvent", remap = false)
+public abstract class VeinMinerEventMixin {
 
     /**
      * Injects into Veinminer's private destroyBlock method.
      * This intercepts the block destruction to handle drops via AutoPickup.
      */
     @Inject(
-            method = "destroyBlock(Lnet/minecraft/class_2680;Lnet/minecraft/class_1799;Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;Lnet/minecraft/class_1657;)V",
+            method = "destroyBlock(Lnet/minecraft/class_2680;Lnet/minecraft/class_1799;Lnet/minecraft/class_1937;Lnet/minecraft/class_2338;Lnet/minecraft/class_1657;Lnet/minecraft/class_2338;)V",
             at = @At("HEAD"),
             cancellable = true,
             require = 0
@@ -37,6 +37,7 @@ public abstract class VeinminerMixin {
             World world,
             BlockPos position,
             PlayerEntity player,
+            BlockPos initialSource,
             CallbackInfo ci
     ) {
         if (world.isClient() || !(world instanceof ServerWorld serverWorld)) {
