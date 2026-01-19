@@ -1,5 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
+import com.lukarbonite.autopickup.AutoPickupCommand;
 import com.lukarbonite.autopickup.AutoPickupConfig;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -59,6 +60,8 @@ public class AutoPickupConfigScreen extends Screen {
         y += spacing;
 
         // Allow Client Control Toggle
+        // Note: This setting is usually server-side enforced. Toggling it here in multiplayer
+        // won't change the server rule, but it will update the local single-player config.
         this.addDrawableChild(CyclingButtonWidget.onOffBuilder(config.allowClientControl)
                 .build(center - 100, y, buttonWidth, buttonHeight, Text.literal("Allow Client Control"), (button, value) -> {
                     config.allowClientControl = value;
@@ -96,11 +99,16 @@ public class AutoPickupConfigScreen extends Screen {
 
     @Override
     public void close() {
+        // Save to disk
         config.save();
-        // Sync to server if in world
+
+        // Sync to server (The Command Tunnel)
         if (this.client.world != null) {
-            AutoPickupClient.sendConfig();
+            // We call the command directly.
+            // It reads the config instance, bitmasks the booleans, and fires the hidden command.
+            AutoPickupCommand.sendConfig();
         }
+
         this.client.setScreen(parent);
     }
 }

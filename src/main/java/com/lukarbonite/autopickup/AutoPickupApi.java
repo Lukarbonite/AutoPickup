@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup;
 
 import com.lukarbonite.autopickup.compat.travelersbackpack.TravelersBackpackCompat;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EquipmentSlot;
@@ -140,7 +141,6 @@ public final class AutoPickupApi {
      */
     public static void tryPickupExperience(PlayerEntity player, int experience) {
         World world = player.getWorld();
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
 
         if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)
                 || !isMasterEnabled(player)
@@ -149,14 +149,14 @@ public final class AutoPickupApi {
         }
 
         // Correctly type the Optional to match the return type of getEntry()
-        Optional<RegistryEntry.Reference<net.minecraft.enchantment.Enchantment>> mendingEntryOptional = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING);
+        Optional<RegistryEntry.Reference<Enchantment>> mendingEntryOptional = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING);
 
         // If Mending doesn't exist for some reason, just give the XP directly.
         if (mendingEntryOptional.isEmpty()) {
             player.addExperience(experience);
             return;
         }
-        RegistryEntry<net.minecraft.enchantment.Enchantment> mendingEntry = mendingEntryOptional.get();
+        RegistryEntry<Enchantment> mendingEntry = mendingEntryOptional.get();
 
         // Find all equipped items that are damaged and have Mending.
         // This includes armor and held items.
