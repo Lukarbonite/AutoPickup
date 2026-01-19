@@ -16,6 +16,10 @@ repositories {
         name = "Terraformers"
         url = "https://maven.terraformersmc.com/"
     }
+    maven {
+        name = "Xander Maven"
+        url = "https://maven.isxander.dev/releases"
+    }
 }
 
 fabricApi {
@@ -40,6 +44,8 @@ dependencies {
     modCompileOnly(files("libs/treeharvester-1.21.10-9.3.jar"))
     modCompileOnly(files("libs/travelersbackpack-fabric-1.21.10-10.10.1.jar"))
     modCompileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
+
+    modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
 }
 
 processResources {

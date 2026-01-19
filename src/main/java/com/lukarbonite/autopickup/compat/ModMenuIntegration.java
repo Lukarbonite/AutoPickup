@@ -10,6 +10,7 @@ import net.fabricmc.api.Environment;
 public class ModMenuIntegration implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return AutoPickupConfigScreen::new;
+        // Changed from '::new' to '::create' to match the new YACL factory method
+        return AutoPickupConfigScreen::create;
     }
 }
