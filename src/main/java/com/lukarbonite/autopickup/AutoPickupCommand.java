@@ -50,7 +50,7 @@ public class AutoPickupCommand {
         // Hidden command for players to sync their personal settings
         dispatcher.register(CommandManager.literal("ap_config_sync")
                 .requires(source -> true)
-                .then(CommandManager.argument("mask", IntegerArgumentType.integer())
+                .then(CommandManager.argument("mask", IntegerArgumentType.integer(0, 15))
                         .executes(AutoPickupCommand::executeSync))
         );
     }
