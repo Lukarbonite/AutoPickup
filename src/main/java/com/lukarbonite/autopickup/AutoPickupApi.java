@@ -16,6 +16,7 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public final class AutoPickupApi {
 
@@ -25,172 +26,139 @@ public final class AutoPickupApi {
     public static void clearBlockBreaker() { blockBreaker.remove(); }
     public static PlayerEntity getBlockBreaker() { return blockBreaker.get(); }
 
-    // --- Helper Methods to check config permissions ---
+    // --- Permissions Logic ---
+
+    private static boolean resolve(PlayerEntity player,
+                                   Function<PlayerConfigs.PlayerState, Boolean> overrideGetter,
+                                   Function<PlayerConfigs.PlayerState, Boolean> clientGetter,
+                                   boolean serverDefault) {
+
+        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
+        PlayerConfigs.PlayerState state = PlayerConfigs.getState(player.getUuid());
+
+        // 1. Admin Override
+        Boolean override = overrideGetter.apply(state);
+        if (override != null) return override;
+
+        // 2. Client Control
+        if (serverConfig.allowClientControl) {
+            return clientGetter.apply(state);
+        }
+
+        // 3. Server Default
+        return serverDefault;
+    }
 
     public static boolean isMasterEnabled(PlayerEntity player) {
-        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
-        if (serverConfig.allowClientControl) {
-            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
-            return data != null ? data.master() : serverConfig.autoPickup;
-        }
-        return serverConfig.autoPickup;
+        return resolve(player, s -> s.overrideMaster, s -> s.clientMaster, AutoPickupConfig.getInstance().autoPickup);
     }
-
     public static boolean isBlocksEnabled(PlayerEntity player) {
-        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
-        if (serverConfig.allowClientControl) {
-            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
-            return data != null ? data.blocks() : serverConfig.autoPickupBlocks;
-        }
-        return serverConfig.autoPickupBlocks;
+        return resolve(player, s -> s.overrideBlocks, s -> s.clientBlocks, AutoPickupConfig.getInstance().autoPickupBlocks);
     }
-
+    public static boolean isBlockXpEnabled(PlayerEntity player) {
+        return resolve(player, s -> s.overrideBlockXp, s -> s.clientBlockXp, AutoPickupConfig.getInstance().autoPickupBlockXp);
+    }
     public static boolean isMobLootEnabled(PlayerEntity player) {
-        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
-        if (serverConfig.allowClientControl) {
-            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
-            return data != null ? data.mobLoot() : serverConfig.autoPickupMobLoot;
-        }
-        return serverConfig.autoPickupMobLoot;
+        return resolve(player, s -> s.overrideMobLoot, s -> s.clientMobLoot, AutoPickupConfig.getInstance().autoPickupMobLoot);
+    }
+    public static boolean isMobXpEnabled(PlayerEntity player) {
+        return resolve(player, s -> s.overrideMobXp, s -> s.clientMobXp, AutoPickupConfig.getInstance().autoPickupMobXp);
     }
 
-    public static boolean isXpEnabled(PlayerEntity player) {
-        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
-        if (serverConfig.allowClientControl) {
-            PlayerConfigs.ConfigData data = PlayerConfigs.get(player.getUuid());
-            return data != null ? data.xp() : serverConfig.autoPickupXp;
-        }
-        return serverConfig.autoPickupXp;
+    // Splitting logic: Enabled if Server says YES *OR* (Client allowed AND Client says YES)
+    public static boolean isSplitMobLootEnabled(PlayerEntity player) {
+        boolean server = AutoPickupConfig.getInstance().autoPickupSplitMobLoot;
+        boolean client = resolve(player, s -> s.overrideSplitMobLoot, s -> s.clientSplitMobLoot, server);
+        return server || client;
     }
 
-    // --- Main API Methods ---
+    public static boolean isSplitMobXpEnabled(PlayerEntity player) {
+        boolean server = AutoPickupConfig.getInstance().autoPickupSplitMobXp;
+        boolean client = resolve(player, s -> s.overrideSplitMobXp, s -> s.clientSplitMobXp, server);
+        return server || client;
+    }
+
+    // --- Pickup Methods ---
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
         if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
-                || !isMasterEnabled(player)
-                || !isBlocksEnabled(player)) {
+                || !isMasterEnabled(player) || !isBlocksEnabled(player)) {
             return drops;
         }
-
-        List<ItemStack> unpickedItems = new ArrayList<>();
-        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
-
-        for (ItemStack stack : drops) {
-            if (stack.isEmpty()) continue;
-
-            // 1. Try Traveler's Backpack (if loaded)
-            if (hasTravelersBackpack) {
-                stack = TravelersBackpackCompat.tryPickup(player, stack);
-                if (stack.isEmpty()) continue; // Fully picked up by backpack
-            }
-
-            // 2. Try Vanilla Inventory
-            // insertStack returns true if it changed the stack (moved items).
-            // We must check if the stack is empty afterwards to see if it was FULLY picked up.
-            if (player.getInventory().insertStack(stack)) {
-                // Some items were picked up. If any remain, add them to unpicked.
-                if (!stack.isEmpty()) {
-                    unpickedItems.add(stack);
-                }
-            } else {
-                // No items were picked up (inventory full)
-                unpickedItems.add(stack);
-            }
-        }
-        return unpickedItems;
+        return insertDrops(player, drops);
     }
 
     public static List<ItemStack> tryPickupFromMob(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
         if (world.isClient() || !(world instanceof ServerWorld) || player.isSpectator()
-                || !isMasterEnabled(player)
-                || !isMobLootEnabled(player)) {
+                || !isMasterEnabled(player) || !isMobLootEnabled(player)) {
             return drops;
         }
+        return insertDrops(player, drops);
+    }
 
-        List<ItemStack> unpickedItems = new ArrayList<>();
-        boolean hasTravelersBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
+    private static List<ItemStack> insertDrops(PlayerEntity player, List<ItemStack> drops) {
+        List<ItemStack> unpicked = new ArrayList<>();
+        boolean hasBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
 
         for (ItemStack stack : drops) {
             if (stack.isEmpty()) continue;
-
-            // 1. Try Traveler's Backpack (if loaded)
-            if (hasTravelersBackpack) {
+            if (hasBackpack) {
                 stack = TravelersBackpackCompat.tryPickup(player, stack);
                 if (stack.isEmpty()) continue;
             }
-
-            // 2. Try Vanilla Inventory
             if (player.getInventory().insertStack(stack)) {
-                if (!stack.isEmpty()) {
-                    unpickedItems.add(stack);
-                }
+                if (!stack.isEmpty()) unpicked.add(stack);
             } else {
-                unpickedItems.add(stack);
+                unpicked.add(stack);
             }
         }
-        return unpickedItems;
+        return unpicked;
     }
 
-    /**
-     * Attempts to repair items with the Mending enchantment before giving the experience to the player.
-     * This method replicates the logic of an experience orb being collected by a player with mending gear.
-     * @param player The player picking up the experience.
-     * @param experience The amount of experience picked up.
-     */
-    public static void tryPickupExperience(PlayerEntity player, int experience) {
+    public static void tryPickupBlockExperience(PlayerEntity player, int experience) {
+        if (!isMasterEnabled(player) || !isBlockXpEnabled(player)) return;
+        giveExperience(player, experience);
+    }
+
+    public static void tryPickupMobExperience(PlayerEntity player, int experience) {
+        if (!isMasterEnabled(player) || !isMobXpEnabled(player)) return;
+        giveExperience(player, experience);
+    }
+
+    private static void giveExperience(PlayerEntity player, int experience) {
         World world = player.getEntityWorld();
+        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)) return;
 
-        if (experience <= 0 || world.isClient() || !(world instanceof ServerWorld)
-                || !isMasterEnabled(player)
-                || !isXpEnabled(player)) {
-            return;
-        }
-
-        // Correctly type the Optional to match the return type of getEntry()
-        Optional<RegistryEntry.Reference<Enchantment>> mendingEntryOptional = player.getEntityWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING.getValue());
-
-        // If Mending doesn't exist for some reason, just give the XP directly.
-        if (mendingEntryOptional.isEmpty()) {
+        Optional<RegistryEntry.Reference<Enchantment>> mendingOpt = world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.MENDING.getValue());
+        if (mendingOpt.isEmpty()) {
             player.addExperience(experience);
             return;
         }
-        RegistryEntry<Enchantment> mendingEntry = mendingEntryOptional.get();
+        RegistryEntry<Enchantment> mending = mendingOpt.get();
 
-        // Find all equipped items that are damaged and have Mending.
-        // This includes armor and held items.
-        List<ItemStack> mendableItems = new ArrayList<>();
+        List<ItemStack> mendable = new ArrayList<>();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
                 ItemStack stack = player.getEquippedStack(slot);
-                if (!stack.isEmpty() && stack.isDamaged() && EnchantmentHelper.getLevel(mendingEntry, stack) > 0) {
-                    mendableItems.add(stack);
+                if (!stack.isEmpty() && stack.isDamaged() && EnchantmentHelper.getLevel(mending, stack) > 0) {
+                    mendable.add(stack);
                 }
             }
         }
 
-        if (mendableItems.isEmpty()) {
-            // No items to mend, so give all XP to the player.
+        if (mendable.isEmpty()) {
             player.addExperience(experience);
             return;
         }
 
-        // Pick one random applicable item to repair.
-        ItemStack itemToMend = mendableItems.get(player.getRandom().nextInt(mendableItems.size()));
+        ItemStack item = mendable.get(player.getRandom().nextInt(mendable.size()));
+        int repair = Math.min(experience * 2, item.getDamage());
+        item.setDamage(item.getDamage() - repair);
+        int consumed = (repair + 1) / 2;
+        int remaining = experience - consumed;
 
-        // In vanilla, 1 point of experience repairs 2 points of durability.
-        int repairValue = Math.min(experience * 2, itemToMend.getDamage());
-        itemToMend.setDamage(itemToMend.getDamage() - repairValue);
-
-        // Calculate how much experience was actually consumed.
-        // We use ceiling division (e.g., (value + 1) / 2) to ensure that repairing 1 durability costs 1 XP.
-        int xpConsumed = (repairValue + 1) / 2;
-        int remainingXp = experience - xpConsumed;
-
-        // Add any leftover experience to the player's experience bar.
-        if (remainingXp > 0) {
-            player.addExperience(remainingXp);
-        }
+        if (remaining > 0) player.addExperience(remaining);
     }
 }

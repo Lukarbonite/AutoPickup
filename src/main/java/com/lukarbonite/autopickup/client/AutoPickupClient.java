@@ -3,7 +3,9 @@ package com.lukarbonite.autopickup.client;
 import com.lukarbonite.autopickup.AutoPickupCommand;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.minecraft.client.MinecraftClient;
 
 public class AutoPickupClient implements ClientModInitializer {
 
@@ -11,19 +13,35 @@ public class AutoPickupClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // When we join a world/server, mark that we need to sync.
-        // We do NOT call sendConfig() here to avoid the Race Condition with the Command Dispatcher.
+        // 1. Handle Connection Switching (Profiles)
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            ClientConfigManager.updateConnection();
             pendingSync = true;
         });
 
-        // 2. Wait for the game to tick.
-        // Once the player exists and the world is ticking, the Command System is guaranteed to be ready.
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            ClientConfigManager.updateConnection(); // Reverts to default
+        });
+
+        // 2. Sync Packet Tunnel
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (pendingSync && client.player != null) {
                 pendingSync = false;
                 AutoPickupCommand.sendConfig();
+                // Send permission check on join so the state is cached before the menu is opened
+                client.player.networkHandler.sendChatCommand("autopickup check_perm");
             }
+        });
+
+        // 3. Chat Interception for Data Query, Permissions, and Global Config
+        ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
+            String text = message.getString();
+            // Check for DATA, PERM, and GLOBAL prefixes
+            if (text.startsWith("[AP_DATA] ") || text.startsWith("[AP_PERM] ") || text.startsWith("[AP_GLOBAL] ")) {
+                AutoPickupConfigScreen.handleDataResponse(text);
+                return false; // Cancel message (hide from chat)
+            }
+            return true;
         });
     }
 }

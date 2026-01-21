@@ -1,7 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.ExperienceCache;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.block.Block;
@@ -22,11 +21,9 @@ public class BlockDropExperienceMixin {
         net.minecraft.util.math.Vec3d posCenter = new net.minecraft.util.math.Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         PlayerEntity player = AutoPickupSessions.findOwner(posCenter);
 
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
-
         if (player != null && !world.isClient()
                 && AutoPickupApi.isMasterEnabled(player)
-                && AutoPickupApi.isXpEnabled(player)) {
+                && AutoPickupApi.isBlockXpEnabled(player)) {
             ExperienceCache.add(player, size);
             ci.cancel();
         }

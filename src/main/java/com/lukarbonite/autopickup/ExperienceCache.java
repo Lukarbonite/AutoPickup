@@ -29,7 +29,7 @@ public final class ExperienceCache {
 
     /**
      * The single entry point for all experience that should be cached.
-     * Called by mixins for block drops, mob kills, etc.
+     * Called by mixins for block drops.
      */
     public static void add(PlayerEntity player, int experience) {
         PlayerExperience session = activeSessions.computeIfAbsent(player.getUuid(), k -> new PlayerExperience());
@@ -52,7 +52,7 @@ public final class ExperienceCache {
                 PlayerEntity player = server.getPlayerManager().getPlayer(uuid);
                 if (player != null && session.experience > 0) {
                     // Apply all the collected experience at once for mending.
-                    AutoPickupApi.tryPickupExperience(player, session.experience);
+                    AutoPickupApi.tryPickupBlockExperience(player, session.experience); // CHANGED: Block Experience
                 }
             }
         });

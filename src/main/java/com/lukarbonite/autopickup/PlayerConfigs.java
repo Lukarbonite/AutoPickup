@@ -1,29 +1,92 @@
 package com.lukarbonite.autopickup;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
+
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerConfigs {
-    private static final Map<UUID, ConfigData> playerSettings = new ConcurrentHashMap<>();
+    private static final Path OVERRIDES_PATH = AutoPickup.CONFIG_DIR.resolve("player_overrides.json");
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    // Default settings (Used before the client syncs)
-    private static final ConfigData DEFAULT = new ConfigData(true, true, false, true);
+    public static class PlayerState {
+        // Preference: What the client requested (Transient)
+        public transient boolean clientMaster = true;
+        public transient boolean clientBlocks = true;
+        public transient boolean clientBlockXp = true;
+        public transient boolean clientMobLoot = false;
+        public transient boolean clientMobXp = true;
+        public transient boolean clientSplitMobLoot = false;
+        public transient boolean clientSplitMobXp = false;
 
-    public record ConfigData(boolean master, boolean blocks, boolean mobLoot, boolean xp) {}
-
-    public static void setPlayerConfig(UUID uuid, boolean master, boolean blocks, boolean mobLoot, boolean xp) {
-        playerSettings.put(uuid, new ConfigData(master, blocks, mobLoot, xp));
-        // Debug log to confirm packet reception
-        // System.out.println("AutoPickup: Config synced for " + uuid);
+        // Overrides: What the admin forced (Saved)
+        public Boolean overrideMaster = null;
+        public Boolean overrideBlocks = null;
+        public Boolean overrideBlockXp = null;
+        public Boolean overrideMobLoot = null;
+        public Boolean overrideMobXp = null;
+        public Boolean overrideSplitMobLoot = null;
+        public Boolean overrideSplitMobXp = null;
     }
 
-    public static void removePlayer(UUID uuid) {
-        playerSettings.remove(uuid);
+    private static final Map<UUID, PlayerState> STATES = new ConcurrentHashMap<>();
+
+    public static PlayerState getState(UUID uuid) {
+        return STATES.computeIfAbsent(uuid, k -> new PlayerState());
     }
 
-    public static ConfigData get(UUID uuid) {
-        // getOrDefault prevents NullPointerException on join
-        return playerSettings.getOrDefault(uuid, DEFAULT);
+    public static void setClientPreference(UUID uuid, boolean master, boolean blocks, boolean blockXp, boolean mobLoot, boolean mobXp, boolean splitMobLoot, boolean splitMobXp) {
+        PlayerState state = getState(uuid);
+        state.clientMaster = master;
+        state.clientBlocks = blocks;
+        state.clientBlockXp = blockXp;
+        state.clientMobLoot = mobLoot;
+        state.clientMobXp = mobXp;
+        state.clientSplitMobLoot = splitMobLoot;
+        state.clientSplitMobXp = splitMobXp;
+    }
+
+    public static void setAdminOverride(UUID uuid, String key, Boolean value) {
+        PlayerState state = getState(uuid);
+        switch (key.toLowerCase()) {
+            case "autopickup", "master", "all" -> state.overrideMaster = value;
+            case "blocks" -> state.overrideBlocks = value;
+            case "blockxp" -> state.overrideBlockXp = value;
+            case "mobloot" -> state.overrideMobLoot = value;
+            case "mobxp" -> state.overrideMobXp = value;
+            case "splitmobloot" -> state.overrideSplitMobLoot = value;
+            case "splitmobxp" -> state.overrideSplitMobXp = value;
+        }
+        save();
+    }
+
+    public static void load() {
+        if (!Files.exists(OVERRIDES_PATH)) return;
+        try (Reader reader = Files.newBufferedReader(OVERRIDES_PATH)) {
+            Type type = new TypeToken<Map<UUID, PlayerState>>(){}.getType();
+            Map<UUID, PlayerState> loaded = GSON.fromJson(reader, type);
+            if (loaded != null) {
+                STATES.putAll(loaded);
+            }
+        } catch (IOException e) {
+            AutoPickup.LOGGER.error("Failed to load player overrides", e);
+        }
+    }
+
+    public static void save() {
+        try (Writer writer = Files.newBufferedWriter(OVERRIDES_PATH)) {
+            GSON.toJson(STATES, writer);
+        } catch (IOException e) {
+            AutoPickup.LOGGER.error("Failed to save player overrides", e);
+        }
     }
 }
