@@ -28,23 +28,27 @@ import java.util.Optional;
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    // Redirect XP Drop
+    // 1. Redirect XP Drop
     @Redirect(
             method = "dropExperience(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/Entity;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
     )
     private void autopickup_redirectExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
         if (attacker instanceof PlayerEntity player && !player.isSpectator()) {
-            LivingEntity mob = (LivingEntity) (Object) this;
 
-            // Use the Splitting Logic to distribute (or give to killer)
-            LootSplittingLogic.distributeXp(player, mob, amount);
-        } else {
-            ExperienceOrbEntity.spawn(world, pos, amount);
+            // Check Master AND MobXpEnabled.
+            // If disabled, fall back to Vanilla spawning immediately to prevent vanishing XP.
+            if (AutoPickupApi.isMasterEnabled(player) && AutoPickupApi.isMobXpEnabled(player)) {
+                LootSplittingLogic.distributeXp(player, (LivingEntity) (Object) this, amount);
+                return;
+            }
         }
+
+        // Fallback: Drop on ground (Vanilla behavior)
+        ExperienceOrbEntity.spawn(world, pos, amount);
     }
 
-    // Intercept Loot Drop
+    // 2. Intercept Loot Drop
     @Inject(
             method = "dropLoot(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;Z)V",
             at = @At("HEAD"),
@@ -56,7 +60,11 @@ public abstract class MobLootMixin {
 
         if (attacker instanceof PlayerEntity player && !player.isSpectator()) {
 
-            if (!AutoPickupApi.isMasterEnabled(player)) return;
+            // Check Master AND MobLootEnabled.
+            // If disabled, ignore interception and let vanilla drop loot normally.
+            if (!AutoPickupApi.isMasterEnabled(player) || !AutoPickupApi.isMobLootEnabled(player)) {
+                return;
+            }
 
             // Generate Loot manually
             Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
@@ -79,7 +87,7 @@ public abstract class MobLootMixin {
             List<ItemStack> generatedLoot = new ArrayList<>();
             lootTable.generateLoot(lootContext, thisEntity.getLootTableSeed(), generatedLoot::add);
 
-            // Distribute via Splitting Logic
+            // Distribute
             List<ItemStack> remainingItems = LootSplittingLogic.distributeLoot(player, thisEntity, generatedLoot);
 
             // Drop whatever wasn't picked up
@@ -87,6 +95,7 @@ public abstract class MobLootMixin {
                 thisEntity.dropStack(world, stack);
             }
 
+            // Cancel original dropLoot
             ci.cancel();
         }
     }

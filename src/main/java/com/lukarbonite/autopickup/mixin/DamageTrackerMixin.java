@@ -4,13 +4,13 @@ import com.lukarbonite.autopickup.accessor.DamageTrackerAccessor;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,11 +24,13 @@ public class DamageTrackerMixin implements DamageTrackerAccessor {
 
     @Override
     public void autopickup_addAttacker(UUID playerUuid) {
-        // Move to front (Most recent first)
+        // Remove existing entry if present to prevent duplicates
         autopickup_attackers.remove(playerUuid);
+
+        // Add to front (Most recent)
         autopickup_attackers.addFirst(playerUuid);
 
-        // Limit history size to prevent memory issues (e.g. top 10)
+        // Limit to last 10 unique players
         if (autopickup_attackers.size() > 10) {
             autopickup_attackers.removeLast();
         }
@@ -40,7 +42,7 @@ public class DamageTrackerMixin implements DamageTrackerAccessor {
     }
 
     @Inject(method = "damage", at = @At("HEAD"))
-    private void autopickup_onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    private void autopickup_onDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (source.getAttacker() instanceof PlayerEntity player) {
             autopickup_addAttacker(player.getUuid());
         }
