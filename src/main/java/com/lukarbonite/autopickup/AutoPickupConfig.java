@@ -14,11 +14,11 @@ public class AutoPickupConfig {
 
     // Block Settings
     public boolean autoPickupBlocks = true;
-    public boolean autoPickupBlockXp = true; // Split from original autoPickupXp
+    public boolean autoPickupBlockXp = true;
 
     // Mob Settings
     public boolean autoPickupMobLoot = false;
-    public boolean autoPickupMobXp = true; // Split from original autoPickupXp
+    public boolean autoPickupMobXp = false;
 
     // Splitting Logic
     public boolean autoPickupSplitMobLoot = false;
