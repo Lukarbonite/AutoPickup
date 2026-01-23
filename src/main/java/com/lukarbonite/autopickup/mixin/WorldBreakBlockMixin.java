@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 /**
  * Extends the tight per-player drop context to blocks broken by mods that bypass
- * Block.dropStacks with a PlayerEntity (e.g., veinminer/liteminer). We link such breaks
+ * Block.dropStacks with a PlayerEntity (e.g., liteminer). We link such breaks
  * to the nearest active mining session within a small radius and open a scoped drop context
  * only for the duration of the break call.
  */

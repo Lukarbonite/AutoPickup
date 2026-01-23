@@ -1,108 +1,95 @@
 package com.lukarbonite.autopickup.mixin.compat.treeharvester;
 
-import com.lukarbonite.autopickup.AutoPickupConfig;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
+import com.natamus.treeharvester_common_fabric.config.ConfigHandler;
+import com.natamus.treeharvester_common_fabric.events.TreeCutEvents;
+import com.natamus.treeharvester_common_fabric.util.Util;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.registry.Registries;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.List;
-
-/**
- * Mixin for Tree Harvester's main cutting logic.
- * Targets: com.natamus.treeharvester_common_fabric.events.TreeCutEvents
- */
-@Mixin(targets = "com.natamus.treeharvester_common_fabric.events.TreeCutEvents")
-public abstract class TreeCutEventsMixin {
+@Mixin(value = TreeCutEvents.class, remap = false)
+public class TreeCutEventsMixin {
 
     @Unique
-    private static final ThreadLocal<PlayerEntity> HARVESTING_PLAYER = new ThreadLocal<>();
+    private static final ThreadLocal<BlockPos> capturedBottomPos = new ThreadLocal<>();
 
-    // --- CAPTURE PLAYER ---
-
-    @Inject(
-            method = "onTreeHarvest",
-            at = @At("HEAD"),
-            remap = false
-    )
-    private static void autopickup_capturePlayer(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
-        HARVESTING_PLAYER.set(player);
+    @Inject(method = "onTreeHarvest", at = @At("HEAD"))
+    private static void onHead(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity be, CallbackInfoReturnable<Boolean> cir) {
+        AutoPickupApi.setBlockBreaker(player);
     }
 
-    @Inject(
+    /**
+     * CAPTURE THE BOTTOM: TreeHarvester updates its local bpos variable
+     * just before calling isTreeAndReturnLogAmount. We capture it here.
+     */
+    @WrapOperation(
             method = "onTreeHarvest",
-            at = @At("RETURN"),
-            remap = false
+            at = @At(value = "INVOKE", target = "Lcom/natamus/treeharvester_common_fabric/processing/TreeProcessing;isTreeAndReturnLogAmount(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)I")
     )
-    private static void autopickup_releasePlayer(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity blockEntity, CallbackInfoReturnable<Boolean> cir) {
-        HARVESTING_PLAYER.remove();
+    private static int captureRealBottom(World level, BlockPos pos, Operation<Integer> original) {
+        capturedBottomPos.set(pos.toImmutable());
+        return original.call(level, pos);
     }
 
-    // --- HIJACK DROPS ---
+    @Inject(method = "onTreeHarvest", at = @At("RETURN"))
+    private static void onReturn(World level, PlayerEntity player, BlockPos bpos, BlockState state, BlockEntity be, CallbackInfoReturnable<Boolean> cir) {
+        BlockPos bottom = capturedBottomPos.get();
+        capturedBottomPos.remove(); // Clean up memory
 
-    @Redirect(
-            method = "onTreeHarvest",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock"
-            ),
-            remap = false
-    )
-    private static void autopickup_hijackDropBlock(World world, BlockPos pos) {
-        if (world.isClient() || !(world instanceof ServerWorld serverWorld)) {
-            return;
-        }
+        if (ConfigHandler.replaceSaplingOnTreeHarvest && bottom != null) {
+            // Only replant if the block is now empty (broken)
+            if (level.getBlockState(bottom).isAir()) {
+                Block logBlock = state.getBlock();
+                String logId = Registries.BLOCK.getId(logBlock).getPath();
+                // Extract wood type (e.g. "birch", "dark_oak")
+                String woodType = logId.replace("_log", "").replace("_stem", "").replace("_wood", "").replace("_hyphae", "");
 
-        PlayerEntity player = HARVESTING_PLAYER.get();
-        BlockState state = world.getBlockState(pos);
+                for (int i = 0; i < player.getInventory().size(); i++) {
+                    ItemStack stack = player.getInventory().getStack(i);
+                    Block potentialSapling = Block.getBlockFromItem(stack.getItem());
 
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
-        boolean shouldPickup = player != null
-                && AutoPickupApi.isMasterEnabled(player)
-                && AutoPickupApi.isBlocksEnabled(player);
+                    if (!stack.isEmpty() && Util.isSapling(potentialSapling)) {
+                        String saplingId = Registries.ITEM.getId(stack.getItem()).getPath();
 
-        if (player != null && shouldPickup) {
-            // Register this position to the session so Experience Mixins (if valid) can find the owner
-            AutoPickupSessions.addBreak(player, pos);
-            AutoPickupApi.setBlockBreaker(player);
-
-            try {
-                // Get the drops as if the player broke it with their current hand item
-                ItemStack tool = player.getMainHandStack();
-                List<ItemStack> drops = Block.getDroppedStacks(state, serverWorld, pos, world.getBlockEntity(pos), player, tool);
-
-                // Attempt pickup
-                List<ItemStack> remaining = AutoPickupApi.tryPickup(player, drops);
-                for (ItemStack stack : remaining) {
-                    Block.dropStack(world, pos, stack);
+                        // Exact Species Match
+                        if (saplingId.contains(woodType)) {
+                            level.setBlockState(bottom, potentialSapling.getDefaultState());
+                            if (!player.isCreative()) stack.decrement(1);
+                            break;
+                        }
+                    }
                 }
-
-                // Trigger experience drop logic
-                state.onStacksDropped(serverWorld, pos, tool, true);
-
-                // Play break sound/particles
-                world.syncWorldEvent(2001, pos, Block.getRawIdFromState(state));
-
-                // Break the block without dropping standard loot (passed false)
-                world.breakBlock(pos, false);
-            } finally {
-                AutoPickupApi.clearBlockBreaker();
             }
+        }
+        AutoPickupApi.clearBlockBreaker();
+    }
+
+    @WrapOperation(
+            method = "onTreeHarvest",
+            at = @At(value = "INVOKE", target = "Lcom/natamus/collective_common_fabric/functions/BlockFunctions;dropBlock(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;)V")
+    )
+    private static void wrapLogDrop(World world, BlockPos pos, Operation<Void> original) {
+        PlayerEntity player = AutoPickupApi.getBlockBreaker();
+        if (player != null) {
+            AutoPickupSessions.beginDropContext(player, pos);
+            original.call(world, pos);
+            AutoPickupSessions.endDropContext(player);
         } else {
-            // Fallback: Default behavior (Break block and drop items normally)
-            world.breakBlock(pos, true);
+            original.call(world, pos);
         }
     }
 }
