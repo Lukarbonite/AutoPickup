@@ -26,59 +26,63 @@ public final class AutoPickupApi {
     public static void clearBlockBreaker() { blockBreaker.remove(); }
     public static PlayerEntity getBlockBreaker() { return blockBreaker.get(); }
 
-    // --- Permissions Logic ---
-
+    /**
+     * Permission Resolution Logic:
+     * 1. Admin Override (Highest Priority)
+     * 2. Client Preference (Only if the server specifically allows this feature to be controlled)
+     * 3. Server Global Fallback (Default)
+     */
     private static boolean resolve(PlayerEntity player,
                                    Function<PlayerConfigs.PlayerState, Boolean> overrideGetter,
                                    Function<PlayerConfigs.PlayerState, Boolean> clientGetter,
+                                   boolean specificAllowance,
                                    boolean serverDefault) {
 
-        AutoPickupConfig serverConfig = AutoPickupConfig.getInstance();
         PlayerConfigs.PlayerState state = PlayerConfigs.getState(player.getUuid());
 
-        // 1. Admin Override
+        // 1. Check Admin Override
         Boolean override = overrideGetter.apply(state);
         if (override != null) return override;
 
-        // 2. Client Control
-        if (serverConfig.allowClientControl) {
+        // 2. Check Client preference IF server allows it for this specific setting
+        if (specificAllowance) {
             return clientGetter.apply(state);
         }
 
-        // 3. Server Default
+        // 3. Fallback to Server global config
         return serverDefault;
     }
 
     public static boolean isMasterEnabled(PlayerEntity player) {
-        return resolve(player, s -> s.overrideMaster, s -> s.clientMaster, AutoPickupConfig.getInstance().autoPickup);
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideMaster, s -> s.clientMaster, cfg.allowMaster, cfg.autoPickup);
     }
     public static boolean isBlocksEnabled(PlayerEntity player) {
-        return resolve(player, s -> s.overrideBlocks, s -> s.clientBlocks, AutoPickupConfig.getInstance().autoPickupBlocks);
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideBlocks, s -> s.clientBlocks, cfg.allowBlocks, cfg.autoPickupBlocks);
     }
     public static boolean isBlockXpEnabled(PlayerEntity player) {
-        return resolve(player, s -> s.overrideBlockXp, s -> s.clientBlockXp, AutoPickupConfig.getInstance().autoPickupBlockXp);
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideBlockXp, s -> s.clientBlockXp, cfg.allowBlockXp, cfg.autoPickupBlockXp);
     }
     public static boolean isMobLootEnabled(PlayerEntity player) {
-        return resolve(player, s -> s.overrideMobLoot, s -> s.clientMobLoot, AutoPickupConfig.getInstance().autoPickupMobLoot);
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideMobLoot, s -> s.clientMobLoot, cfg.allowMobLoot, cfg.autoPickupMobLoot);
     }
     public static boolean isMobXpEnabled(PlayerEntity player) {
-        return resolve(player, s -> s.overrideMobXp, s -> s.clientMobXp, AutoPickupConfig.getInstance().autoPickupMobXp);
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideMobXp, s -> s.clientMobXp, cfg.allowMobXp, cfg.autoPickupMobXp);
     }
-
-    // Splitting logic: Enabled if Server says YES *OR* (Client allowed AND Client says YES)
     public static boolean isSplitMobLootEnabled(PlayerEntity player) {
-        boolean server = AutoPickupConfig.getInstance().autoPickupSplitMobLoot;
-        boolean client = resolve(player, s -> s.overrideSplitMobLoot, s -> s.clientSplitMobLoot, server);
-        return server || client;
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideSplitMobLoot, s -> s.clientSplitMobLoot, cfg.allowSplitMobLoot, cfg.autoPickupSplitMobLoot);
     }
-
     public static boolean isSplitMobXpEnabled(PlayerEntity player) {
-        boolean server = AutoPickupConfig.getInstance().autoPickupSplitMobXp;
-        boolean client = resolve(player, s -> s.overrideSplitMobXp, s -> s.clientSplitMobXp, server);
-        return server || client;
+        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
+        return resolve(player, s -> s.overrideSplitMobXp, s -> s.clientSplitMobXp, cfg.allowSplitMobXp, cfg.autoPickupSplitMobXp);
     }
 
-    // --- Pickup Methods ---
+    // --- Logic Implementation ---
 
     public static List<ItemStack> tryPickup(PlayerEntity player, List<ItemStack> drops) {
         World world = player.getEntityWorld();
