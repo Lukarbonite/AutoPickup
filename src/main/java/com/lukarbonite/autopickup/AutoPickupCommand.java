@@ -15,6 +15,7 @@ import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -224,10 +225,39 @@ public class AutoPickupCommand {
     private static int showServerStatus(CommandContext<ServerCommandSource> context) {
         AutoPickupConfig config = AutoPickupConfig.getInstance();
         ServerCommandSource s = context.getSource();
-        s.sendFeedback(() -> Text.literal("--- AutoPickup Config ---").formatted(Formatting.LIGHT_PURPLE), false);
-        s.sendFeedback(() -> formatStatus("Master", config.autoPickup), false);
-        s.sendFeedback(() -> formatStatus("Blocks", config.autoPickupBlocks), false);
+
+        s.sendFeedback(() -> Text.literal("--- AutoPickup Global Configuration ---").formatted(Formatting.LIGHT_PURPLE), false);
+
+        // Header for columns
+        s.sendFeedback(() -> Text.literal(String.format("%-18s | %-8s | %s", "Feature", "Default", "Client Control")), false);
+        s.sendFeedback(() -> Text.literal("---------------------------------------------------").formatted(Formatting.GRAY), false);
+
+        // Display all rows
+        s.sendFeedback(() -> formatRow("Master Toggle", config.autoPickup, config.allowMaster), false);
+        s.sendFeedback(() -> formatRow("Blocks", config.autoPickupBlocks, config.allowBlocks), false);
+        s.sendFeedback(() -> formatRow("Block XP", config.autoPickupBlockXp, config.allowBlockXp), false);
+        s.sendFeedback(() -> formatRow("Mob Loot", config.autoPickupMobLoot, config.allowMobLoot), false);
+        s.sendFeedback(() -> formatRow("Mob XP", config.autoPickupMobXp, config.allowMobXp), false);
+        s.sendFeedback(() -> formatRow("Split Mob Loot", config.autoPickupSplitMobLoot, config.allowSplitMobLoot), false);
+        s.sendFeedback(() -> formatRow("Split Mob XP", config.autoPickupSplitMobXp, config.allowSplitMobXp), false);
+
         return 1;
+    }
+
+    private static Text formatRow(String name, boolean value, boolean allowed) {
+        MutableText row = Text.literal(String.format("%-18s | ", name)).formatted(Formatting.WHITE);
+
+        // Format the Value (Default State)
+        row.append(Text.literal(String.format("%-8s", value ? "ON" : "OFF"))
+                .formatted(value ? Formatting.GREEN : Formatting.RED));
+
+        row.append(Text.literal(" | ").formatted(Formatting.WHITE));
+
+        // Format the Allowance (Client Control)
+        row.append(Text.literal(allowed ? "ENABLED" : "DISABLED")
+                .formatted(allowed ? Formatting.AQUA : Formatting.GRAY));
+
+        return row;
     }
 
     private static int setGlobal(CommandContext<ServerCommandSource> ctx, boolean silent) {
