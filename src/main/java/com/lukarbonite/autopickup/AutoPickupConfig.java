@@ -16,18 +16,18 @@ public class AutoPickupConfig {
     public boolean autoPickupBlocks = true;
     public boolean autoPickupBlockXp = true;
     public boolean autoPickupMobLoot = false;
-    public boolean autoPickupMobXp = true;
+    public boolean autoPickupMobXp = false;
     public boolean autoPickupSplitMobLoot = false;
     public boolean autoPickupSplitMobXp = false;
 
     // --- Allowance States (Per-setting) ---
-    public boolean allowMaster = true;
-    public boolean allowBlocks = true;
-    public boolean allowBlockXp = true;
-    public boolean allowMobLoot = true;
-    public boolean allowMobXp = true;
-    public boolean allowSplitMobLoot = true;
-    public boolean allowSplitMobXp = true;
+    public boolean allowMaster = false;
+    public boolean allowBlocks = false;
+    public boolean allowBlockXp = false;
+    public boolean allowMobLoot = false;
+    public boolean allowMobXp = false;
+    public boolean allowSplitMobLoot = false;
+    public boolean allowSplitMobXp = false;
 
     public static AutoPickupConfig getInstance() {
         if (INSTANCE == null) INSTANCE = new AutoPickupConfig();

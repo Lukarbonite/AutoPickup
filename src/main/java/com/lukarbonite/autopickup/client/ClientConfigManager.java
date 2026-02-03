@@ -32,7 +32,7 @@ public class ClientConfigManager {
         public boolean blocks = true;
         public boolean blockXp = true;
         public boolean mobLoot = false;
-        public boolean mobXp = true;
+        public boolean mobXp = false;
         public boolean splitMobLoot = false;
         public boolean splitMobXp = false;
     }

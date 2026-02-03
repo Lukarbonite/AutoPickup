@@ -28,8 +28,9 @@ public class AutoPickupClient implements ClientModInitializer {
             if (pendingSync && client.player != null) {
                 pendingSync = false;
                 AutoPickupCommand.sendConfig();
-                // Send permission check on join so the state is cached before the menu is opened
+                // Send permission check and global config request on join so the state is cached before the menu is opened
                 client.player.networkHandler.sendChatCommand("autopickup check_perm");
+                client.player.networkHandler.sendChatCommand("autopickup query_global");
             }
         });
 

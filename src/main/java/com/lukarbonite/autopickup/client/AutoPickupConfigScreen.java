@@ -185,6 +185,12 @@ public class AutoPickupConfigScreen {
             Tristate currentP = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
             if (!ClientSyncHandler.targetPlayerName.isEmpty() && currentP != pValsSnap[i]) sendPlayer(ClientSyncHandler.targetPlayerName, keys[i], currentP);
         }
+        // Update snapshots to reflect saved state
+        for (int i = 0; i < 7; i++) {
+            sValsSnap[i] = ClientSyncHandler.sVals[i];
+            sAllowsSnap[i] = ClientSyncHandler.sAllows[i];
+            pValsSnap[i] = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
+        }
     }
 
     private static void sendGlobal(String key, boolean val) {
@@ -211,7 +217,8 @@ public class AutoPickupConfigScreen {
 
                             @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
                                 int x = getDimension().x(), y = getDimension().y(), w = getDimension().width(), h = getDimension().height();
-                                boolean canConfig = allowed.get();
+                                // Allow configuration in main menu; when connected, check server permission
+                                boolean canConfig = MinecraftClient.getInstance().player == null || allowed.get();
                                 int color = canConfig ? 0xFFFFFFFF : 0xFFA0A0A0;
                                 context.drawText(textRenderer, o.name(), x + 6, y + (h - 8)/2, color, true);
                                 int btnW = 50, btnX = x + w - btnW - 6;
@@ -220,7 +227,8 @@ public class AutoPickupConfigScreen {
                             }
                             @Override public boolean onMouseClicked(double mouseX, double mouseY, int button) {
                                 int btnW = 50, btnX = getDimension().x() + getDimension().width() - btnW - 6;
-                                if (allowed.get() && mouseX >= btnX) { o.requestSet(!o.pendingValue()); playDownSound(); return true; }
+                                boolean canConfig = MinecraftClient.getInstance().player == null || allowed.get();
+                                if (canConfig && mouseX >= btnX) { o.requestSet(!o.pendingValue()); playDownSound(); return true; }
                                 return false;
                             }
                         };

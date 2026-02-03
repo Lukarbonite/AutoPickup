@@ -15,7 +15,7 @@ public class ClientSyncHandler {
 
     static {
         // Defaults
-        boolean[] defaults = {true, true, true, false, true, false, false};
+        boolean[] defaults = {true, true, true, false, false, false, false};
         for (int i = 0; i < 7; i++) {
             sVals[i] = defaults[i];
             sAllows[i] = true;
