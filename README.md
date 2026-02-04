@@ -21,7 +21,7 @@
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
 - **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
 
-![One-Block Mining](assets/ONE_BLOCK.gif)
+![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/ONE_BLOCK.gif)
 
 ---
 
@@ -48,7 +48,7 @@ If you have **Mod Menu** and **YetAnotherConfigLib (YACL)** installed, you can c
 
 > **Note:** Your client settings only apply if the server admin has enabled the corresponding "Allow" setting for that feature.
 
-![YACL Menu](assets/YACL_MENU.gif)
+![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/YACL_MENU.gif)
 
 ---
 
@@ -193,7 +193,7 @@ Auto Pickup intercepts drops at these injection points:
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
-![MultiBlock Mining](assets/MULTI_BLOCK.gif)
+![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/MULTI_BLOCK.gif)
 
 ---
 
