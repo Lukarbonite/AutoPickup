@@ -21,7 +21,7 @@
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
 - **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
 
-![OneBlock Mining Demo](https://github.com/user-attachments/assets/5e3afe38-de87-4a3a-a0fa-3de2fa9a7a8f)
+![One-Block Mining](assets/ONE_BLOCK.gif)
 
 ---
 
@@ -48,7 +48,7 @@ If you have **Mod Menu** and **YetAnotherConfigLib (YACL)** installed, you can c
 
 > **Note:** Your client settings only apply if the server admin has enabled the corresponding "Allow" setting for that feature.
 
-![Config Screen Placeholder]()
+![YACL Menu](assets/YACL_MENU.gif)
 
 ---
 
@@ -193,7 +193,7 @@ Auto Pickup intercepts drops at these injection points:
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
-![MultiBlock Mining Demo](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
+![MultiBlock Mining](assets/MULTI_BLOCK.gif)
 
 ---
 
