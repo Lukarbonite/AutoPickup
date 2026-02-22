@@ -35,9 +35,10 @@ public class AutoPickupCommand {
 
     public static void register(CommandDispatcher<ServerCommandSource> dispatcher) {
         dispatcher.register(CommandManager.literal("autopickup")
-                .requires(source -> checkPermission(source))
+                // No .requires() here — subcommands guard themselves
                 .executes(AutoPickupCommand::showServerStatus)
                 .then(CommandManager.literal("global")
+                        .requires(source -> checkPermission(source))
                         .then(CommandManager.argument("key", StringArgumentType.word())
                                 .suggests((ctx, b) -> CommandSource.suggestMatching(
                                         java.util.List.of("master","blocks","blockXp","mobLoot","mobXp","splitMobLoot","splitMobXp","allowClientControl"), b))
@@ -49,7 +50,9 @@ public class AutoPickupCommand {
                         )
                 )
                 .then(CommandManager.literal("setPlayerConfig")
+                        // No .requires() — internal logic handles op vs. self-only
                         .then(CommandManager.argument("target", EntityArgumentType.players())
+                                .requires(source -> true)  // Allow non-ops to pass a target name
                                 .then(CommandManager.argument("key", StringArgumentType.word())
                                         .suggests((ctx, b) -> CommandSource.suggestMatching(
                                                 java.util.List.of("master","blocks","blockXp","mobLoot","mobXp","splitMobLoot","splitMobXp","all"), b))
@@ -63,13 +66,13 @@ public class AutoPickupCommand {
                         )
                 )
                 .then(CommandManager.literal("query_player")
+                        .requires(source -> checkPermission(source))
                         .then(CommandManager.argument("targetName", StringArgumentType.string())
                                 .executes(AutoPickupCommand::executeQueryPlayer))
                 )
                 .then(CommandManager.literal("check_perm")
                         .executes(ctx -> {
                             boolean op = checkPermission(ctx.getSource());
-                            // Send 1 for true, 0 for false
                             ctx.getSource().sendFeedback(() -> Text.literal("[AP_PERM] " + (op ? 1 : 0)), false);
                             return 1;
                         })
