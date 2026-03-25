@@ -38,15 +38,31 @@ dependencies {
     implementation project(':common')
 }
 
+tasks.named('jar', Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from project(':common').sourceSets.main.output
+    from project(':common').sourceSets.main.resources
+}
+
+tasks.withType(Jar).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from project(':common').sourceSets.main.output
+    from project(':common').sourceSets.main.resources
+}
+
 processResources {
-    inputs.property "version",           project.mod_version
-    inputs.property "minecraft_version", project.minecraft_version
-    inputs.property "neoforge_version",  project.neoforge_version
+    var replaceProperties = [
+            version          : project.mod_version,
+            minecraft_version: project.minecraft_version,
+            neoforge_version : project.neoforge_version
+    ]
+
+    inputs.properties replaceProperties
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     filesMatching("META-INF/neoforge.mods.toml") {
-        expand version:           project.mod_version,
-                minecraft_version: project.minecraft_version,
-                neoforge_version:  project.neoforge_version
+        expand replaceProperties
     }
 }
 

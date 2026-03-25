@@ -8,21 +8,21 @@ issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
     version     = "${version}"
     displayName = "Auto Pickup"
     description = '''Auto Pickup mod by lukarbonite'''
-    logoFile    = "assets/auto-pickup/icon.png"
+    logoFile    = "assets/autopickup/icon.png"
     authors     = "lukarbonite"
 
     [[mods.contacts]]
         homepage = "https://github.com/Lukarbonite/AutoPickup"
         sources  = "https://github.com/Lukarbonite/AutoPickup"
 
-[[dependencies."auto-pickup"]]
+[[dependencies."autopickup"]]
     modId        = "neoforge"
     type         = "required"
     versionRange = "[${neoforge_version},)"
     ordering     = "NONE"
     side         = "BOTH"
 
-[[dependencies."auto-pickup"]]
+[[dependencies."autopickup"]]
     modId        = "minecraft"
     type         = "required"
     versionRange = "[${minecraft_version},)"
@@ -30,4 +30,4 @@ issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
     side         = "BOTH"
 
 [[mixins]]
-    config = "auto-pickup.mixins.json"
+    config = "autopickup.mixins.json"
