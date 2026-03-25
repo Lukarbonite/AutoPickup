@@ -15,7 +15,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerConfigs {
-    private static final Path OVERRIDES_PATH = AutoPickup.CONFIG_DIR.resolve("player_overrides.json");
+    private static Path getOverridesPath() { return AutoPickupCommon.getConfigDir().resolve("player_overrides.json"); }
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static class PlayerState {
@@ -70,23 +70,24 @@ public class PlayerConfigs {
     }
 
     public static void load() {
-        if (!Files.exists(OVERRIDES_PATH)) return;
-        try (Reader reader = Files.newBufferedReader(OVERRIDES_PATH)) {
+        Path path = getOverridesPath();
+        if (!Files.exists(path)) return;
+        try (Reader reader = Files.newBufferedReader(path)) {
             Type type = new TypeToken<Map<UUID, PlayerState>>(){}.getType();
             Map<UUID, PlayerState> loaded = GSON.fromJson(reader, type);
             if (loaded != null) {
                 STATES.putAll(loaded);
             }
         } catch (IOException e) {
-            AutoPickup.LOGGER.error("Failed to load player overrides", e);
+            AutoPickupCommon.LOGGER.error("Failed to load player overrides", e);
         }
     }
 
     public static void save() {
-        try (Writer writer = Files.newBufferedWriter(OVERRIDES_PATH)) {
+        try (Writer writer = Files.newBufferedWriter(getOverridesPath())) {
             GSON.toJson(STATES, writer);
         } catch (IOException e) {
-            AutoPickup.LOGGER.error("Failed to save player overrides", e);
+            AutoPickupCommon.LOGGER.error("Failed to save player overrides", e);
         }
     }
 }

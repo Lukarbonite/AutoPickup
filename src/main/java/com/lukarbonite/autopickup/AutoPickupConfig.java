@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class AutoPickupConfig {
-    private static final Path PATH = AutoPickup.CONFIG_DIR.resolve("global_config.json");
+    private static Path getPath() { return AutoPickupCommon.getConfigDir().resolve("global_config.json"); }
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static AutoPickupConfig INSTANCE;
 
@@ -35,23 +35,24 @@ public class AutoPickupConfig {
     }
 
     public void load() {
-        if (!Files.exists(PATH)) {
+        Path path = getPath();
+        if (!Files.exists(path)) {
             save();
             return;
         }
         try {
-            String json = Files.readString(PATH);
+            String json = Files.readString(path);
             INSTANCE = GSON.fromJson(json, AutoPickupConfig.class);
         } catch (IOException e) {
-            AutoPickup.LOGGER.error("Failed to load global config", e);
+            AutoPickupCommon.LOGGER.error("Failed to load global config", e);
         }
     }
 
     public void save() {
         try {
-            Files.writeString(PATH, GSON.toJson(this));
+            Files.writeString(getPath(), GSON.toJson(this));
         } catch (IOException e) {
-            AutoPickup.LOGGER.error("Failed to save global config", e);
+            AutoPickupCommon.LOGGER.error("Failed to save global config", e);
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
-import net.fabricmc.loader.api.FabricLoader;
+import com.lukarbonite.autopickup.platform.PlatformHelper;
 import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
@@ -15,8 +15,9 @@ public class AutoPickupMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public void onLoad(String mixinPackage) {
-        hasVeinMiner = FabricLoader.getInstance().isModLoaded("veinminer");
-        hasTreeHarvester = FabricLoader.getInstance().isModLoaded("treeharvester");
+        PlatformHelper platform = PlatformHelper.get();
+        hasVeinMiner = platform.isModLoaded("veinminer");
+        hasTreeHarvester = platform.isModLoaded("treeharvester");
     }
 
     @Override

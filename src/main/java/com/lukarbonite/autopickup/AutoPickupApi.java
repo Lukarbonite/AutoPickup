@@ -1,7 +1,6 @@
 package com.lukarbonite.autopickup;
 
 //import com.lukarbonite.autopickup.compat.travelersbackpack.TravelersBackpackCompat;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
