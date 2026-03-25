@@ -1,15 +1,11 @@
 package com.lukarbonite.autopickup;
 
-import com.lukarbonite.autopickup.client.ClientConfigManager;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.client.Minecraft;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.Commands;
@@ -23,15 +19,15 @@ import java.util.Collection;
 
 public class AutoPickupCommand {
 
-    // Bit flags for Boolean configs (Global & Client Sync)
-    private static final int FLAG_MASTER         = 1;       // Bit 0
-    private static final int FLAG_BLOCKS         = 2;       // Bit 1
-    private static final int FLAG_BLOCK_XP       = 4;       // Bit 2
-    private static final int FLAG_MOB_LOOT       = 8;       // Bit 3
-    private static final int FLAG_MOB_XP         = 16;      // Bit 4
-    private static final int FLAG_SPLIT_LOOT     = 32;      // Bit 5
-    private static final int FLAG_SPLIT_XP       = 64;      // Bit 6
-    private static final int FLAG_ALLOW_CLIENT   = 128;     // Bit 7 (Global only)
+    // Bit flags for Boolean configs (Global & Client Sync) — public so platform clients can build the mask
+    public static final int FLAG_MASTER         = 1;       // Bit 0
+    public static final int FLAG_BLOCKS         = 2;       // Bit 1
+    public static final int FLAG_BLOCK_XP       = 4;       // Bit 2
+    public static final int FLAG_MOB_LOOT       = 8;       // Bit 3
+    public static final int FLAG_MOB_XP         = 16;      // Bit 4
+    public static final int FLAG_SPLIT_LOOT     = 32;      // Bit 5
+    public static final int FLAG_SPLIT_XP       = 64;      // Bit 6
+    public static final int FLAG_ALLOW_CLIENT   = 128;     // Bit 7 (Global only)
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("autopickup")
@@ -300,22 +296,5 @@ public class AutoPickupCommand {
 
     private static Component formatStatus(String name, boolean value) {
         return Component.literal(name + ": " + value);
-    }
-
-    @Environment(EnvType.CLIENT)
-    public static void sendConfig() {
-        Minecraft client = Minecraft.getInstance();
-        if (client.player == null) return;
-
-        int mask = 0;
-        if (ClientConfigManager.isMaster())    mask |= FLAG_MASTER;
-        if (ClientConfigManager.isBlocks())    mask |= FLAG_BLOCKS;
-        if (ClientConfigManager.isBlockXp())   mask |= FLAG_BLOCK_XP;
-        if (ClientConfigManager.isMobLoot())   mask |= FLAG_MOB_LOOT;
-        if (ClientConfigManager.isMobXp())     mask |= FLAG_MOB_XP;
-        if (ClientConfigManager.isSplitMobLoot()) mask |= FLAG_SPLIT_LOOT;
-        if (ClientConfigManager.isSplitMobXp())   mask |= FLAG_SPLIT_XP;
-
-        client.player.connection.sendCommand("ap_config_sync " + mask);
     }
 }

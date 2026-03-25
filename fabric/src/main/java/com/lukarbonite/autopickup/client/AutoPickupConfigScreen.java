@@ -175,7 +175,7 @@ public class AutoPickupConfigScreen {
 
         return builder.save(() -> {
             ClientConfigManager.save();
-            com.lukarbonite.autopickup.AutoPickupCommand.sendConfig();
+            FabricClientCommands.sendConfig();
             if (ClientSyncHandler.isAdmin) applyAdminChanges();
         }).build().generateScreen(parent);
     }

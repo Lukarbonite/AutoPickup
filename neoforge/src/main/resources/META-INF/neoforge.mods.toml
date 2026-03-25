@@ -1,0 +1,33 @@
+modLoader    = "javafml"
+loaderVersion = "[4,)"
+license       = "AGPL-3.0-only"
+issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
+
+[[mods]]
+    modId       = "auto-pickup"
+    version     = "${file.jarVersion}"
+    displayName = "Auto Pickup"
+    description = '''Auto Pickup mod by lukarbonite'''
+    logoFile    = "assets/auto-pickup/icon.png"
+    authors     = "lukarbonite"
+
+    [[mods.contacts]]
+        homepage = "https://github.com/Lukarbonite/AutoPickup"
+        sources  = "https://github.com/Lukarbonite/AutoPickup"
+
+[[dependencies."auto-pickup"]]
+    modId        = "neoforge"
+    type         = "required"
+    versionRange = "[${neoforge_version},)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies."auto-pickup"]]
+    modId        = "minecraft"
+    type         = "required"
+    versionRange = "[${minecraft_version},)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[mixins]]
+    config = "auto-pickup.mixins.json"

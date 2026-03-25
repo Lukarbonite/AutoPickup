@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.client;
 
-import com.lukarbonite.autopickup.AutoPickupCommand;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
@@ -27,7 +26,7 @@ public class AutoPickupClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (pendingSync && client.player != null) {
                 pendingSync = false;
-                AutoPickupCommand.sendConfig();
+                FabricClientCommands.sendConfig();
                 // Send permission check and global config request on join so the state is cached before the menu is opened
                 client.player.connection.sendCommand("autopickup check_perm");
                 client.player.connection.sendCommand("autopickup query_global");

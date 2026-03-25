@@ -1,93 +1,25 @@
-plugins {
-	id 'net.fabricmc.fabric-loom' version "${loom_version}"
-	id 'maven-publish'
-}
+// Root build — shared conventions only.
+// Each subproject (:common, :fabric, :neoforge) carries its own plugins and deps.
 
-version = project.mod_version
-group = project.maven_group
+subprojects {
+    group   = project.maven_group
+    version = project.mod_version
 
-base {
-	archivesName = project.archives_base_name
-}
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release  = 25
+    }
 
-repositories {
-	mavenLocal()
-	maven {
-		name = "Terraformers"
-		url = "https://maven.terraformersmc.com/"
-	}
-	maven {
-		name = "Xander Maven"
-		url = "https://maven.isxander.dev/releases"
-	}
-}
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+        withSourcesJar()
+    }
 
-fabricApi {
-	configureDataGeneration {
-		client = true
-	}
-}
-
-dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-
-	//implementation "io.github.llamalad7:mixinextras-fabric:0.5.0"
-	//annotationProcessor "io.github.llamalad7:mixinextras-fabric:0.5.0"
-
-	//compileOnly(files("libs/veinminer-fabric-2.5.0.jar"))
-	//compileOnly(files("libs/treeharvester-1.21.10-9.3.jar"))
-	//compileOnly(files("libs/travelersbackpack-fabric-1.21.10-10.10.1.jar"))
-	compileOnly("com.terraformersmc:modmenu:${project.modmenu_version}")
-
-	compileOnly("dev.isxander:yet-another-config-lib:${project.yacl_version}")
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 25
-}
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(25)
-	}
-	withSourcesJar()
-}
-
-jar {
-	inputs.property "archivesName", project.base.archivesName
-
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
-}
-
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
-		}
-	}
-
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+    jar {
+        from(rootProject.file("LICENSE")) {
+            rename { "${it}_${project.base.archivesName.get()}" }
+        }
+    }
 }

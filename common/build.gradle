@@ -1,0 +1,25 @@
+// :common — platform-agnostic Minecraft code + Mixins.
+// Compiled with Fabric Loom for Minecraft access + Mixin AP, but NO Fabric API.
+plugins {
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
+}
+
+base {
+    archivesName = "${project.archives_base_name}-common"
+}
+
+loom {
+    // Generate a refmap so mixin names survive remapping in both platform jars
+    mixin {
+        useLegacyMixinAp = true
+        add sourceSets.main, "auto-pickup.refmap.json"
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings  loom.officialMojangMappings()
+
+    // Loader needed only for Mixin annotations (@Mixin, @Inject …) — NOT bundled
+    modCompileOnly "net.fabricmc:fabric-loader:${loader_version}"
+}

@@ -1,0 +1,49 @@
+// :neoforge — NeoForge-specific entry points and event registrations.
+// Uses ModDevGradle (net.neoforged.moddev) — update neoforge_version in gradle.properties
+// once NeoForge releases for the target Minecraft version.
+plugins {
+    id 'net.neoforged.moddev' version "${neoforge_gradle_version}"
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-neoforge"
+}
+
+neoForge {
+    version = neoforge_version
+
+    mods {
+        "auto-pickup" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    // Pull compiled :common classes into this jar (no transitive deps)
+    implementation(project(path: ':common', configuration: 'namedElements')) { transitive = false }
+    // Bundle :common into the final NeoForge jar
+    jarJar(project(':common'))
+}
+
+processResources {
+    inputs.property "version",           project.mod_version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "neoforge_version",  project.neoforge_version
+
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand version:           inputs.properties.version,
+                minecraft_version: inputs.properties.minecraft_version,
+                neoforge_version:  inputs.properties.neoforge_version
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${project.archives_base_name}-neoforge"
+            from components.java
+        }
+    }
+}
