@@ -1,8 +1,8 @@
 package com.lukarbonite.autopickup;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
@@ -36,25 +36,25 @@ public final class AutoPickupSessions {
     private static int CURRENT_TICK = 0;
 
     private static final class Session {
-        final WeakReference<PlayerEntity> playerRef;
+        final WeakReference<Player> playerRef;
         final ArrayDeque<BlockPos> recent = new ArrayDeque<>();
         int ticksToLive = SESSION_TTL_TICKS;
         int lastTouchedTick = 0; // tick when this session was last updated
 
-        Session(PlayerEntity p) {
+        Session(Player p) {
             this.playerRef = new WeakReference<>(p);
         }
 
         void touch() { this.ticksToLive = SESSION_TTL_TICKS; this.lastTouchedTick = CURRENT_TICK; }
 
         void addPos(BlockPos pos) {
-            recent.addLast(pos.toImmutable());
+            recent.addLast(pos.immutable());
             while (recent.size() > MAX_RECENT_POSITIONS) {
                 recent.removeFirst();
             }
         }
 
-        double minDist2(Vec3d v) {
+        double minDist2(Vec3 v) {
             if (recent.isEmpty()) return Double.MAX_VALUE;
             double sx = v.x, sy = v.y, sz = v.z;
             double best = Double.MAX_VALUE;
@@ -71,15 +71,15 @@ public final class AutoPickupSessions {
 
     private static final class DropGuard {
         final BlockPos origin;
-        DropGuard(BlockPos origin) { this.origin = origin.toImmutable(); }
+        DropGuard(BlockPos origin) { this.origin = origin.immutable(); }
     }
 
-    public static void begin(PlayerEntity player) {
+    public static void begin(Player player) {
         if (player == null) return;
         SESSIONS.computeIfAbsent(player.getId(), id -> new Session(player)).touch();
     }
 
-    public static void addBreak(PlayerEntity player, BlockPos pos) {
+    public static void addBreak(Player player, BlockPos pos) {
         if (player == null || pos == null) return;
         Session s = SESSIONS.computeIfAbsent(player.getId(), id -> new Session(player));
         s.touch();
@@ -89,7 +89,7 @@ public final class AutoPickupSessions {
     /**
      * Begin a tight drop context around a specific broken block for the given player.
      */
-    public static void beginDropContext(PlayerEntity player, BlockPos pos) {
+    public static void beginDropContext(Player player, BlockPos pos) {
         if (player == null || pos == null) return;
         ArrayDeque<DropGuard> stack = DROP_GUARDS.computeIfAbsent(player.getId(), id -> new ArrayDeque<>());
         stack.push(new DropGuard(pos));
@@ -98,7 +98,7 @@ public final class AutoPickupSessions {
     /**
      * End the most recent drop context for the given player.
      */
-    public static void endDropContext(PlayerEntity player) {
+    public static void endDropContext(Player player) {
         if (player == null) return;
         ArrayDeque<DropGuard> stack = DROP_GUARDS.get(player.getId());
         if (stack != null && !stack.isEmpty()) stack.pop();
@@ -108,12 +108,12 @@ public final class AutoPickupSessions {
      * Find the most plausible owner of an item/XP spawn near recent break positions.
      * Returns null if no session is close enough.
      */
-    public static PlayerEntity findOwner(Vec3d spawnPos) {
-        PlayerEntity best = null;
+    public static Player findOwner(Vec3 spawnPos) {
+        Player best = null;
         double bestD2 = Double.MAX_VALUE;
         for (Map.Entry<Integer, Session> e : SESSIONS.entrySet()) {
             Session s = e.getValue();
-            PlayerEntity p = s.playerRef.get();
+            Player p = s.playerRef.get();
             if (p == null || p.isSpectator()) continue;
             double d2 = s.minDist2(spawnPos);
             if (d2 <= INTERCEPT_RADIUS2 && d2 < bestD2) {
@@ -128,15 +128,15 @@ public final class AutoPickupSessions {
      * Find the player that currently has an active drop context closest to the given spawn position.
      * Only returns a player if the spawn is within a small radius of that context.
      */
-    public static PlayerEntity findOwnerInDropContext(Vec3d spawnPos) {
-        PlayerEntity best = null;
+    public static Player findOwnerInDropContext(Vec3 spawnPos) {
+        Player best = null;
         double bestD2 = Double.MAX_VALUE;
         for (Map.Entry<Integer, ArrayDeque<DropGuard>> e : DROP_GUARDS.entrySet()) {
             ArrayDeque<DropGuard> stack = e.getValue();
             if (stack == null || stack.isEmpty()) continue;
             Session s = SESSIONS.get(e.getKey());
             if (s == null) continue;
-            PlayerEntity p = s.playerRef.get();
+            Player p = s.playerRef.get();
             if (p == null || p.isSpectator()) continue;
             DropGuard g = stack.peek();
             if (g == null) continue;
@@ -154,13 +154,13 @@ public final class AutoPickupSessions {
 
     // --- Linked-break helpers for veinminer/liteminer compatibility ---
 
-    public static PlayerEntity findLinkedOwnerForBreak(BlockPos pos) {
-        Vec3d center = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        PlayerEntity best = null;
+    public static Player findLinkedOwnerForBreak(BlockPos pos) {
+        Vec3 center = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+        Player best = null;
         double bestD2 = Double.MAX_VALUE;
         for (Map.Entry<Integer, Session> e : SESSIONS.entrySet()) {
             Session s = e.getValue();
-            PlayerEntity p = s.playerRef.get();
+            Player p = s.playerRef.get();
             if (p == null || p.isSpectator()) continue;
             double d2 = s.minDist2(center);
             if (d2 <= LINK_RADIUS2 && d2 < bestD2) {
@@ -175,7 +175,7 @@ public final class AutoPickupSessions {
     private static final ThreadLocal<java.util.ArrayDeque<Integer>> OPEN_LINKED_CONTEXT = ThreadLocal.withInitial(java.util.ArrayDeque::new);
 
     public static void openLinkedDropContext(BlockPos pos) {
-        PlayerEntity owner = findLinkedOwnerForBreak(pos);
+        Player owner = findLinkedOwnerForBreak(pos);
         if (owner != null) {
             beginDropContext(owner, pos);
             OPEN_LINKED_CONTEXT.get().push(owner.getId());
@@ -190,7 +190,7 @@ public final class AutoPickupSessions {
         int id = stack.pop();
         if (id >= 0) {
             Session s = SESSIONS.get(id);
-            PlayerEntity p = s != null ? s.playerRef.get() : null;
+            Player p = s != null ? s.playerRef.get() : null;
             if (p != null) {
                 endDropContext(p);
             }
@@ -204,11 +204,11 @@ public final class AutoPickupSessions {
      * If no drop context matched, attribute spawns that happen in the same tick and within a tiny radius
      * of a recent break position to the corresponding player.
      */
-    public static PlayerEntity findOwnerSameTickTight(Vec3d spawnPos) {
-        PlayerEntity best = null; double bestD2 = Double.MAX_VALUE;
+    public static Player findOwnerSameTickTight(Vec3 spawnPos) {
+        Player best = null; double bestD2 = Double.MAX_VALUE;
         for (Map.Entry<Integer, Session> e : SESSIONS.entrySet()) {
             Session s = e.getValue();
-            PlayerEntity p = s.playerRef.get();
+            Player p = s.playerRef.get();
             if (p == null || p.isSpectator() || s.recent.isEmpty()) continue;
             if (s.lastTouchedTick != CURRENT_TICK) continue;
             double sx = spawnPos.x, sy = spawnPos.y, sz = spawnPos.z;

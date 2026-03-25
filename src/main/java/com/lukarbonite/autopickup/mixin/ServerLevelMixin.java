@@ -2,11 +2,11 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,32 +15,32 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Collections;
 import java.util.List;
 
-@Mixin(ServerWorld.class)
-public abstract class ServerWorldMixin {
+@Mixin(ServerLevel.class)
+public abstract class ServerLevelMixin {
 
     /**
      * Injects into the spawnEntity method to intercept item drops.
      * This is used for compatibility with mods like Tree Harvester that spawn
      * their item drops directly without using Block.dropStacks.
      */
-    @Inject(method = "spawnEntity", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "addFreshEntity", at = @At("HEAD"), cancellable = true)
     private void autopickup_interceptItemSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (entity instanceof ItemEntity itemEntity) {
 
             // Allow "delayed" items to spawn so other mods (Tree Harvester) can react to them first.
-            if (entity.getCommandTags().contains("autopickup_delayed")) {
+            if (entity.entityTags().contains("autopickup_delayed")) {
                 return;
             }
 
-            ServerWorld world = (ServerWorld) (Object) this;
+            ServerLevel world = (ServerLevel) (Object) this;
 
             // Skip items with an owner: player hand-drops, entity-produced items (e.g., chicken eggs)
             Entity ownerEntity = itemEntity.getOwner();
             if (ownerEntity != null) return;
 
             // Only intercept if we are within an active player drop-context
-            net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
-            PlayerEntity owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
+            net.minecraft.world.phys.Vec3 spawnPos = new net.minecraft.world.phys.Vec3(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
+            Player owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
 
             // Same-tick tiny-radius fallback if no active drop context matched (for mods that spawn ItemEntity directly)
             if (owner == null) {
@@ -51,7 +51,7 @@ public abstract class ServerWorldMixin {
                     && !owner.isSpectator()
                     && AutoPickupApi.isMasterEnabled(owner)
                     && AutoPickupApi.isBlocksEnabled(owner)) {
-                ItemStack stackToPickup = itemEntity.getStack();
+                ItemStack stackToPickup = itemEntity.getItem();
 
                 // Use the API to attempt to pick up the item.
                 List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));
@@ -66,25 +66,25 @@ public abstract class ServerWorldMixin {
 
                 // If some items remain (e.g., inventory full), update the entity's stack.
                 // The original spawnEntity method will then proceed with this smaller stack.
-                itemEntity.setStack(remainingItems.getFirst());
+                itemEntity.setItem(remainingItems.getFirst());
             }
         }
     }
 
-    @Inject(method = "spawnEntity", at = @At("TAIL"))
+    @Inject(method = "addFreshEntity", at = @At("TAIL"))
     private void autopickup_cleanupDelayedSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         // If we allowed an item to spawn via the "delayed" tag, try to pick it up now
         // that other mods have had their chance to react to ENTITY_LOAD.
-        if (entity instanceof ItemEntity itemEntity && entity.getCommandTags().contains("autopickup_delayed")) {
+        if (entity instanceof ItemEntity itemEntity && entity.entityTags().contains("autopickup_delayed")) {
             // If the item is dead or empty, another mod (Tree Harvester) consumed it.
-            if (!itemEntity.isAlive() || itemEntity.getStack().isEmpty()) {
+            if (!itemEntity.isAlive() || itemEntity.getItem().isEmpty()) {
                 return;
             }
 
-            ServerWorld world = (ServerWorld) (Object) this;
-            net.minecraft.util.math.Vec3d spawnPos = new net.minecraft.util.math.Vec3d(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
+            ServerLevel world = (ServerLevel) (Object) this;
+            net.minecraft.world.phys.Vec3 spawnPos = new net.minecraft.world.phys.Vec3(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());
 
-            PlayerEntity owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
+            Player owner = AutoPickupSessions.findOwnerInDropContext(spawnPos);
             if (owner == null) {
                 owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
             }
@@ -97,14 +97,14 @@ public abstract class ServerWorldMixin {
                     && AutoPickupApi.isMasterEnabled(owner)
                     && AutoPickupApi.isBlocksEnabled(owner)) {
 
-                ItemStack stackToPickup = itemEntity.getStack();
+                ItemStack stackToPickup = itemEntity.getItem();
                 List<ItemStack> remainingItems = AutoPickupApi.tryPickup(owner, Collections.singletonList(stackToPickup));
 
                 if (remainingItems.isEmpty()) {
                     itemEntity.discard();
                 } else {
-                    itemEntity.setStack(remainingItems.getFirst());
-                    itemEntity.removeCommandTag("autopickup_delayed");
+                    itemEntity.setItem(remainingItems.getFirst());
+                    itemEntity.removeTag("autopickup_delayed");
                 }
             }
         }

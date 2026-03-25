@@ -3,7 +3,7 @@ package com.lukarbonite.autopickup.client;
 import com.lukarbonite.autopickup.AutoPickup;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,12 +43,12 @@ public class ClientConfigManager {
     }
 
     public static void updateConnection() {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         String id;
-        if (client.isInSingleplayer() && client.getServer() != null) {
-            id = "sp_" + client.getServer().getSaveProperties().getLevelName();
-        } else if (client.getCurrentServerEntry() != null) {
-            id = "mp_" + client.getCurrentServerEntry().address.replace(":", "_");
+        if (client.isLocalServer() && client.getSingleplayerServer() != null) {
+            id = "sp_" + client.getSingleplayerServer().getWorldData().getLevelName();
+        } else if (client.getCurrentServer() != null) {
+            id = "mp_" + client.getCurrentServer().ip.replace(":", "_");
         } else {
             currentFilePath = DEFAULT_CONFIG;
             load(currentFilePath);

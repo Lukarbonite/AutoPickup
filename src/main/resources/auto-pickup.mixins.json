@@ -6,16 +6,12 @@
   "mixins": [
     "BlockMixin",
     "BlockDropExperienceMixin",
-    "ServerPlayerInteractionManagerMixin",
+    "ServerPlayerGameModeMixin",
     "MobLootMixin",
     "ServerTickMixin",
-    "ServerWorldMixin",
-    "WorldBreakBlockMixin",
-    "DamageTrackerMixin",
-    "compat.veinminer.VeinMinerEventMixin",
-    "compat.treeharvester.LeafEventsMixin",
-    "compat.treeharvester.LeafProcessingMixin",
-    "compat.treeharvester.TreeCutEventsMixin"
+    "ServerLevelMixin",
+    "LevelBreakBlockMixin",
+    "DamageTrackerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

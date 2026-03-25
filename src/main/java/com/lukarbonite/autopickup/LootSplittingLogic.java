@@ -1,10 +1,10 @@
 package com.lukarbonite.autopickup;
 
 import com.lukarbonite.autopickup.accessor.DamageTrackerAccessor;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.server.level.ServerLevel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,8 +34,8 @@ public class LootSplittingLogic {
      * @param type   The type of split being calculated (LOOT or XP).
      * @return A list of eligible players.
      */
-    private static List<PlayerEntity> getParticipants(LivingEntity mob, ServerWorld world, PlayerEntity killer, SplitType type) {
-        List<PlayerEntity> participants = new ArrayList<>();
+    private static List<Player> getParticipants(LivingEntity mob, ServerLevel world, Player killer, SplitType type) {
+        List<Player> participants = new ArrayList<>();
 
         // Killer is always Index 0.
         // Note: Validity of killer (Master/MobEnabled) is checked in Mixin before calling this.
@@ -55,12 +55,12 @@ public class LootSplittingLogic {
             List<UUID> history = tracker.autopickup_getAttackers();
 
             for (UUID uuid : history) {
-                if (uuid.equals(killer.getUuid())) continue;
+                if (uuid.equals(killer.getUUID())) continue;
 
-                PlayerEntity p = world.getServer().getPlayerManager().getPlayer(uuid);
+                Player p = world.getServer().getPlayerList().getPlayer(uuid);
 
                 // Basic Validation
-                if (p != null && !p.isSpectator() && p.getEntityWorld() == world) {
+                if (p != null && !p.isSpectator() && p.level() == world) {
 
                     // STRICT VALIDATION:
                     // Player must have Master ON, specific Pickup ON, AND specific Split ON.
@@ -86,11 +86,11 @@ public class LootSplittingLogic {
         return participants;
     }
 
-    public static List<ItemStack> distributeLoot(PlayerEntity killer, LivingEntity mob, List<ItemStack> drops) {
+    public static List<ItemStack> distributeLoot(Player killer, LivingEntity mob, List<ItemStack> drops) {
         if (drops.isEmpty()) return drops;
-        ServerWorld world = (ServerWorld) killer.getEntityWorld();
+        ServerLevel world = (ServerLevel) killer.level();
 
-        List<PlayerEntity> participants = getParticipants(mob, world, killer, SplitType.LOOT);
+        List<Player> participants = getParticipants(mob, world, killer, SplitType.LOOT);
         List<ItemStack> unpicked = new ArrayList<>();
 
         int participantCount = participants.size();
@@ -103,7 +103,7 @@ public class LootSplittingLogic {
             int remainder = totalItems % participantCount;
 
             for (int i = 0; i < participantCount; i++) {
-                PlayerEntity beneficiary = participants.get(i);
+                Player beneficiary = participants.get(i);
 
                 // Calculate amount
                 int amountForPlayer = perPerson;
@@ -130,11 +130,11 @@ public class LootSplittingLogic {
         return unpicked;
     }
 
-    public static void distributeXp(PlayerEntity killer, LivingEntity mob, int amount) {
+    public static void distributeXp(Player killer, LivingEntity mob, int amount) {
         if (amount <= 0) return;
-        ServerWorld world = (ServerWorld) killer.getEntityWorld();
+        ServerLevel world = (ServerLevel) killer.level();
 
-        List<PlayerEntity> participants = getParticipants(mob, world, killer, SplitType.XP);
+        List<Player> participants = getParticipants(mob, world, killer, SplitType.XP);
         if (participants.isEmpty()) return;
 
         int count = participants.size();
@@ -142,7 +142,7 @@ public class LootSplittingLogic {
         int remainder = amount % count;
 
         for (int i = 0; i < count; i++) {
-            PlayerEntity p = participants.get(i);
+            Player p = participants.get(i);
             int xpToGive = splitAmount;
             if (i == 0) xpToGive += remainder;
 

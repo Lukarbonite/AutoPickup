@@ -5,11 +5,15 @@ import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.Style;
+import net.minecraft.ChatFormatting;
+import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,27 +36,27 @@ public class AutoPickupConfigScreen {
     private static final List<Option<ServerControl>> sOptionRefs = new ArrayList<>();
 
     enum Tristate {
-        UNSET("unset", Formatting.GRAY),
-        RESET("reset", Formatting.YELLOW),
-        TRUE("true", Formatting.GREEN),
-        FALSE("false", Formatting.RED);
+        UNSET("unset", ChatFormatting.GRAY),
+        RESET("reset", ChatFormatting.YELLOW),
+        TRUE("true", ChatFormatting.GREEN),
+        FALSE("false", ChatFormatting.RED);
 
-        final String val; final Formatting fmt;
-        Tristate(String v, Formatting f) { this.val = v; this.fmt = f; }
-        public Text getText() { return Text.literal(name()).formatted(fmt); }
+        final String val; final ChatFormatting fmt;
+        Tristate(String v, ChatFormatting f) { this.val = v; this.fmt = f; }
+        public Component getText() { return Component.literal(name()).withStyle(fmt); }
         public static Tristate fromEncoded(int i) {
             return switch(i) { case 1 -> TRUE; case 2 -> FALSE; case 3 -> RESET; default -> UNSET; };
         }
     }
 
     enum ServerControl {
-        ON("ON", Formatting.GREEN),
-        OFF("OFF", Formatting.RED),
-        CLIENT("CLIENT DECIDE", Formatting.AQUA);
+        ON("ON", ChatFormatting.GREEN),
+        OFF("OFF", ChatFormatting.RED),
+        CLIENT("CLIENT DECIDE", ChatFormatting.AQUA);
 
-        final String label; final Formatting fmt;
-        ServerControl(String l, Formatting f) { this.label = l; this.fmt = f; }
-        public Text getText() { return Text.literal(label).formatted(fmt); }
+        final String label; final ChatFormatting fmt;
+        ServerControl(String l, ChatFormatting f) { this.label = l; this.fmt = f; }
+        public Component getText() { return Component.literal(label).withStyle(fmt); }
 
         static ServerControl fromState(boolean val, boolean allow) {
             if (allow) return CLIENT;
@@ -74,25 +78,25 @@ public class AutoPickupConfigScreen {
             pValsSnap[i] = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
         }
 
-        if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.networkHandler.sendChatCommand("autopickup query_global");
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().player.connection.sendCommand("autopickup query_global");
         }
 
         ClientConfigManager.ClientProfile profile = ClientConfigManager.getProfile();
-        YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Text.literal("Auto Pickup Config"));
+        YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Component.literal("Auto Pickup Config"));
 
         ConfigCategory clientCat = ConfigCategory.createBuilder()
                 .name(new DynamicTabTitle("Client Settings", clientOptions, 0))
                 .option(clientBool("Master Toggle", () -> profile.master, v -> profile.master = v, () -> ClientConfigManager.allowMaster))
-                .group(OptionGroup.createBuilder().name(Text.literal("Blocks"))
+                .group(OptionGroup.createBuilder().name(Component.literal("Blocks"))
                         .option(clientBool("Pickup Blocks", () -> profile.blocks, v -> profile.blocks = v, () -> ClientConfigManager.allowBlocks))
                         .option(clientBool("Pickup Block XP", () -> profile.blockXp, v -> profile.blockXp = v, () -> ClientConfigManager.allowBlockXp))
                         .build())
-                .group(OptionGroup.createBuilder().name(Text.literal("Mobs"))
+                .group(OptionGroup.createBuilder().name(Component.literal("Mobs"))
                         .option(clientBool("Pickup Mob Loot", () -> profile.mobLoot, v -> profile.mobLoot = v, () -> ClientConfigManager.allowMobLoot))
                         .option(clientBool("Pickup Mob XP", () -> profile.mobXp, v -> profile.mobXp = v, () -> ClientConfigManager.allowMobXp))
                         .build())
-                .group(OptionGroup.createBuilder().name(Text.literal("Multiplayer Splitting"))
+                .group(OptionGroup.createBuilder().name(Component.literal("Multiplayer Splitting"))
                         .option(clientBool("Split Mob Loot", () -> profile.splitMobLoot, v -> profile.splitMobLoot = v, () -> ClientConfigManager.allowSplitMobLoot))
                         .option(clientBool("Split Mob XP", () -> profile.splitMobXp, v -> profile.splitMobXp = v, () -> ClientConfigManager.allowSplitMobXp))
                         .build())
@@ -107,7 +111,7 @@ public class AutoPickupConfigScreen {
             for (int i = 0; i < 7; i++) {
                 final int idx = i;
                 Option<ServerControl> sOpt = Option.<ServerControl>createBuilder()
-                        .name(Text.literal(names[idx]))
+                        .name(Component.literal(names[idx]))
                         .binding(ServerControl.CLIENT,
                                 () -> ServerControl.fromState(ClientSyncHandler.sVals[idx], ClientSyncHandler.sAllows[idx]),
                                 (v) -> {
@@ -129,26 +133,26 @@ public class AutoPickupConfigScreen {
             ConfigCategory.Builder playerCat = ConfigCategory.createBuilder().name(new DynamicTabTitle("Player Management", playerOptions, 2));
 
             Option<String> targetNameOpt = Option.<String>createBuilder()
-                    .name(Text.literal("Target Player Name"))
+                    .name(Component.literal("Target Player Name"))
                     .binding("", () -> ClientSyncHandler.targetPlayerName, v -> ClientSyncHandler.targetPlayerName = v)
                     .controller(StringControllerBuilder::create)
                     .build();
             playerCat.option(targetNameOpt);
 
             playerCat.option(ButtonOption.createBuilder()
-                    .name(Text.literal("Load Player Config"))
-                    .text(Text.literal("Search / Load"))
+                    .name(Component.literal("Load Player Config"))
+                    .text(Component.literal("Search / Load"))
                     .action((s, o) -> {
                         String name = targetNameOpt.pendingValue();
                         if (name != null && !name.isEmpty()) {
-                            MinecraftClient.getInstance().player.networkHandler.sendChatCommand("autopickup query_player " + name);
+                            Minecraft.getInstance().player.connection.sendCommand("autopickup query_player " + name);
                         }
                     }).build());
 
             for(int i=0; i<7; i++) {
                 final int idx = i;
                 Option<Tristate> pOpt = Option.<Tristate>createBuilder()
-                        .name(Text.literal("Override " + names[idx]))
+                        .name(Component.literal("Override " + names[idx]))
                         .binding(Tristate.UNSET,
                                 () -> Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[idx]),
                                 v -> {
@@ -194,41 +198,55 @@ public class AutoPickupConfigScreen {
     }
 
     private static void sendGlobal(String key, boolean val) {
-        if (MinecraftClient.getInstance().player != null) {
-            MinecraftClient.getInstance().player.networkHandler.sendChatCommand("autopickup global " + key + " " + val + " silent");
+        if (Minecraft.getInstance().player != null) {
+            Minecraft.getInstance().player.connection.sendCommand("autopickup global " + key + " " + val + " silent");
         }
     }
 
     private static void sendPlayer(String target, String key, Tristate val) {
-        if (target.isEmpty() || MinecraftClient.getInstance().player == null) return;
-        MinecraftClient.getInstance().player.networkHandler.sendChatCommand("autopickup setPlayerConfig " + target + " " + key + " " + val.val + " silent");
+        if (target.isEmpty() || Minecraft.getInstance().player == null) return;
+        Minecraft.getInstance().player.connection.sendCommand("autopickup setPlayerConfig " + target + " " + key + " " + val.val + " silent");
     }
 
     private static Option<Boolean> clientBool(String name, Supplier<Boolean> g, Consumer<Boolean> s, Supplier<Boolean> allowed) {
-        return Option.<Boolean>createBuilder().name(Text.literal(name)).binding(true, g, s)
+        return Option.<Boolean>createBuilder().name(Component.literal(name)).binding(true, g, s)
                 .customController(o -> new Controller<Boolean>() {
                     @Override public Option<Boolean> option() { return o; }
-                    @Override public Text formatValue() { return o.pendingValue() ? Text.literal("ON").formatted(Formatting.GREEN) : Text.literal("OFF").formatted(Formatting.RED); }
+                    @Override public Component formatValue() { return o.pendingValue() ? Component.literal("ON").withStyle(ChatFormatting.GREEN) : Component.literal("OFF").withStyle(ChatFormatting.RED); }
                     @Override public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> dim) {
                         return new AbstractWidget(dim) {
                             private boolean focused = false;
                             @Override public void setFocused(boolean f) { this.focused = f; }
                             @Override public boolean isFocused() { return this.focused; }
 
-                            @Override public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
                                 int x = getDimension().x(), y = getDimension().y(), w = getDimension().width(), h = getDimension().height();
                                 // Allow configuration in main menu; when connected, check server permission
-                                boolean canConfig = MinecraftClient.getInstance().player == null || allowed.get();
+                                boolean canConfig = Minecraft.getInstance().player == null || allowed.get();
                                 int color = canConfig ? 0xFFFFFFFF : 0xFFA0A0A0;
-                                context.drawText(textRenderer, o.name(), x + 6, y + (h - 8)/2, color, true);
+                                graphics.text(Minecraft.getInstance().font, o.name(), x + 6, y + (h - 8)/2, color, true);
                                 int btnW = 50, btnX = x + w - btnW - 6;
-                                drawButtonRect(context, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY) && canConfig, canConfig);
-                                context.drawCenteredTextWithShadow(textRenderer, formatValue(), btnX + btnW/2, y + (h-8)/2, color);
+                                drawButtonRect(graphics, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY) && canConfig, canConfig);
+                                graphics.centeredText(Minecraft.getInstance().font, formatValue(), btnX + btnW/2, y + (h-8)/2, color);
                             }
-                            @Override public boolean onMouseClicked(double mouseX, double mouseY, int button) {
-                                int btnW = 50, btnX = getDimension().x() + getDimension().width() - btnW - 6;
-                                boolean canConfig = MinecraftClient.getInstance().player == null || allowed.get();
-                                if (canConfig && mouseX >= btnX) { o.requestSet(!o.pendingValue()); playDownSound(); return true; }
+                            @Override
+                            public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
+                                // Extract values from the event object
+                                double mouseX = event.x();
+                                double mouseY = event.y();
+                                int button = event.button();
+
+                                int btnW = 50;
+                                int btnX = getDimension().x() + getDimension().width() - btnW - 6;
+
+                                boolean canConfig = Minecraft.getInstance().player == null || allowed.get();
+
+                                if (canConfig && mouseX >= btnX) {
+                                    o.requestSet(!o.pendingValue());
+                                    playDownSound();
+                                    return true;
+                                }
+
                                 return false;
                             }
                         };
@@ -237,18 +255,18 @@ public class AutoPickupConfigScreen {
     }
 
     private static Option<Boolean> createTickerOption(int tickerIdx) {
-        return Option.<Boolean>createBuilder().name(Text.literal("Internal Sync"))
+        return Option.<Boolean>createBuilder().name(Component.literal("Internal Sync"))
                 .binding(false, () -> categoryTickers[tickerIdx], v -> categoryTickers[tickerIdx] = v)
                 .customController(o -> new Controller<Boolean>() {
                     @Override public Option<Boolean> option() { return o; }
-                    @Override public Text formatValue() { return Text.empty(); }
+                    @Override public Component formatValue() { return Component.empty(); }
                     @Override public AbstractWidget provideWidget(YACLScreen s, Dimension<Integer> d) {
                         return new AbstractWidget(d) {
                             private boolean focused = false;
                             @Override public void setFocused(boolean f) { this.focused = f; }
                             @Override public boolean isFocused() { return this.focused; }
 
-                            @Override public void render(DrawContext c, int mx, int my, float dl) {
+                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mx, int my, float dl) {
                                 if (s.tabManager.getCurrentTab() instanceof YACLScreen.CategoryTab tab) {
                                     boolean changed = false;
                                     for(int i=0; i<7; i++) {
@@ -266,7 +284,7 @@ public class AutoPickupConfigScreen {
                 }).build();
     }
 
-    private static class DynamicTabTitle implements Text {
+    private static class DynamicTabTitle implements Component {
         private final List<Option<?>> options;
         private final String label;
         private final int type;
@@ -282,13 +300,13 @@ public class AutoPickupConfigScreen {
             } else {
                 for (int i=0; i<7; i++) if (Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]) != pValsSnap[i]) changed = true;
             }
-            return changed ? Style.EMPTY.withColor(Formatting.RED) : Style.EMPTY;
+            return changed ? Style.EMPTY.withColor(ChatFormatting.RED) : Style.EMPTY;
         }
 
-        @Override public TextContent getContent() { return Text.literal(label).getContent(); }
-        @Override public List<Text> getSiblings() { return java.util.Collections.emptyList(); }
-        @Override public OrderedText asOrderedText() {
-            return (visitor) -> Text.literal(label).asOrderedText().accept((index, style, cp) -> visitor.accept(index, getStyle(), cp));
+        @Override public ComponentContents getContents() { return Component.literal(label).getContents(); }
+        @Override public List<Component> getSiblings() { return java.util.Collections.emptyList(); }
+        @Override public FormattedCharSequence getVisualOrderText() {
+            return (visitor) -> Component.literal(label).getVisualOrderText().accept((index, style, cp) -> visitor.accept(index, getStyle(), cp));
         }
     }
 }

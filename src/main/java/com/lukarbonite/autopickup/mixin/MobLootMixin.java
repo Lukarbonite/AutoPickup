@@ -2,19 +2,19 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.LootSplittingLogic;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ExperienceOrbEntity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.loot.context.LootWorldContext;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.ExperienceOrb;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -25,16 +25,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    // 1. Redirect XP Drop
+    // TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// 1. Redirect XP Drop
     @Redirect(
-            method = "dropExperience(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/Entity;)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ExperienceOrbEntity;spawn(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/util/math/Vec3d;I)V")
+            method = "dropExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V")
     )
-    private void autopickup_redirectExperience(ServerWorld world, Vec3d pos, int amount, ServerWorld originalWorld, Entity attacker) {
-        if (attacker instanceof PlayerEntity player && !player.isSpectator()) {
+    private void autopickup_redirectExperience(ServerLevel world, Vec3 pos, int amount, ServerLevel originalWorld, Entity attacker) {
+        if (attacker instanceof Player player && !player.isSpectator()) {
 
             // Check Master AND MobXpEnabled.
             // If disabled, fall back to Vanilla spawning immediately to prevent vanishing XP.
@@ -45,20 +53,24 @@ public abstract class MobLootMixin {
         }
 
         // Fallback: Drop on ground (Vanilla behavior)
-        ExperienceOrbEntity.spawn(world, pos, amount);
+        ExperienceOrb.award(world, pos, amount);
     }
 
-    // 2. Intercept Loot Drop
+    // TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// 2. Intercept Loot Drop
     @Inject(
-            method = "dropLoot(Lnet/minecraft/server/world/ServerWorld;Lnet/minecraft/entity/damage/DamageSource;Z)V",
+            method = "dropFromLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;Z)V",
             at = @At("HEAD"),
             cancellable = true
     )
-    private void autopickup_onDropLoot(ServerWorld world, DamageSource damageSource, boolean causedByPlayer, CallbackInfo ci) {
+    private void autopickup_onDropLoot(ServerLevel world, DamageSource damageSource, boolean causedByPlayer, CallbackInfo ci) {
         LivingEntity thisEntity = (LivingEntity) (Object) this;
-        Entity attacker = damageSource.getAttacker();
+        Entity attacker = damageSource.getEntity();
 
-        if (attacker instanceof PlayerEntity player && !player.isSpectator()) {
+        if (attacker instanceof Player player && !player.isSpectator()) {
 
             // Check Master AND MobLootEnabled.
             // If disabled, ignore interception and let vanilla drop loot normally.
@@ -67,32 +79,32 @@ public abstract class MobLootMixin {
             }
 
             // Generate Loot manually
-            Optional<RegistryKey<LootTable>> optional = thisEntity.getLootTableKey();
+            Optional<ResourceKey<LootTable>> optional = thisEntity.getLootTable();
             if (optional.isEmpty()) return;
 
-            LootTable lootTable = world.getServer().getReloadableRegistries().getLootTable(optional.get());
+            LootTable lootTable = world.getServer().reloadableRegistries().getLootTable(optional.get());
 
-            LootWorldContext.Builder builder = new LootWorldContext.Builder(world)
-                    .add(LootContextParameters.THIS_ENTITY, thisEntity)
-                    .add(LootContextParameters.ORIGIN, thisEntity.getEntityPos())
-                    .add(LootContextParameters.DAMAGE_SOURCE, damageSource)
-                    .addOptional(LootContextParameters.ATTACKING_ENTITY, damageSource.getAttacker())
-                    .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, damageSource.getSource());
+            LootParams.Builder builder = new LootParams.Builder(world)
+                    .withParameter(LootContextParams.THIS_ENTITY, thisEntity)
+                    .withParameter(LootContextParams.ORIGIN, thisEntity.position())
+                    .withParameter(LootContextParams.DAMAGE_SOURCE, damageSource)
+                    .withOptionalParameter(LootContextParams.ATTACKING_ENTITY, damageSource.getEntity())
+                    .withOptionalParameter(LootContextParams.DIRECT_ATTACKING_ENTITY, damageSource.getDirectEntity());
 
             if (causedByPlayer) {
-                builder.add(LootContextParameters.LAST_DAMAGE_PLAYER, player).luck(player.getLuck());
+                builder.withParameter(LootContextParams.LAST_DAMAGE_PLAYER, player).withLuck(player.getLuck());
             }
 
-            LootWorldContext lootContext = builder.build(LootContextTypes.ENTITY);
+            LootParams lootContext = builder.create(LootContextParamSets.ENTITY);
             List<ItemStack> generatedLoot = new ArrayList<>();
-            lootTable.generateLoot(lootContext, thisEntity.getLootTableSeed(), generatedLoot::add);
+            lootTable.getRandomItems(lootContext, thisEntity.getLootTableSeed(), generatedLoot::add);
 
             // Distribute
             List<ItemStack> remainingItems = LootSplittingLogic.distributeLoot(player, thisEntity, generatedLoot);
 
             // Drop whatever wasn't picked up
             for (ItemStack stack : remainingItems) {
-                thisEntity.dropStack(world, stack);
+                thisEntity.spawnAtLocation(world, stack);
             }
 
             // Cancel original dropLoot

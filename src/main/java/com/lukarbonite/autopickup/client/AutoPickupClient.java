@@ -5,7 +5,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public class AutoPickupClient implements ClientModInitializer {
 
@@ -29,8 +29,8 @@ public class AutoPickupClient implements ClientModInitializer {
                 pendingSync = false;
                 AutoPickupCommand.sendConfig();
                 // Send permission check and global config request on join so the state is cached before the menu is opened
-                client.player.networkHandler.sendChatCommand("autopickup check_perm");
-                client.player.networkHandler.sendChatCommand("autopickup query_global");
+                client.player.connection.sendCommand("autopickup check_perm");
+                client.player.connection.sendCommand("autopickup query_global");
             }
         });
 

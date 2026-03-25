@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup;
 
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.server.MinecraftServer;
 
 import java.util.UUID;
@@ -31,8 +31,8 @@ public final class ExperienceCache {
      * The single entry point for all experience that should be cached.
      * Called by mixins for block drops.
      */
-    public static void add(PlayerEntity player, int experience) {
-        PlayerExperience session = activeSessions.computeIfAbsent(player.getUuid(), k -> new PlayerExperience());
+    public static void add(Player player, int experience) {
+        PlayerExperience session = activeSessions.computeIfAbsent(player.getUUID(), k -> new PlayerExperience());
         session.addExperience(experience);
     }
 
@@ -49,7 +49,7 @@ public final class ExperienceCache {
             if (session.ticksUntilFinalize <= 0) {
                 // Timer expired, means the action (or series of actions) is complete.
                 activeSessions.remove(uuid);
-                PlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+                Player player = server.getPlayerList().getPlayer(uuid);
                 if (player != null && session.experience > 0) {
                     // Apply all the collected experience at once for mending.
                     AutoPickupApi.tryPickupBlockExperience(player, session.experience); // CHANGED: Block Experience

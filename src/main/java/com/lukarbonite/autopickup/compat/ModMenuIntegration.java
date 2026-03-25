@@ -5,8 +5,8 @@ import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.gui.screen.NoticeScreen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.AlertScreen;
+import net.minecraft.network.chat.Component;
 
 @Environment(EnvType.CLIENT)
 public class ModMenuIntegration implements ModMenuApi {
@@ -20,10 +20,10 @@ public class ModMenuIntegration implements ModMenuApi {
         }
 
         // Fallback: If YACL is missing, show a screen explaining why the menu won't open
-        return parent -> new NoticeScreen(
-                () -> net.minecraft.client.MinecraftClient.getInstance().setScreen(parent),
-                Text.literal("Auto Pickup Config"),
-                Text.literal("YetAnotherConfigLib (YACL) is required to use this menu. " +
+        return parent -> new AlertScreen(
+                () -> net.minecraft.client.Minecraft.getInstance().setScreen(parent),
+                Component.literal("Auto Pickup Config"),
+                Component.literal("YetAnotherConfigLib (YACL) is required to use this menu. " +
                         "Please install it or use commands /autopickup instead.")
         );
     }

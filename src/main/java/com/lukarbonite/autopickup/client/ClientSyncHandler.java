@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
 
 public class ClientSyncHandler {
     public static boolean isAdmin = false;
@@ -23,7 +23,7 @@ public class ClientSyncHandler {
     }
 
     public static void handleDataResponse(String msg) {
-        MinecraftClient client = MinecraftClient.getInstance();
+        Minecraft client = Minecraft.getInstance();
         client.execute(() -> {
             try {
                 if (msg.startsWith("[AP_PERM] ")) {

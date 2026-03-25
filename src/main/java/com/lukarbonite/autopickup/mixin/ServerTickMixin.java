@@ -13,7 +13,7 @@ import java.util.function.BooleanSupplier;
 @Mixin(MinecraftServer.class)
 public class ServerTickMixin {
 
-    @Inject(method = "tick", at = @At("TAIL"))
+    @Inject(method = "tickServer", at = @At("TAIL"))
     private void onServerTickEnd(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
         // Process the experience cache at the end of the tick.
         ExperienceCache.onServerTick((MinecraftServer) (Object) this);

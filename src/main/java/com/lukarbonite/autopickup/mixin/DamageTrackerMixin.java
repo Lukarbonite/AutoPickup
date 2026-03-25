@@ -1,10 +1,10 @@
 package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.accessor.DamageTrackerAccessor;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.server.level.ServerLevel;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +16,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
+// TODO(Ravel): can not resolve target class LivingEntity
 @Mixin(LivingEntity.class)
 public class DamageTrackerMixin implements DamageTrackerAccessor {
 
@@ -41,10 +45,14 @@ public class DamageTrackerMixin implements DamageTrackerAccessor {
         return Collections.unmodifiableList(autopickup_attackers);
     }
 
-    @Inject(method = "damage", at = @At("HEAD"))
-    private void autopickup_onDamage(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (source.getAttacker() instanceof PlayerEntity player) {
-            autopickup_addAttacker(player.getUuid());
+    // TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+// TODO(Ravel): no target class
+    @Inject(method = "hurtServer", at = @At("HEAD"))
+    private void autopickup_onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (source.getEntity() instanceof Player player) {
+            autopickup_addAttacker(player.getUUID());
         }
     }
 }
