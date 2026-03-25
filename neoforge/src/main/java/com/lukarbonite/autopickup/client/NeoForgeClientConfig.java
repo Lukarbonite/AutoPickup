@@ -10,7 +10,6 @@ import net.neoforged.api.distmarker.OnlyIn;
  * <p>Defaults match the server defaults. A full per-server profile system
  * (equivalent to the Fabric TOML profiles) can be added here later.
  */
-@OnlyIn(Dist.CLIENT)
 public final class NeoForgeClientConfig {
 
     // --- Allowances pushed down from the server ---

@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
-import com.lukarbonite.autopickup.AutoPickup;
+import com.lukarbonite.autopickup.AutoPickupCommon;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
@@ -11,10 +11,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-@Environment(EnvType.CLIENT)
 public class ClientConfigManager {
-    private static final Path PRESETS_DIR = AutoPickup.CONFIG_DIR.resolve("presets");
-    private static final Path DEFAULT_CONFIG = AutoPickup.CONFIG_DIR.resolve("client_default.toml");
+    private static final Path PRESETS_DIR = AutoPickupCommon.getConfigDir().resolve("presets");
+    private static final Path DEFAULT_CONFIG = AutoPickupCommon.getConfigDir().resolve("client_default.toml");
 
     private static final ClientProfile activeProfile = new ClientProfile();
     private static Path currentFilePath = DEFAULT_CONFIG;
@@ -88,7 +87,9 @@ public class ClientConfigManager {
                     case "splitMobXp" -> activeProfile.splitMobXp = Boolean.parseBoolean(val);
                 }
             }
-        } catch (IOException e) { AutoPickup.LOGGER.error("Failed to load client config", e); }
+        } catch (IOException e) {
+            AutoPickupCommon.LOGGER.error("Failed to load client config", e);
+        }
     }
 
     public static void save() {

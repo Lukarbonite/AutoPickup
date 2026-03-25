@@ -11,20 +11,31 @@ base {
 }
 
 neoForge {
-    version = neoforge_version
+    version = project.neoforge_version
+
+    runs {
+        client {
+            client() // Tells it to run the client
+
+            // Optional: Add your mod's ID to the arguments if it's not picking up the source
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.archives_base_name
+        }
+
+        server {
+            server() // Tells it to run a dedicated server
+        }
+    }
 
     mods {
-        "auto-pickup" {
+        "autopickup" {
             sourceSet sourceSets.main
+            sourceSet project(':common').sourceSets.main
         }
     }
 }
 
 dependencies {
-    // Pull compiled :common classes into this jar (no transitive deps)
-    implementation(project(path: ':common', configuration: 'namedElements')) { transitive = false }
-    // Bundle :common into the final NeoForge jar
-    jarJar(project(':common'))
+    implementation project(':common')
 }
 
 processResources {
@@ -33,9 +44,9 @@ processResources {
     inputs.property "neoforge_version",  project.neoforge_version
 
     filesMatching("META-INF/neoforge.mods.toml") {
-        expand version:           inputs.properties.version,
-                minecraft_version: inputs.properties.minecraft_version,
-                neoforge_version:  inputs.properties.neoforge_version
+        expand version:           project.mod_version,
+                minecraft_version: project.minecraft_version,
+                neoforge_version:  project.neoforge_version
     }
 }
 

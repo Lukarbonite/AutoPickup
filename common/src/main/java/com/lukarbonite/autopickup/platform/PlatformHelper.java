@@ -18,8 +18,10 @@ public interface PlatformHelper {
     /** Returns the loader's config directory (e.g. {@code .minecraft/config}). */
     Path getConfigDir();
 
-    /** Returns {@code true} if the mod with the given mod-id is present at runtime. */
-    boolean isModLoaded(String modId);
+    /**
+     * A safe version of isModLoaded to be used during the Mixin stage.
+     */
+    boolean isModLoadedEarly(String modId);
 
     // --- Singleton accessor (lazy-loaded via ServiceLoader) ---
 
@@ -41,4 +43,8 @@ public interface PlatformHelper {
         }
         return INSTANCE[0];
     }
+
+    /** * Updates the platform-specific client configuration with server-provided allowances.
+     */
+    void updateClientAllowances(boolean[] allowances);
 }

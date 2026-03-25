@@ -1,7 +1,7 @@
 {
   "required": true,
   "package": "com.lukarbonite.autopickup.mixin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_25",
   "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
   "mixins": [
     "BlockMixin",

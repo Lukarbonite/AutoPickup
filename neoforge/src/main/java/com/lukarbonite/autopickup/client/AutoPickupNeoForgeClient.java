@@ -7,25 +7,25 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.event.entity.player.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 
 /**
  * NeoForge client-side event handler.
  * Mirrors the behaviour of {@code AutoPickupClient} (Fabric) using NeoForge events.
  */
-@EventBusSubscriber(modid = AutoPickupCommon.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
+@EventBusSubscriber(modid = AutoPickupCommon.MOD_ID, value = Dist.CLIENT)
 public final class AutoPickupNeoForgeClient {
 
     private static boolean pendingSync = false;
 
     @SubscribeEvent
-    public static void onPlayerLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
         pendingSync = true;
     }
 
     @SubscribeEvent
-    public static void onPlayerLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         // Reset state on disconnect
         pendingSync = false;
     }

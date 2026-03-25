@@ -2,19 +2,39 @@
 // Each subproject (:common, :fabric, :neoforge) carries its own plugins and deps.
 
 subprojects {
+    // 1. APPLY THE PLUGIN FIRST
+    apply plugin: 'java-library'
+
     group   = project.maven_group
     version = project.mod_version
 
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-        options.release  = 25
-    }
-
+    // 2. NOW THE 'java' BLOCK WILL WORK
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(25)
         }
         withSourcesJar()
+    }
+
+    repositories {
+        mavenCentral()
+        maven {
+            name = 'Mojang'
+            url = 'https://libraries.minecraft.net/'
+        }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        maven {
+            name = 'NeoForge'
+            url = 'https://maven.neoforged.net/releases'
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release  = 25
     }
 
     jar {

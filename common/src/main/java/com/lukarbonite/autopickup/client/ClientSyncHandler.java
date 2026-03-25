@@ -1,5 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
+import com.lukarbonite.autopickup.platform.PlatformHelper;
 import net.minecraft.client.Minecraft;
 
 public class ClientSyncHandler {
@@ -56,12 +57,6 @@ public class ClientSyncHandler {
     }
 
     private static void updateClientAllowances() {
-        ClientConfigManager.allowMaster = sAllows[0];
-        ClientConfigManager.allowBlocks = sAllows[1];
-        ClientConfigManager.allowBlockXp = sAllows[2];
-        ClientConfigManager.allowMobLoot = sAllows[3];
-        ClientConfigManager.allowMobXp = sAllows[4];
-        ClientConfigManager.allowSplitMobLoot = sAllows[5];
-        ClientConfigManager.allowSplitMobXp = sAllows[6];
+        PlatformHelper.get().updateClientAllowances(sAllows);
     }
 }

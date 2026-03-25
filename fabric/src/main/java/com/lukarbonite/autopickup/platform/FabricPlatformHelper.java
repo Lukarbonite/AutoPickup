@@ -1,6 +1,7 @@
 package com.lukarbonite.autopickup.platform;
 
 import net.fabricmc.loader.api.FabricLoader;
+import com.lukarbonite.autopickup.client.ClientConfigManager;
 
 import java.nio.file.Path;
 
@@ -19,7 +20,18 @@ public final class FabricPlatformHelper implements PlatformHelper {
     }
 
     @Override
-    public boolean isModLoaded(String modId) {
+    public boolean isModLoadedEarly(String modId) {
         return FabricLoader.getInstance().isModLoaded(modId);
+    }
+
+    @Override
+    public void updateClientAllowances(boolean[] allowances) {
+        ClientConfigManager.allowMaster = allowances[0];
+        ClientConfigManager.allowBlocks = allowances[1];
+        ClientConfigManager.allowBlockXp = allowances[2];
+        ClientConfigManager.allowMobLoot = allowances[3];
+        ClientConfigManager.allowMobXp = allowances[4];
+        ClientConfigManager.allowSplitMobLoot = allowances[5];
+        ClientConfigManager.allowSplitMobXp = allowances[6];
     }
 }

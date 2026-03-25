@@ -20,7 +20,7 @@ import java.nio.file.Path;
  */
 public final class AutoPickupCommon {
 
-    public static final String MOD_ID = "auto-pickup";
+    public static final String MOD_ID = "autopickup";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private AutoPickupCommon() {}

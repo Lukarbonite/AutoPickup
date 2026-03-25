@@ -16,8 +16,8 @@ public class AutoPickupMixinPlugin implements IMixinConfigPlugin {
     @Override
     public void onLoad(String mixinPackage) {
         PlatformHelper platform = PlatformHelper.get();
-        hasVeinMiner = platform.isModLoaded("veinminer");
-        hasTreeHarvester = platform.isModLoaded("treeharvester");
+        hasVeinMiner = platform.isModLoadedEarly("veinminer");
+        hasTreeHarvester = platform.isModLoadedEarly("treeharvester");
     }
 
     @Override

@@ -4,8 +4,8 @@ license       = "AGPL-3.0-only"
 issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
 
 [[mods]]
-    modId       = "auto-pickup"
-    version     = "${file.jarVersion}"
+    modId       = "autopickup"
+    version     = "${version}"
     displayName = "Auto Pickup"
     description = '''Auto Pickup mod by lukarbonite'''
     logoFile    = "assets/auto-pickup/icon.png"
