@@ -10,14 +10,12 @@ import java.util.Set;
 
 public class AutoPickupMixinPlugin implements IMixinConfigPlugin {
 
-    private boolean hasVeinMiner;
-    private boolean hasTreeHarvester;
+//    private boolean hasTreeHarvester;
 
     @Override
     public void onLoad(String mixinPackage) {
         PlatformHelper platform = PlatformHelper.get();
-        hasVeinMiner = platform.isModLoadedEarly("veinminer");
-        hasTreeHarvester = platform.isModLoadedEarly("treeharvester");
+//        hasTreeHarvester = platform.isModLoadedEarly("treeharvester");
     }
 
     @Override
@@ -27,12 +25,9 @@ public class AutoPickupMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".compat.veinminer")) {
-            return hasVeinMiner;
-        }
-        if (mixinClassName.contains(".compat.treeharvester")) {
-            return hasTreeHarvester;
-        }
+//        if (mixinClassName.contains(".compat.treeharvester")) {
+//            return hasTreeHarvester;
+//        }
         return true;
     }
 

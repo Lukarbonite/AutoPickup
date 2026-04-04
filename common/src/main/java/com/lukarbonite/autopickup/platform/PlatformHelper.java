@@ -43,8 +43,4 @@ public interface PlatformHelper {
         }
         return INSTANCE[0];
     }
-
-    /** * Updates the platform-specific client configuration with server-provided allowances.
-     */
-    void updateClientAllowances(boolean[] allowances);
 }

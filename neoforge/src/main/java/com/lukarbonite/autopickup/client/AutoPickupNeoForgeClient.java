@@ -50,17 +50,17 @@ public final class AutoPickupNeoForgeClient {
         }
     }
 
-    /** Builds the config bit-mask from {@link NeoForgeClientConfig} and sends it to the server. */
+    /** Builds the config bit-mask from {@link ClientConfigManager} and sends it to the server. */
     private static void sendConfig(Minecraft client) {
         if (client.player == null) return;
         int mask = 0;
-        if (NeoForgeClientConfig.isMaster())       mask |= AutoPickupCommand.FLAG_MASTER;
-        if (NeoForgeClientConfig.isBlocks())       mask |= AutoPickupCommand.FLAG_BLOCKS;
-        if (NeoForgeClientConfig.isBlockXp())      mask |= AutoPickupCommand.FLAG_BLOCK_XP;
-        if (NeoForgeClientConfig.isMobLoot())      mask |= AutoPickupCommand.FLAG_MOB_LOOT;
-        if (NeoForgeClientConfig.isMobXp())        mask |= AutoPickupCommand.FLAG_MOB_XP;
-        if (NeoForgeClientConfig.isSplitMobLoot()) mask |= AutoPickupCommand.FLAG_SPLIT_LOOT;
-        if (NeoForgeClientConfig.isSplitMobXp())   mask |= AutoPickupCommand.FLAG_SPLIT_XP;
+        if (ClientConfigManager.isMaster())       mask |= AutoPickupCommand.FLAG_MASTER;
+        if (ClientConfigManager.isBlocks())       mask |= AutoPickupCommand.FLAG_BLOCKS;
+        if (ClientConfigManager.isBlockXp())      mask |= AutoPickupCommand.FLAG_BLOCK_XP;
+        if (ClientConfigManager.isMobLoot())      mask |= AutoPickupCommand.FLAG_MOB_LOOT;
+        if (ClientConfigManager.isMobXp())        mask |= AutoPickupCommand.FLAG_MOB_XP;
+        if (ClientConfigManager.isSplitMobLoot()) mask |= AutoPickupCommand.FLAG_SPLIT_LOOT;
+        if (ClientConfigManager.isSplitMobXp())   mask |= AutoPickupCommand.FLAG_SPLIT_XP;
         client.player.connection.sendCommand("ap_config_sync " + mask);
     }
 }

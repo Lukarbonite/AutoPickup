@@ -175,7 +175,7 @@ public class AutoPickupConfigScreen {
 
         return builder.save(() -> {
             ClientConfigManager.save();
-            FabricClientCommands.sendConfig();
+            ClientNetworkManager.sendConfig();
             if (ClientSyncHandler.isAdmin) applyAdminChanges();
         }).build().generateScreen(parent);
     }

@@ -1,8 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommon;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 
 import java.io.IOException;

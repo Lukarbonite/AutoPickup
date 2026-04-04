@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "plugin": "com.lukarbonite.autopickup.mixin.NeoforgeMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

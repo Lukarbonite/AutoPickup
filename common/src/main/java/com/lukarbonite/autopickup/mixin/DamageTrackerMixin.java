@@ -16,10 +16,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
 @Mixin(LivingEntity.class)
 public class DamageTrackerMixin implements DamageTrackerAccessor {
 
@@ -45,10 +41,6 @@ public class DamageTrackerMixin implements DamageTrackerAccessor {
         return Collections.unmodifiableList(autopickup_attackers);
     }
 
-    // TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
     @Inject(method = "hurtServer", at = @At("HEAD"))
     private void autopickup_onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (source.getEntity() instanceof Player player) {

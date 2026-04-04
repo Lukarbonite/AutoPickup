@@ -18,17 +18,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
-// TODO(Ravel): can not resolve target class Block
-// TODO(Ravel): can not resolve target class Block
-// TODO(Ravel): can not resolve target class Block
-// TODO(Ravel): can not resolve target class Block
 @Mixin(Block.class)
 public abstract class BlockMixin {
 
-    // TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
     @Inject(
             method = "dropResources(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/entity/BlockEntity;Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/item/ItemStack;)V",
             at = @At("HEAD"),

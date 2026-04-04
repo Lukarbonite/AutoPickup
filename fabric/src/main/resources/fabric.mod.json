@@ -26,7 +26,8 @@
         ]
 	},
 	"mixins": [
-		"autopickup.mixins.json"
+		"autopickup.mixins.json",
+		"autopickup.fabric.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.16.12",

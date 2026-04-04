@@ -11,9 +11,15 @@ loom {
     intermediateMappingsProvider = null
 }
 
+repositories {
+    maven { name = "Xander Maven";  url = "https://maven.isxander.dev/releases" }
+}
+
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
 
     implementation "com.google.code.gson:gson:2.10.1"
     compileOnly "net.fabricmc:fabric-loader:${loader_version}"
+
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
 }

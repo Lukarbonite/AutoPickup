@@ -1,9 +1,7 @@
 package com.lukarbonite.autopickup.platform;
 
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 import net.neoforged.fml.loading.FMLPaths;
-import com.lukarbonite.autopickup.client.NeoForgeClientConfig;
 
 
 import java.nio.file.Path;
@@ -30,16 +28,5 @@ public final class NeoForgePlatformHelper implements PlatformHelper {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    @Override
-    public void updateClientAllowances(boolean[] allowances) {
-        NeoForgeClientConfig.allowMaster = allowances[0];
-        NeoForgeClientConfig.allowBlocks = allowances[1];
-        NeoForgeClientConfig.allowBlockXp = allowances[2];
-        NeoForgeClientConfig.allowMobLoot = allowances[3];
-        NeoForgeClientConfig.allowMobXp = allowances[4];
-        NeoForgeClientConfig.allowSplitMobLoot = allowances[5];
-        NeoForgeClientConfig.allowSplitMobXp = allowances[6];
     }
 }

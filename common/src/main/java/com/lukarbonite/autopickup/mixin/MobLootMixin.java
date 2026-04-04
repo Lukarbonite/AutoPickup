@@ -25,18 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
-// TODO(Ravel): can not resolve target class LivingEntity
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    // TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// 1. Redirect XP Drop
+    // Redirect XP Drop
     @Redirect(
             method = "dropExperience(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/Entity;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V")
@@ -56,11 +48,7 @@ public abstract class MobLootMixin {
         ExperienceOrb.award(world, pos, amount);
     }
 
-    // TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// TODO(Ravel): no target class
-// 2. Intercept Loot Drop
+    // Intercept Loot Drop
     @Inject(
             method = "dropFromLootTable(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/damagesource/DamageSource;Z)V",
             at = @At("HEAD"),

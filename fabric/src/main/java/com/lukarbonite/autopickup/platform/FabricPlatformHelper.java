@@ -23,15 +23,4 @@ public final class FabricPlatformHelper implements PlatformHelper {
     public boolean isModLoadedEarly(String modId) {
         return FabricLoader.getInstance().isModLoaded(modId);
     }
-
-    @Override
-    public void updateClientAllowances(boolean[] allowances) {
-        ClientConfigManager.allowMaster = allowances[0];
-        ClientConfigManager.allowBlocks = allowances[1];
-        ClientConfigManager.allowBlockXp = allowances[2];
-        ClientConfigManager.allowMobLoot = allowances[3];
-        ClientConfigManager.allowMobXp = allowances[4];
-        ClientConfigManager.allowSplitMobLoot = allowances[5];
-        ClientConfigManager.allowSplitMobXp = allowances[6];
-    }
 }

@@ -1,18 +1,11 @@
 package com.lukarbonite.autopickup.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommand;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 
-/**
- * Fabric-side client command helpers. Lives in :fabric so it can freely reference
- * {@code Minecraft} and {@code ClientConfigManager} without polluting :common.
- */
-@Environment(EnvType.CLIENT)
-public final class FabricClientCommands {
+public final class ClientNetworkManager {
 
-    private FabricClientCommands() {}
+    private ClientNetworkManager() {}
 
     /**
      * Builds a bit-mask from the current client profile and sends it to the server

@@ -34,8 +34,16 @@ neoForge {
     }
 }
 
+repositories {
+    maven { name = "Xander Maven";  url = "https://maven.isxander.dev/releases" }
+}
+
 dependencies {
     implementation project(':common')
+
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
+
+    compileOnly(files("../libs/treeharvester-26.1.1-9.3.jar"))
 }
 
 tasks.named('jar', Jar) {
