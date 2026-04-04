@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup.client;
 
-import com.lukarbonite.autopickup.client.ClientConfigManager;
 import net.minecraft.client.Minecraft;
 
 public class ClientSyncHandler {
