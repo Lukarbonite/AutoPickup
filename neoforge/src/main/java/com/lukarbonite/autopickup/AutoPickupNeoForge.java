@@ -1,8 +1,5 @@
 package com.lukarbonite.autopickup;
 
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.AlertScreen;
-import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
@@ -25,19 +22,13 @@ public class AutoPickupNeoForge {
 
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, parentScreen) -> {
 
-            // Check if YACL is installed using NeoForge's ModList
+            // Check if YACL is installed
             if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
-                // The lambda prevents the YACL-dependent class from loading until execution
-                return com.lukarbonite.autopickup.client.AutoPickupConfigScreen.create(parentScreen);
+                return com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen.create(parentScreen);
             }
 
-            // Fallback: If YACL is missing, show the alert screen
-            return new AlertScreen(
-                    () -> Minecraft.getInstance().setScreen(parentScreen),
-                    Component.literal("Auto Pickup Config"),
-                    Component.literal("YetAnotherConfigLib (YACL) is required to use this menu. " +
-                            "Please install it or use commands /autopickup instead.")
-            );
+            // Vanilla GUI
+            return com.lukarbonite.autopickup.client.AutoPickupConfigScreen.create(parentScreen);
         });
     }
 

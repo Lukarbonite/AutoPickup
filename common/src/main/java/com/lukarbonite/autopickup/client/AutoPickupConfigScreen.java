@@ -1,312 +1,176 @@
 package com.lukarbonite.autopickup.client;
 
-import dev.isxander.yacl3.api.*;
-import dev.isxander.yacl3.api.controller.*;
-import dev.isxander.yacl3.api.utils.Dimension;
-import dev.isxander.yacl3.gui.AbstractWidget;
-import dev.isxander.yacl3.gui.YACLScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
-import net.minecraft.network.chat.Style;
-import net.minecraft.ChatFormatting;
-import net.minecraft.util.FormattedCharSequence;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-public class AutoPickupConfigScreen {
+public class AutoPickupConfigScreen extends Screen {
 
-    private static final boolean[] sValsSnap = new boolean[7];
-    private static final boolean[] sAllowsSnap = new boolean[7];
-    private static final Tristate[] pValsSnap = new Tristate[7];
+    private final boolean[] ui_sVals = new boolean[7];
+    private final boolean[] ui_sAllows = new boolean[7];
+    private final int[] ui_pVals = new int[7];
 
-    private static final List<Option<?>> clientOptions = new ArrayList<>();
-    private static final List<Option<?>> serverOptions = new ArrayList<>();
-    private static final List<Option<?>> playerOptions = new ArrayList<>();
+    private final Screen parent;
+    private int currentTab = 0; // 0 = Client, 1 = Server, 2 = Player
 
-    private static final boolean[] categoryTickers = new boolean[3];
-    private static final List<Option<Tristate>> pOptionRefs = new ArrayList<>();
-    private static final List<Option<ServerControl>> sOptionRefs = new ArrayList<>();
-
-    enum Tristate {
-        UNSET("unset", ChatFormatting.GRAY),
-        RESET("reset", ChatFormatting.YELLOW),
-        TRUE("true", ChatFormatting.GREEN),
-        FALSE("false", ChatFormatting.RED);
-
-        final String val; final ChatFormatting fmt;
-        Tristate(String v, ChatFormatting f) { this.val = v; this.fmt = f; }
-        public Component getText() { return Component.literal(name()).withStyle(fmt); }
-        public static Tristate fromEncoded(int i) {
-            return switch(i) { case 1 -> TRUE; case 2 -> FALSE; case 3 -> RESET; default -> UNSET; };
-        }
-    }
-
-    enum ServerControl {
-        ON("ON", ChatFormatting.GREEN),
-        OFF("OFF", ChatFormatting.RED),
-        CLIENT("CLIENT DECIDE", ChatFormatting.AQUA);
-
-        final String label; final ChatFormatting fmt;
-        ServerControl(String l, ChatFormatting f) { this.label = l; this.fmt = f; }
-        public Component getText() { return Component.literal(label).withStyle(fmt); }
-
-        static ServerControl fromState(boolean val, boolean allow) {
-            if (allow) return CLIENT;
-            return val ? ON : OFF;
-        }
+    public AutoPickupConfigScreen(Screen parent) {
+        super(Component.literal("Auto Pickup Config"));
+        this.parent = parent;
     }
 
     public static Screen create(Screen parent) {
-        pOptionRefs.clear();
-        sOptionRefs.clear();
-        clientOptions.clear();
-        serverOptions.clear();
-        playerOptions.clear();
-        Arrays.fill(categoryTickers, false);
+        ConfigUIUtils.updateSnapshots();
+        ConfigUIUtils.requestGlobalConfig();
+        return new AutoPickupConfigScreen(parent);
+    }
 
+    @Override
+    protected void init() {
+        super.init();
         for (int i = 0; i < 7; i++) {
-            sValsSnap[i] = ClientSyncHandler.sVals[i];
-            sAllowsSnap[i] = ClientSyncHandler.sAllows[i];
-            pValsSnap[i] = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
+            ui_sVals[i] = ClientSyncHandler.sVals[i];
+            ui_sAllows[i] = ClientSyncHandler.sAllows[i];
+            ui_pVals[i] = ClientSyncHandler.pValsEncoded[i];
         }
 
-        if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.connection.sendCommand("autopickup query_global");
-        }
+        int leftX = this.width / 2 - 155;
+        int rightX = this.width / 2 + 5;
+        int startY = 50;
 
-        ClientConfigManager.ClientProfile profile = ClientConfigManager.getProfile();
-        YetAnotherConfigLib.Builder builder = YetAnotherConfigLib.createBuilder().title(Component.literal("Auto Pickup Config"));
-
-        ConfigCategory clientCat = ConfigCategory.createBuilder()
-                .name(new DynamicTabTitle("Client Settings", clientOptions, 0))
-                .option(clientBool("Master Toggle", () -> profile.master, v -> profile.master = v, () -> ClientConfigManager.allowMaster))
-                .group(OptionGroup.createBuilder().name(Component.literal("Blocks"))
-                        .option(clientBool("Pickup Blocks", () -> profile.blocks, v -> profile.blocks = v, () -> ClientConfigManager.allowBlocks))
-                        .option(clientBool("Pickup Block XP", () -> profile.blockXp, v -> profile.blockXp = v, () -> ClientConfigManager.allowBlockXp))
-                        .build())
-                .group(OptionGroup.createBuilder().name(Component.literal("Mobs"))
-                        .option(clientBool("Pickup Mob Loot", () -> profile.mobLoot, v -> profile.mobLoot = v, () -> ClientConfigManager.allowMobLoot))
-                        .option(clientBool("Pickup Mob XP", () -> profile.mobXp, v -> profile.mobXp = v, () -> ClientConfigManager.allowMobXp))
-                        .build())
-                .group(OptionGroup.createBuilder().name(Component.literal("Multiplayer Splitting"))
-                        .option(clientBool("Split Mob Loot", () -> profile.splitMobLoot, v -> profile.splitMobLoot = v, () -> ClientConfigManager.allowSplitMobLoot))
-                        .option(clientBool("Split Mob XP", () -> profile.splitMobXp, v -> profile.splitMobXp = v, () -> ClientConfigManager.allowSplitMobXp))
-                        .build())
-                .option(createTickerOption(0))
-                .build();
-        builder.category(clientCat);
-
+        // --- TABS ---
+        this.addRenderableWidget(Button.builder(Component.literal("Client Settings"), btn -> switchTab(0))
+                .bounds(leftX, 20, 100, 20).build()).active = (currentTab != 0);
         if (ClientSyncHandler.isAdmin) {
-            String[] names = {"Master Toggle", "Pickup Blocks", "Pickup Block XP", "Pickup Mob Loot", "Pickup Mob XP", "Split Mob Loot", "Split Mob XP"};
+            this.addRenderableWidget(Button.builder(Component.literal("Server Config"), btn -> switchTab(1))
+                    .bounds(this.width / 2 - 50, 20, 100, 20).build()).active = (currentTab != 1);
+            this.addRenderableWidget(Button.builder(Component.literal("Player Mgmt"), btn -> switchTab(2))
+                    .bounds(rightX + 50, 20, 100, 20).build()).active = (currentTab != 2);
+        }
 
-            ConfigCategory.Builder serverCat = ConfigCategory.createBuilder().name(new DynamicTabTitle("Server Config", serverOptions, 1));
+        // --- TAB CONTENT ---
+        if (currentTab == 0) {
+            ClientConfigManager.ClientProfile profile = ClientConfigManager.getProfile();
+            addClientToggle(leftX, startY, "Master Toggle", profile.master, v -> profile.master = v, ClientConfigManager.allowMaster);
+            addClientToggle(rightX, startY, "Pickup Blocks", profile.blocks, v -> profile.blocks = v, ClientConfigManager.allowBlocks);
+            addClientToggle(leftX, startY + 24, "Pickup Block XP", profile.blockXp, v -> profile.blockXp = v, ClientConfigManager.allowBlockXp);
+            addClientToggle(rightX, startY + 24, "Pickup Mob Loot", profile.mobLoot, v -> profile.mobLoot = v, ClientConfigManager.allowMobLoot);
+            addClientToggle(leftX, startY + 48, "Pickup Mob XP", profile.mobXp, v -> profile.mobXp = v, ClientConfigManager.allowMobXp);
+            addClientToggle(rightX, startY + 48, "Split Mob Loot", profile.splitMobLoot, v -> profile.splitMobLoot = v, ClientConfigManager.allowSplitMobLoot);
+            addClientToggle(leftX, startY + 72, "Split Mob XP", profile.splitMobXp, v -> profile.splitMobXp = v, ClientConfigManager.allowSplitMobXp);
+
+        } else if (currentTab == 1 && ClientSyncHandler.isAdmin) {
             for (int i = 0; i < 7; i++) {
+                int x = (i % 2 == 0) ? leftX : rightX;
+                int y = startY + (i / 2) * 24;
                 final int idx = i;
-                Option<ServerControl> sOpt = Option.<ServerControl>createBuilder()
-                        .name(Component.literal(names[idx]))
-                        .binding(ServerControl.CLIENT,
-                                () -> ServerControl.fromState(ClientSyncHandler.sVals[idx], ClientSyncHandler.sAllows[idx]),
-                                (v) -> {
-                                    if (v == ServerControl.ON) { ClientSyncHandler.sAllows[idx] = false; ClientSyncHandler.sVals[idx] = true; }
-                                    else if (v == ServerControl.OFF) { ClientSyncHandler.sAllows[idx] = false; ClientSyncHandler.sVals[idx] = false; }
-                                    else { ClientSyncHandler.sAllows[idx] = true; }
-                                })
-                        .controller(opt -> CyclingListControllerBuilder.create(opt)
-                                .values(Arrays.asList(ServerControl.ON, ServerControl.OFF, ServerControl.CLIENT))
-                                .formatValue(ServerControl::getText))
-                        .build();
-                sOptionRefs.add(sOpt);
-                serverOptions.add(sOpt);
-                serverCat.option(sOpt);
+
+                this.addRenderableWidget(CycleButton.<ConfigUIUtils.ServerControl>builder(
+                                ConfigUIUtils.ServerControl::getText,
+                                ConfigUIUtils.ServerControl.fromState(ui_sVals[idx], ui_sAllows[idx])
+                        )
+                        .withValues(ConfigUIUtils.ServerControl.values())
+                        .create(x, y, 150, 20, Component.literal(ConfigUIUtils.NAMES[idx]), (btn, val) -> {
+                            if (val == ConfigUIUtils.ServerControl.ON) { ClientSyncHandler.sAllows[idx] = false; ClientSyncHandler.sVals[idx] = true; }
+                            else if (val == ConfigUIUtils.ServerControl.OFF) { ClientSyncHandler.sAllows[idx] = false; ClientSyncHandler.sVals[idx] = false; }
+                            else { ClientSyncHandler.sAllows[idx] = true; }
+
+                            ui_sVals[idx] = ClientSyncHandler.sVals[idx];
+                            ui_sAllows[idx] = ClientSyncHandler.sAllows[idx];
+                        }));
             }
-            serverCat.option(createTickerOption(1));
-            builder.category(serverCat.build());
+        } else if (currentTab == 2 && ClientSyncHandler.isAdmin) {
+            EditBox targetBox = new EditBox(this.font, leftX, startY, 150, 20, Component.literal("Target Player"));
+            targetBox.setMaxLength(16);
+            if (ClientSyncHandler.targetPlayerName != null) targetBox.setValue(ClientSyncHandler.targetPlayerName);
+            targetBox.setResponder(val -> ClientSyncHandler.targetPlayerName = val);
+            this.addRenderableWidget(targetBox);
 
-            ConfigCategory.Builder playerCat = ConfigCategory.createBuilder().name(new DynamicTabTitle("Player Management", playerOptions, 2));
+            this.addRenderableWidget(Button.builder(Component.literal("Search / Load"), btn -> {
+                String name = targetBox.getValue();
+                if (name != null && !name.isEmpty() && this.minecraft != null && this.minecraft.player != null) {
+                    this.minecraft.player.connection.sendCommand("autopickup query_player " + name);
+                }
+            }).bounds(rightX, startY, 150, 20).build());
 
-            Option<String> targetNameOpt = Option.<String>createBuilder()
-                    .name(Component.literal("Target Player Name"))
-                    .binding("", () -> ClientSyncHandler.targetPlayerName, v -> ClientSyncHandler.targetPlayerName = v)
-                    .controller(StringControllerBuilder::create)
-                    .build();
-            playerCat.option(targetNameOpt);
-
-            playerCat.option(ButtonOption.createBuilder()
-                    .name(Component.literal("Load Player Config"))
-                    .text(Component.literal("Search / Load"))
-                    .action((s, o) -> {
-                        String name = targetNameOpt.pendingValue();
-                        if (name != null && !name.isEmpty()) {
-                            Minecraft.getInstance().player.connection.sendCommand("autopickup query_player " + name);
-                        }
-                    }).build());
-
-            for(int i=0; i<7; i++) {
+            int playerStartY = startY + 30;
+            for (int i = 0; i < 7; i++) {
+                int x = (i % 2 == 0) ? leftX : rightX;
+                int y = playerStartY + (i / 2) * 24;
                 final int idx = i;
-                Option<Tristate> pOpt = Option.<Tristate>createBuilder()
-                        .name(Component.literal("Override " + names[idx]))
-                        .binding(Tristate.UNSET,
-                                () -> Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[idx]),
-                                v -> {
-                                    if (v == Tristate.TRUE) ClientSyncHandler.pValsEncoded[idx] = 1;
-                                    else if (v == Tristate.FALSE) ClientSyncHandler.pValsEncoded[idx] = 2;
-                                    else if (v == Tristate.RESET) ClientSyncHandler.pValsEncoded[idx] = 3;
-                                    else ClientSyncHandler.pValsEncoded[idx] = 0;
-                                })
-                        .controller(c -> CyclingListControllerBuilder.create(c)
-                                .values(Arrays.asList(Tristate.UNSET, Tristate.RESET, Tristate.TRUE, Tristate.FALSE))
-                                .formatValue(Tristate::getText))
-                        .build();
-                pOptionRefs.add(pOpt);
-                playerOptions.add(pOpt);
-                playerCat.option(pOpt);
+
+                this.addRenderableWidget(CycleButton.<ConfigUIUtils.Tristate>builder(
+                                ConfigUIUtils.Tristate::getText,
+                                ConfigUIUtils.Tristate.fromEncoded(ui_pVals[idx])
+                        )
+                        .withValues(ConfigUIUtils.Tristate.values())
+                        .create(x, y, 150, 20, Component.literal("Override " + ConfigUIUtils.NAMES[idx]), (btn, val) -> {
+                            if (val == ConfigUIUtils.Tristate.TRUE) ClientSyncHandler.pValsEncoded[idx] = 1;
+                            else if (val == ConfigUIUtils.Tristate.FALSE) ClientSyncHandler.pValsEncoded[idx] = 2;
+                            else if (val == ConfigUIUtils.Tristate.RESET) ClientSyncHandler.pValsEncoded[idx] = 3;
+                            else ClientSyncHandler.pValsEncoded[idx] = 0;
+
+                            ui_pVals[idx] = ClientSyncHandler.pValsEncoded[idx];
+                        }));
             }
-            playerCat.option(createTickerOption(2));
-            builder.category(playerCat.build());
         }
 
-        return builder.save(() -> {
-            ClientConfigManager.save();
-            ClientNetworkManager.sendConfig();
-            if (ClientSyncHandler.isAdmin) applyAdminChanges();
-        }).build().generateScreen(parent);
+        // --- DONE BUTTON ---
+        this.addRenderableWidget(Button.builder(Component.literal("Done"), btn -> this.onClose())
+                .bounds(this.width / 2 - 100, this.height - 30, 200, 20).build());
     }
 
-    private static void applyAdminChanges() {
-        if (!ClientSyncHandler.serverDataReceived) return;
-        String[] keys = {"master", "blocks", "blockXp", "mobLoot", "mobXp", "splitMobLoot", "splitMobXp"};
+    private void addClientToggle(int x, int y, String name, boolean currentVal, Consumer<Boolean> setter, boolean allowed) {
+        CycleButton<Boolean> btn = CycleButton.onOffBuilder(currentVal)
+                .create(x, y, 150, 20, Component.literal(name), (b, val) -> setter.accept(val));
+        btn.active = this.minecraft == null || this.minecraft.player == null || allowed;
+        this.addRenderableWidget(btn);
+    }
+
+    private void switchTab(int tab) {
+        if (this.currentTab != tab) {
+            this.currentTab = tab;
+            this.rebuildWidgets();
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        boolean needsRefresh = false;
+
         for (int i = 0; i < 7; i++) {
-            if (ClientSyncHandler.sVals[i] != sValsSnap[i]) sendGlobal(keys[i], ClientSyncHandler.sVals[i]);
-            if (ClientSyncHandler.sAllows[i] != sAllowsSnap[i]) sendGlobal("allow_" + keys[i], ClientSyncHandler.sAllows[i]);
-            Tristate currentP = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
-            if (!ClientSyncHandler.targetPlayerName.isEmpty() && currentP != pValsSnap[i]) sendPlayer(ClientSyncHandler.targetPlayerName, keys[i], currentP);
-        }
-        // Update snapshots to reflect saved state
-        for (int i = 0; i < 7; i++) {
-            sValsSnap[i] = ClientSyncHandler.sVals[i];
-            sAllowsSnap[i] = ClientSyncHandler.sAllows[i];
-            pValsSnap[i] = Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]);
-        }
-    }
-
-    private static void sendGlobal(String key, boolean val) {
-        if (Minecraft.getInstance().player != null) {
-            Minecraft.getInstance().player.connection.sendCommand("autopickup global " + key + " " + val + " silent");
-        }
-    }
-
-    private static void sendPlayer(String target, String key, Tristate val) {
-        if (target.isEmpty() || Minecraft.getInstance().player == null) return;
-        Minecraft.getInstance().player.connection.sendCommand("autopickup setPlayerConfig " + target + " " + key + " " + val.val + " silent");
-    }
-
-    private static Option<Boolean> clientBool(String name, Supplier<Boolean> g, Consumer<Boolean> s, Supplier<Boolean> allowed) {
-        return Option.<Boolean>createBuilder().name(Component.literal(name)).binding(true, g, s)
-                .customController(o -> new Controller<Boolean>() {
-                    @Override public Option<Boolean> option() { return o; }
-                    @Override public Component formatValue() { return o.pendingValue() ? Component.literal("ON").withStyle(ChatFormatting.GREEN) : Component.literal("OFF").withStyle(ChatFormatting.RED); }
-                    @Override public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> dim) {
-                        return new AbstractWidget(dim) {
-                            private boolean focused = false;
-                            @Override public void setFocused(boolean f) { this.focused = f; }
-                            @Override public boolean isFocused() { return this.focused; }
-
-                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-                                int x = getDimension().x(), y = getDimension().y(), w = getDimension().width(), h = getDimension().height();
-                                // Allow configuration in main menu; when connected, check server permission
-                                boolean canConfig = Minecraft.getInstance().player == null || allowed.get();
-                                int color = canConfig ? 0xFFFFFFFF : 0xFFA0A0A0;
-                                graphics.text(Minecraft.getInstance().font, o.name(), x + 6, y + (h - 8)/2, color, true);
-                                int btnW = 50, btnX = x + w - btnW - 6;
-                                drawButtonRect(graphics, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY) && canConfig, canConfig);
-                                graphics.centeredText(Minecraft.getInstance().font, formatValue(), btnX + btnW/2, y + (h-8)/2, color);
-                            }
-                            @Override
-                            public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-                                // Extract values from the event object
-                                double mouseX = event.x();
-                                double mouseY = event.y();
-                                int button = event.button();
-
-                                int btnW = 50;
-                                int btnX = getDimension().x() + getDimension().width() - btnW - 6;
-
-                                boolean canConfig = Minecraft.getInstance().player == null || allowed.get();
-
-                                if (canConfig && mouseX >= btnX) {
-                                    o.requestSet(!o.pendingValue());
-                                    playDownSound();
-                                    return true;
-                                }
-
-                                return false;
-                            }
-                        };
-                    }
-                }).build();
-    }
-
-    private static Option<Boolean> createTickerOption(int tickerIdx) {
-        return Option.<Boolean>createBuilder().name(Component.literal("Internal Sync"))
-                .binding(false, () -> categoryTickers[tickerIdx], v -> categoryTickers[tickerIdx] = v)
-                .customController(o -> new Controller<Boolean>() {
-                    @Override public Option<Boolean> option() { return o; }
-                    @Override public Component formatValue() { return Component.empty(); }
-                    @Override public AbstractWidget provideWidget(YACLScreen s, Dimension<Integer> d) {
-                        return new AbstractWidget(d) {
-                            private boolean focused = false;
-                            @Override public void setFocused(boolean f) { this.focused = f; }
-                            @Override public boolean isFocused() { return this.focused; }
-
-                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mx, int my, float dl) {
-                                if (s.tabManager.getCurrentTab() instanceof YACLScreen.CategoryTab tab) {
-                                    boolean changed = false;
-                                    for(int i=0; i<7; i++) {
-                                        if (ClientSyncHandler.sAllows[i] != sAllowsSnap[i] || ClientSyncHandler.sVals[i] != sValsSnap[i]) changed = true;
-                                        if (Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]) != pValsSnap[i]) changed = true;
-                                    }
-                                    for (Option<?> opt : clientOptions) if (opt.changed()) changed = true;
-                                    if (changed && !o.changed()) o.requestSet(!categoryTickers[tickerIdx]);
-                                    else if (!changed && o.changed()) o.requestSet(categoryTickers[tickerIdx]);
-                                    tab.updateButtons();
-                                }
-                            }
-                        };
-                    }
-                }).build();
-    }
-
-    private static class DynamicTabTitle implements Component {
-        private final List<Option<?>> options;
-        private final String label;
-        private final int type;
-
-        public DynamicTabTitle(String l, List<Option<?>> o, int type) { this.label = l; this.options = o; this.type = type; }
-
-        @Override public Style getStyle() {
-            boolean changed = false;
-            if (type == 0) {
-                for (Option<?> o : options) if (o.changed()) changed = true;
-            } else if (type == 1) {
-                for (int i=0; i<7; i++) if (ClientSyncHandler.sAllows[i] != sAllowsSnap[i] || ClientSyncHandler.sVals[i] != sValsSnap[i]) changed = true;
-            } else {
-                for (int i=0; i<7; i++) if (Tristate.fromEncoded(ClientSyncHandler.pValsEncoded[i]) != pValsSnap[i]) changed = true;
+            if (ui_sVals[i] != ClientSyncHandler.sVals[i] ||
+                    ui_sAllows[i] != ClientSyncHandler.sAllows[i] ||
+                    ui_pVals[i] != ClientSyncHandler.pValsEncoded[i]) {
+                needsRefresh = true;
+                break;
             }
-            return changed ? Style.EMPTY.withColor(ChatFormatting.RED) : Style.EMPTY;
         }
 
-        @Override public ComponentContents getContents() { return Component.literal(label).getContents(); }
-        @Override public List<Component> getSiblings() { return java.util.Collections.emptyList(); }
-        @Override public FormattedCharSequence getVisualOrderText() {
-            return (visitor) -> Component.literal(label).getVisualOrderText().accept((index, style, cp) -> visitor.accept(index, getStyle(), cp));
+        if (needsRefresh) {
+            this.rebuildWidgets();
+        }
+    }
+
+    @Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        graphics.centeredText(this.font, this.title, this.width / 2, 8, 0xFFFFFF);
+    }
+
+    @Override
+    public void onClose() {
+        ClientConfigManager.save();
+        ClientNetworkManager.sendConfig();
+        if (ClientSyncHandler.isAdmin) ConfigUIUtils.applyAdminChanges();
+
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(this.parent);
         }
     }
 }
