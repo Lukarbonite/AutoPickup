@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "auto-pickup",
+	"id": "autopickup",
 	"version": "${version}",
 	"name": "Auto Pickup",
 	"description": "Auto Pickup mod by lukarbonite",
@@ -36,6 +36,6 @@
 		"fabric-api": "*"
 	},
 	"suggests": {
-        "yet_another_config_lib_v3": ">=3.9.0+26.1-fabric"
+        "yet_another_config_lib_v3": ">=3.9.2+26.1-fabric"
 	}
 }
