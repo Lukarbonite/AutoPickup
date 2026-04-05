@@ -1,6 +1,6 @@
-# Auto Pickup for Fabric
+# Auto Pickup
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
 
@@ -35,7 +35,7 @@ Auto Pickup uses a flexible three-tier permission system:
 
 ### 🖥️ Mod Menu Integration (Client)
 
-If you have **Mod Menu** and **YetAnotherConfigLib (YACL)** installed, you can configure your personal preferences via the Mods menu.
+If you have **Mod Menu** installed, you can configure your personal preferences via the Mods menu.
 
 **Settings available:**
 - Master Toggle
@@ -58,16 +58,16 @@ Server operators (OP Level 2+) can manage global defaults and player overrides u
 
 #### Global Configuration
 
-| Command | Description | Default |
-|:--------|:------------|:--------|
-| `/autopickup` | Display current configuration status | - |
+| Command | Description                                    | Default |
+|:--------|:-----------------------------------------------|:--------|
+| `/autopickup` | Display current configuration status           | - |
 | `/autopickup master <true\|false>` | Master toggle - disables mod entirely if false | `true` |
-| `/autopickup blocks <true\|false>` | Auto-pickup items from broken blocks | `true` |
-| `/autopickup blockxp <true\|false>` | Auto-pickup experience from broken blocks | `true` |
-| `/autopickup mobloot <true\|false>` | Auto-pickup loot from killed mobs | `false` |
-| `/autopickup mobxp <true\|false>` | Auto-pickup experience from killed mobs | `false` |
-| `/autopickup splitmobloot <true\|false>` | Share mob loot among nearby attackers | `false` |
-| `/autopickup splitmobxp <true\|false>` | Share mob XP among nearby attackers | `false` |
+| `/autopickup blocks <true\|false>` | Autopickup items from broken blocks            | `true` |
+| `/autopickup blockxp <true\|false>` | Autopickup experience from broken blocks       | `true` |
+| `/autopickup mobloot <true\|false>` | Autopickup loot from killed mobs               | `false` |
+| `/autopickup mobxp <true\|false>` | Autopickup experience from killed mobs         | `false` |
+| `/autopickup splitmobloot <true\|false>` | Share mob loot among nearby attackers          | `false` |
+| `/autopickup splitmobxp <true\|false>` | Share mob XP among nearby attackers            | `false` |
 
 #### Client Control Allowances
 
@@ -150,21 +150,10 @@ splitMobXp = false
 }
 ```
 
----
-
-## 📦 Installation
-
-### Client & Server
-
-1. Install [Fabric Loader](https://fabricmc.net/use/)
-2. Download [Fabric API](https://modrinth.com/mod/fabric-api) and place in `mods/`
-3. Download **Auto Pickup** from the [releases page](https://github.com/yourusername/auto-pickup/releases)
-4. Place `auto-pickup-x.x.x.jar` in your `mods/` folder
-
 ### Optional But Recommended Client Dependencies
 
 - **Mod Menu** - Access config screen in-game
-- **YetAnotherConfigLib (YACL)** - Required for config GUI (fallback notice shown if missing)
+- **YetAnotherConfigLib (YACL)** - Required for config GUI (Vanilla GUI fallback)
 
 ---
 
@@ -174,12 +163,12 @@ Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most m
 
 ### 🔧 Explicitly Supported Mods
 
-| Mod | Status | Notes |
-|:----|:------:|:------|
-| **VeinMiner** | ✅ Full | All vein blocks picked up instantly with XP |
-| **TreeHarvester** | ✅ Full | Logs/leaves collected; saplings auto-replanted if enabled |
-| **Traveler's Backpack** | ✅ Full | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
-| **General Block Breakers** | ✅ Compatible | Any mod using vanilla break hooks |
+| Mod |             Status              | Notes |
+|:----|:-------------------------------:|:------|
+| **VeinMiner** |           Fabric only           | All vein blocks picked up instantly with XP |
+| **TreeHarvester** |              Full               | Logs/leaves collected; saplings auto-replanted if enabled |
+| **Traveler's Backpack** | 1.21.9-11 & Fabric only for now | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
+| **General Block Breakers** |           Compatible            | Any mod using vanilla break hooks |
 
 ### 📋 Technical Details
 
@@ -235,7 +224,7 @@ Player A (killer), B, and C all damaged a zombie. Settings:
 
 ```groovy
 dependencies {
-    modCompileOnly files("libs/auto-pickup-x.x.x.jar")
+    modCompileOnly files("libs/autopickup-platform-x.x.x.jar")
 }
 ```
 
@@ -243,12 +232,11 @@ dependencies {
 
 ```java
 import com.lukarbonite.autopickup.AutoPickupApi;
-import net.fabricmc.loader.api.FabricLoader;
 
 public class QuestRewards {
     
     public void giveReward(PlayerEntity player, List<ItemStack> items, int xp) {
-        if (!FabricLoader.getInstance().isModLoaded("auto-pickup")) {
+        if (!isModLoaded("autopickup")) {
             // Fallback: manual drops
             items.forEach(stack -> player.dropItem(stack, false));
             player.addExperience(xp);
@@ -282,17 +270,17 @@ public class QuestRewards {
 
 ### API Methods
 
-| Method | Description |
-|:-------|:------------|
+| Method | Description                                                  |
+|:-------|:-------------------------------------------------------------|
 | `tryPickup(PlayerEntity, List<ItemStack>)` | Pickup items from blocks (respects Master + Blocks settings) |
-| `tryPickupFromMob(PlayerEntity, List<ItemStack>)` | Pickup items from mobs (respects Master + MobLoot settings) |
-| `tryPickupBlockExperience(PlayerEntity, int)` | Give block XP (respects Master + BlockXP settings) |
-| `tryPickupMobExperience(PlayerEntity, int)` | Give mob XP (respects Master + MobXP settings) |
-| `isMasterEnabled(PlayerEntity)` | Check if auto-pickup is enabled for player |
-| `isBlocksEnabled(PlayerEntity)` | Check block item pickup setting |
-| `isBlockXpEnabled(PlayerEntity)` | Check block XP pickup setting |
-| `isMobLootEnabled(PlayerEntity)` | Check mob loot pickup setting |
-| `isMobXpEnabled(PlayerEntity)` | Check mob XP pickup setting |
+| `tryPickupFromMob(PlayerEntity, List<ItemStack>)` | Pickup items from mobs (respects Master + MobLoot settings)  |
+| `tryPickupBlockExperience(PlayerEntity, int)` | Give block XP (respects Master + BlockXP settings)           |
+| `tryPickupMobExperience(PlayerEntity, int)` | Give mob XP (respects Master + MobXP settings)               |
+| `isMasterEnabled(PlayerEntity)` | Check if autopickup is enabled for player                    |
+| `isBlocksEnabled(PlayerEntity)` | Check block item pickup setting                              |
+| `isBlockXpEnabled(PlayerEntity)` | Check block XP pickup setting                                |
+| `isMobLootEnabled(PlayerEntity)` | Check mob loot pickup setting                                |
+| `isMobXpEnabled(PlayerEntity)` | Check mob XP pickup setting                                  |
 
 > **Note:** All `try*` methods return lists of items that could not be picked up (full inventory).
 
