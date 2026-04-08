@@ -1,5 +1,7 @@
 package com.lukarbonite.autopickup;
 
+import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
+import com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
@@ -24,11 +26,11 @@ public class AutoPickupNeoForge {
 
             // Check if YACL is installed
             if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
-                return com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen.create(parentScreen);
+                return AutoPickupYACLConfigScreen.create(parentScreen);
             }
 
             // Vanilla GUI
-            return com.lukarbonite.autopickup.client.AutoPickupConfigScreen.create(parentScreen);
+            return AutoPickupConfigScreen.create(parentScreen);
         });
     }
 

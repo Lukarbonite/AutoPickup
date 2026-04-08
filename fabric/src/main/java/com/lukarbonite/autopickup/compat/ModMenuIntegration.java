@@ -1,5 +1,7 @@
 package com.lukarbonite.autopickup.compat;
 
+import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
+import com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen;
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import net.fabricmc.api.EnvType;
@@ -12,10 +14,10 @@ public class ModMenuIntegration implements ModMenuApi {
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
         // Check if YACL is installed
         if (FabricLoader.getInstance().isModLoaded("yet_another_config_lib_v3")) {
-            return parent -> com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen.create(parent);
+            return parent -> AutoPickupYACLConfigScreen.create(parent);
         }
 
         // Vanilla GUI
-        return parent -> com.lukarbonite.autopickup.client.AutoPickupConfigScreen.create(parent);
+        return parent -> AutoPickupConfigScreen.create(parent);
     }
 }

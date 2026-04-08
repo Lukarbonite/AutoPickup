@@ -1,5 +1,8 @@
 package com.lukarbonite.autopickup.client;
 
+import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
+import com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen;
+import com.lukarbonite.autopickup.platform.PlatformHelper;
 import net.minecraft.client.Minecraft;
 
 public class ClientSyncHandler {
@@ -43,11 +46,24 @@ public class ClientSyncHandler {
 
                 if (msg.startsWith("[AP_DATA] ")) {
                     String[] parts = msg.split(" ");
-                    if (parts.length < 3) return;
+                    if (parts.length < 3)
+                        return;
                     int mask = Integer.parseInt(parts[2]);
                     for(int i = 0; i < 7; i++) {
                         pValsEncoded[i] = (mask >> (i * 2)) & 3;
                     }
+                }
+
+                if (msg.startsWith("[AP_OPEN_GUI]")) {
+                    client.execute(() -> {
+                        boolean useYACL = PlatformHelper.get().isModLoadedEarly("yet_another_config_lib_v3");
+
+                        if (useYACL)
+                            client.setScreen(AutoPickupYACLConfigScreen.create(null));
+                        else
+                            client.setScreen(AutoPickupConfigScreen.create(null));
+                    });
+                    return;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -56,12 +72,12 @@ public class ClientSyncHandler {
     }
 
     private static void updateClientAllowances() {
-        ClientConfigManager.allowMaster       = sAllows[0];
-        ClientConfigManager.allowBlocks       = sAllows[1];
-        ClientConfigManager.allowBlockXp      = sAllows[2];
-        ClientConfigManager.allowMobLoot      = sAllows[3];
-        ClientConfigManager.allowMobXp        = sAllows[4];
+        ClientConfigManager.allowMaster = sAllows[0];
+        ClientConfigManager.allowBlocks = sAllows[1];
+        ClientConfigManager.allowBlockXp = sAllows[2];
+        ClientConfigManager.allowMobLoot = sAllows[3];
+        ClientConfigManager.allowMobXp = sAllows[4];
         ClientConfigManager.allowSplitMobLoot = sAllows[5];
-        ClientConfigManager.allowSplitMobXp   = sAllows[6];
+        ClientConfigManager.allowSplitMobXp = sAllows[6];
     }
 }

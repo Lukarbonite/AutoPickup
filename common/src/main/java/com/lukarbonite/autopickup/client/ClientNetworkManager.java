@@ -16,13 +16,13 @@ public final class ClientNetworkManager {
         if (client.player == null) return;
 
         int mask = 0;
-        if (ClientConfigManager.isMaster())       mask |= AutoPickupCommand.FLAG_MASTER;
-        if (ClientConfigManager.isBlocks())       mask |= AutoPickupCommand.FLAG_BLOCKS;
-        if (ClientConfigManager.isBlockXp())      mask |= AutoPickupCommand.FLAG_BLOCK_XP;
-        if (ClientConfigManager.isMobLoot())      mask |= AutoPickupCommand.FLAG_MOB_LOOT;
-        if (ClientConfigManager.isMobXp())        mask |= AutoPickupCommand.FLAG_MOB_XP;
+        if (ClientConfigManager.isMaster()) mask |= AutoPickupCommand.FLAG_MASTER;
+        if (ClientConfigManager.isBlocks()) mask |= AutoPickupCommand.FLAG_BLOCKS;
+        if (ClientConfigManager.isBlockXp()) mask |= AutoPickupCommand.FLAG_BLOCK_XP;
+        if (ClientConfigManager.isMobLoot()) mask |= AutoPickupCommand.FLAG_MOB_LOOT;
+        if (ClientConfigManager.isMobXp()) mask |= AutoPickupCommand.FLAG_MOB_XP;
         if (ClientConfigManager.isSplitMobLoot()) mask |= AutoPickupCommand.FLAG_SPLIT_LOOT;
-        if (ClientConfigManager.isSplitMobXp())   mask |= AutoPickupCommand.FLAG_SPLIT_XP;
+        if (ClientConfigManager.isSplitMobXp()) mask |= AutoPickupCommand.FLAG_SPLIT_XP;
 
         client.player.connection.sendCommand("ap_config_sync " + mask);
     }

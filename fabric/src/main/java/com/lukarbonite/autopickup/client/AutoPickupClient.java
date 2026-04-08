@@ -35,7 +35,8 @@ public class AutoPickupClient implements ClientModInitializer {
         // 3. Chat Interception for Data Query, Permissions, and Global Config
         ClientReceiveMessageEvents.ALLOW_GAME.register((message, overlay) -> {
             String text = message.getString();
-            if (text.startsWith("[AP_DATA] ") || text.startsWith("[AP_PERM] ") || text.startsWith("[AP_GLOBAL] ")) {
+            if (text.startsWith("[AP_DATA] ") || text.startsWith("[AP_PERM] ") ||
+                    text.startsWith("[AP_GLOBAL] ") || text.startsWith("[AP_OPEN_GUI]")) {
                 ClientSyncHandler.handleDataResponse(text);
                 return false;
             }

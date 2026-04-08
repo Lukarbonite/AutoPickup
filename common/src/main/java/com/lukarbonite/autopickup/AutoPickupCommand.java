@@ -77,6 +77,12 @@ public class AutoPickupCommand {
                 .then(Commands.literal("query_global")
                         .executes(AutoPickupCommand::executeQueryGlobal)
                 )
+                .then(Commands.literal("gui")
+                        .executes(ctx -> {
+                            ctx.getSource().sendSuccess(() -> Component.literal("[AP_OPEN_GUI]"), false);
+                            return 1;
+                        })
+                )
         );
 
         dispatcher.register(Commands.literal("ap_config_sync")
@@ -114,13 +120,13 @@ public class AutoPickupCommand {
             PlayerConfigs.PlayerState s = PlayerConfigs.getState(target.getUUID());
 
             int mask = 0;
-            mask |= encodeTristate(s.overrideMaster)       << 0;
-            mask |= encodeTristate(s.overrideBlocks)       << 2;
-            mask |= encodeTristate(s.overrideBlockXp)      << 4;
-            mask |= encodeTristate(s.overrideMobLoot)      << 6;
-            mask |= encodeTristate(s.overrideMobXp)        << 8;
+            mask |= encodeTristate(s.overrideMaster) << 0;
+            mask |= encodeTristate(s.overrideBlocks) << 2;
+            mask |= encodeTristate(s.overrideBlockXp) << 4;
+            mask |= encodeTristate(s.overrideMobLoot) << 6;
+            mask |= encodeTristate(s.overrideMobXp) << 8;
             mask |= encodeTristate(s.overrideSplitMobLoot) << 10;
-            mask |= encodeTristate(s.overrideSplitMobXp)   << 12;
+            mask |= encodeTristate(s.overrideSplitMobXp) << 12;
 
             final int finalMask = mask;
             // Sending feedback directly to the command source (the admin)

@@ -44,7 +44,8 @@ public final class AutoPickupNeoForgeClient {
     @SubscribeEvent
     public static void onChatReceived(ClientChatReceivedEvent event) {
         String text = event.getMessage().getString();
-        if (text.startsWith("[AP_DATA] ") || text.startsWith("[AP_PERM] ") || text.startsWith("[AP_GLOBAL] ")) {
+        if (text.startsWith("[AP_DATA] ") || text.startsWith("[AP_PERM] ") ||
+                text.startsWith("[AP_GLOBAL] ") || text.startsWith("[AP_OPEN_GUI]")) {
             ClientSyncHandler.handleDataResponse(text);
             event.setCanceled(true);
         }
