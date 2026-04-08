@@ -40,3 +40,5 @@ replay_*.log
 *.jfr
 /.claude/worktrees/dreamy-shannon/
 /.run/
+libs/*
+!libs/.ignoreme

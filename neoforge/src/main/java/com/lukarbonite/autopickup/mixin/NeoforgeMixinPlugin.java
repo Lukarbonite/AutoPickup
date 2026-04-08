@@ -20,6 +20,14 @@ public class NeoforgeMixinPlugin implements IMixinConfigPlugin {
                 return false;
             }
         }
+        if (mixinClassName.contains(".compat.travelersbackpack")) {
+            try {
+                return FMLLoader.getCurrent().getLoadingModList() != null &&
+                        FMLLoader.getCurrent().getLoadingModList().getModFileById("travelersbackpack") != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         return true;
     }
 

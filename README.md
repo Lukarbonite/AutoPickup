@@ -115,13 +115,13 @@ Force specific settings for individual players (overrides both server defaults a
   "autoPickupMobXp": false,
   "autoPickupSplitMobLoot": false,
   "autoPickupSplitMobXp": false,
-  "allowMaster": false,
-  "allowBlocks": false,
-  "allowBlockXp": false,
-  "allowMobLoot": false,
-  "allowMobXp": false,
-  "allowSplitMobLoot": false,
-  "allowSplitMobXp": false
+  "allowMaster": true,
+  "allowBlocks": true,
+  "allowBlockXp": true,
+  "allowMobLoot": true,
+  "allowMobXp": true,
+  "allowSplitMobLoot": true,
+  "allowSplitMobXp": true
 }
 ```
 
@@ -163,12 +163,12 @@ Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most m
 
 ### 🔧 Explicitly Supported Mods
 
-| Mod |             Status              | Notes |
-|:----|:-------------------------------:|:------|
-| **VeinMiner** |           Fabric only           | All vein blocks picked up instantly with XP |
-| **TreeHarvester** |              Full               | Logs/leaves collected; saplings auto-replanted if enabled |
-| **Traveler's Backpack** | 1.21.9-11 & Fabric only for now | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
-| **General Block Breakers** |           Compatible            | Any mod using vanilla break hooks |
+| Mod |   Status    | Notes |
+|:----|:-----------:|:------|
+| **VeinMiner** | Fabric only | All vein blocks picked up instantly with XP |
+| **TreeHarvester** |    Full     | Logs/leaves collected; saplings auto-replanted if enabled |
+| **Traveler's Backpack** |    Full     | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
+| **General Block Breakers** | Compatible  | Any mod using vanilla break hooks |
 
 ### 📋 Technical Details
 
@@ -224,7 +224,7 @@ Player A (killer), B, and C all damaged a zombie. Settings:
 
 ```groovy
 dependencies {
-    modCompileOnly files("libs/autopickup-platform-x.x.x.jar")
+    compileOnly(files("libs/autopickup-platform-x.x.x.jar"))
 }
 ```
 

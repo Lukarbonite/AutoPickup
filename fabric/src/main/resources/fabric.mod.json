@@ -27,6 +27,7 @@
 	},
 	"mixins": [
 		"autopickup.mixins.json",
+		"autopickup.compat.mixins.json",
 		"autopickup.fabric.mixins.json"
 	],
 	"depends": {

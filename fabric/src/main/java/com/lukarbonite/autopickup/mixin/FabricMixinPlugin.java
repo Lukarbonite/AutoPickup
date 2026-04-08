@@ -18,6 +18,9 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains(".compat.treeharvester")) {
             return FabricLoader.getInstance().isModLoaded("treeharvester");
         }
+        if (mixinClassName.contains(".compat.travelersbackpack")) {
+            return FabricLoader.getInstance().isModLoaded("travelersbackpack");
+        }
         return true;
     }
 

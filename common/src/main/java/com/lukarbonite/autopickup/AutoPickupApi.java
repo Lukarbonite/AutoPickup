@@ -1,6 +1,5 @@
 package com.lukarbonite.autopickup;
 
-//import com.lukarbonite.autopickup.compat.travelersbackpack.TravelersBackpackCompat;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
@@ -103,16 +102,14 @@ public final class AutoPickupApi {
 
     private static List<ItemStack> insertDrops(Player player, List<ItemStack> drops) {
         List<ItemStack> unpicked = new ArrayList<>();
-        //boolean hasBackpack = FabricLoader.getInstance().isModLoaded("travelersbackpack");
 
         for (ItemStack stack : drops) {
-            if (stack.isEmpty()) continue;
-//            if (hasBackpack) {
-//                stack = TravelersBackpackCompat.tryPickup(player, stack);
-//                if (stack.isEmpty()) continue;
-//            }
+            if (stack.isEmpty())
+                continue;
+
             if (player.getInventory().add(stack)) {
-                if (!stack.isEmpty()) unpicked.add(stack);
+                if (!stack.isEmpty())
+                    unpicked.add(stack);
             } else {
                 unpicked.add(stack);
             }

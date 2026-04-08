@@ -33,4 +33,7 @@ issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
     config = "autopickup.mixins.json"
 
 [[mixins]]
-config = "autopickup.neoforge.mixins.json"
+    config = "autopickup.compat.mixins.json"
+
+[[mixins]]
+    config = "autopickup.neoforge.mixins.json"

@@ -44,6 +44,7 @@ dependencies {
     compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
 
     compileOnly(files("../libs/treeharvester-26.1.1-9.3.jar"))
+    compileOnly(files("../libs/travelersbackpack-neoforge-26.1.1-11.1.0.jar"))
 }
 
 tasks.named('jar', Jar) {
