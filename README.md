@@ -33,9 +33,10 @@ Auto Pickup uses a flexible three-tier permission system:
 2. **Admin Overrides** - Per-player forced settings (highest priority)
 3. **Client Preferences** - Individual player choices (only if server allows)
 
-### 🖥️ Mod Menu Integration (Client)
+### 🖥️ Configuration Menu (Client)
 
-If you have **Mod Menu** installed, you can configure your personal preferences via the Mods menu.
+You can configure your personal preferences via the menu. Use **Mod Menu** for a easy access on Fabric.
+Otherwise, use /autopickup gui
 
 **Settings available:**
 - Master Toggle
@@ -55,6 +56,12 @@ If you have **Mod Menu** installed, you can configure your personal preferences 
 ### 📜 Commands (Server Admin)
 
 Server operators (OP Level 2+) can manage global defaults and player overrides using `/autopickup`.
+
+#### Menu Access
+
+| Command           | Description                              |
+|:------------------|:-----------------------------------------|
+| `/autopickup gui` | Access to configuration menu via command |
 
 #### Global Configuration
 
@@ -235,7 +242,7 @@ import com.lukarbonite.autopickup.AutoPickupApi;
 
 public class QuestRewards {
     
-    public void giveReward(PlayerEntity player, List<ItemStack> items, int xp) {
+    public void giveReward(Player player, List<ItemStack> items, int xp) {
         if (!isModLoaded("autopickup")) {
             // Fallback: manual drops
             items.forEach(stack -> player.dropItem(stack, false));
@@ -259,7 +266,7 @@ public class QuestRewards {
     }
     
     // For mob-related rewards
-    public void giveMobReward(PlayerEntity player, List<ItemStack> loot, int xp) {
+    public void giveMobReward(Player player, List<ItemStack> loot, int xp) {
         List<ItemStack> remaining = AutoPickupApi.tryPickupFromMob(player, loot);
         remaining.forEach(stack -> player.dropItem(stack, false));
         
