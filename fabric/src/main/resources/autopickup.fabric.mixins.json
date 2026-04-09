@@ -1,10 +1,12 @@
 {
   "required": false,
-  "package": "com.lukarbonite.autopickup.mixin",
-  "plugin": "com.lukarbonite.autopickup.mixin.FabricMixinPlugin",
-  "compatibilityLevel": "JAVA_25",
+  "package": "com.lukarbonite.fabric.mixin",
+  "refmap": "autopickup-fabric-refmap.json",
+  "plugin": "com.lukarbonite.fabric.mixin.FabricMixinPlugin",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
   "mixins": [
-    "compat.veinminer.VeinMinerEventMixin",
+    "compat.veinminer.VeinminerMixin",
     "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
     "compat.treeharvester.LeafEventsMixin",
     "compat.treeharvester.LeafProcessingMixin",

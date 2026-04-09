@@ -52,7 +52,7 @@ public final class AutoPickupCommon {
 
     /**
      * Registers all commands. Call this from the platform's command-registration event
-     * (Fabric: {@code CommandRegistrationCallback}, NeoForge: {@code RegisterCommandsEvent}).
+     * (Fabric: {@code CommandRegistrationCallback}, Forge: {@code RegisterCommandsEvent}).
      */
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         AutoPickupCommand.register(dispatcher);

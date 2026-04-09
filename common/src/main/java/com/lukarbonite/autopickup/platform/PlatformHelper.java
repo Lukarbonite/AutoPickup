@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.util.ServiceLoader;
 
 /**
- * SPI abstraction for platform-specific (Fabric / NeoForge) services.
+ * SPI abstraction for platform-specific (Fabric / Forge) services.
  *
  * <p>Each platform module provides exactly one implementation and registers it via
  * {@code META-INF/services/com.lukarbonite.autopickup.platform.PlatformHelper}.

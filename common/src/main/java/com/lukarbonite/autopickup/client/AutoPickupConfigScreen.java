@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.client;
 
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
@@ -69,10 +69,8 @@ public class AutoPickupConfigScreen extends Screen {
                 int y = startY + (i / 2) * 24;
                 final int idx = i;
 
-                this.addRenderableWidget(CycleButton.<ConfigUIUtils.ServerControl>builder(
-                                ConfigUIUtils.ServerControl::getText,
-                                ConfigUIUtils.ServerControl.fromState(ui_sVals[idx], ui_sAllows[idx])
-                        )
+                this.addRenderableWidget(CycleButton.builder(ConfigUIUtils.ServerControl::getText)
+                        .withInitialValue(ConfigUIUtils.ServerControl.fromState(ui_sVals[idx], ui_sAllows[idx]))
                         .withValues(ConfigUIUtils.ServerControl.values())
                         .create(x, y, 150, 20, Component.literal(ConfigUIUtils.NAMES[idx]), (btn, val) -> {
                             if (val == ConfigUIUtils.ServerControl.ON) { ClientSyncHandler.sAllows[idx] = false; ClientSyncHandler.sVals[idx] = true; }
@@ -103,10 +101,8 @@ public class AutoPickupConfigScreen extends Screen {
                 int y = playerStartY + (i / 2) * 24;
                 final int idx = i;
 
-                this.addRenderableWidget(CycleButton.<ConfigUIUtils.Tristate>builder(
-                                ConfigUIUtils.Tristate::getText,
-                                ConfigUIUtils.Tristate.fromEncoded(ui_pVals[idx])
-                        )
+                this.addRenderableWidget(CycleButton.builder(ConfigUIUtils.Tristate::getText)
+                        .withInitialValue(ConfigUIUtils.Tristate.fromEncoded(ui_pVals[idx]))
                         .withValues(ConfigUIUtils.Tristate.values())
                         .create(x, y, 150, 20, Component.literal("Override " + ConfigUIUtils.NAMES[idx]), (btn, val) -> {
                             if (val == ConfigUIUtils.Tristate.TRUE) ClientSyncHandler.pValsEncoded[idx] = 1;
@@ -158,9 +154,11 @@ public class AutoPickupConfigScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.centeredText(this.font, this.title, this.width / 2, 8, 0xFFFFFF);
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        this.renderBackground(graphics);
+
+        super.render(graphics, mouseX, mouseY, partialTick);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 8, 0xFFFFFF);
     }
 
     @Override

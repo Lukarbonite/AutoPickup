@@ -131,16 +131,11 @@ public final class AutoPickupApi {
         Level world = player.level();
         if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel)) return;
 
-        Optional<Holder.Reference<Enchantment>> mendingOpt = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(Enchantments.MENDING.identifier());
-        if (mendingOpt.isEmpty()) {
-            player.giveExperiencePoints(experience);
-            return;
-        }
-        Holder<Enchantment> mending = mendingOpt.get();
+        Enchantment mending = Enchantments.MENDING;
 
         List<ItemStack> mendable = new ArrayList<>();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
+            if (slot.getType() == EquipmentSlot.Type.ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
                 ItemStack stack = player.getItemBySlot(slot);
                 if (!stack.isEmpty() && stack.isDamaged() && EnchantmentHelper.getItemEnchantmentLevel(mending, stack) > 0) {
                     mendable.add(stack);

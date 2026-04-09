@@ -41,8 +41,8 @@ public class DamageTrackerMixin implements DamageTrackerAccessor {
         return Collections.unmodifiableList(autopickup_attackers);
     }
 
-    @Inject(method = "hurtServer", at = @At("HEAD"))
-    private void autopickup_onDamage(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "hurt", at = @At("HEAD"))
+    private void autopickup_onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (source.getEntity() instanceof Player player) {
             autopickup_addAttacker(player.getUUID());
         }

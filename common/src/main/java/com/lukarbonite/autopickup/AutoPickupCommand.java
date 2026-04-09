@@ -95,7 +95,7 @@ public class AutoPickupCommand {
     private static boolean checkPermission(CommandSourceStack source) {
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            return source.getServer().getPlayerList().isOp(player.nameAndId());
+            return source.getServer().getPlayerList().isOp(player.getGameProfile());
         }
         return true;
     }

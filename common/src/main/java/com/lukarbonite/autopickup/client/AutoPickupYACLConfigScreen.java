@@ -6,9 +6,9 @@ import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.Style;
@@ -149,19 +149,17 @@ public class AutoPickupYACLConfigScreen {
                             @Override public void setFocused(boolean f) { this.focused = f; }
                             @Override public boolean isFocused() { return this.focused; }
 
-                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+                            @Override public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
                                 int x = getDimension().x(), y = getDimension().y(), w = getDimension().width(), h = getDimension().height();
                                 boolean canConfig = Minecraft.getInstance().player == null || allowed.get();
                                 int color = canConfig ? 0xFFFFFFFF : 0xFFA0A0A0;
-                                graphics.text(Minecraft.getInstance().font, o.name(), x + 6, y + (h - 8)/2, color, true);
+                                graphics.drawString(Minecraft.getInstance().font, o.name(), x + 6, y + (h - 8)/2, color, true);
                                 int btnW = 50, btnX = x + w - btnW - 6;
                                 drawButtonRect(graphics, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY) && canConfig, canConfig);
-                                graphics.centeredText(Minecraft.getInstance().font, formatValue(), btnX + btnW/2, y + (h-8)/2, color);
+                                graphics.drawCenteredString(Minecraft.getInstance().font, formatValue(), btnX + btnW/2, y + (h-8)/2, color);
                             }
                             @Override
-                            public boolean mouseClicked(final MouseButtonEvent event, final boolean doubleClick) {
-                                double mouseX = event.x();
-                                double mouseY = event.y();
+                            public boolean mouseClicked(double mouseX, double mouseY, int button) {
                                 int btnW = 50;
                                 int btnX = getDimension().x() + getDimension().width() - btnW - 6;
 
@@ -172,6 +170,15 @@ public class AutoPickupYACLConfigScreen {
                                     return true;
                                 }
                                 return false;
+                            }
+
+                            @Override
+                            public NarrationPriority narrationPriority() {
+                                return NarrationPriority.NONE;
+                            }
+
+                            @Override
+                            public void updateNarration(NarrationElementOutput output) {
                             }
                         };
                     }
@@ -190,7 +197,7 @@ public class AutoPickupYACLConfigScreen {
                             @Override public void setFocused(boolean f) { this.focused = f; }
                             @Override public boolean isFocused() { return this.focused; }
 
-                            @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mx, int my, float dl) {
+                            @Override public void render(GuiGraphics graphics, int mx, int my, float dl) {
                                 if (s.tabManager.getCurrentTab() instanceof YACLScreen.CategoryTab tab) {
                                     boolean changed = false;
                                     for(int i=0; i<7; i++) {
@@ -202,6 +209,15 @@ public class AutoPickupYACLConfigScreen {
                                     else if (!changed && o.changed()) o.requestSet(categoryTickers[tickerIdx]);
                                     tab.updateButtons();
                                 }
+                            }
+
+                            @Override
+                            public NarrationPriority narrationPriority() {
+                                return NarrationPriority.NONE;
+                            }
+
+                            @Override
+                            public void updateNarration(NarrationElementOutput output) {
                             }
                         };
                     }

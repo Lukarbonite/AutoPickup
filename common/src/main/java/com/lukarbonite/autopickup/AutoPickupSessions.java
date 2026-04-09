@@ -172,7 +172,7 @@ public final class AutoPickupSessions {
     }
 
     // Maintain a small thread-local stack to balance HEAD/TAIL injections safely
-    private static final ThreadLocal<java.util.ArrayDeque<Integer>> OPEN_LINKED_CONTEXT = ThreadLocal.withInitial(java.util.ArrayDeque::new);
+    private static final ThreadLocal<ArrayDeque<Integer>> OPEN_LINKED_CONTEXT = ThreadLocal.withInitial(ArrayDeque::new);
 
     public static void openLinkedDropContext(BlockPos pos) {
         Player owner = findLinkedOwnerForBreak(pos);
@@ -185,7 +185,7 @@ public final class AutoPickupSessions {
     }
 
     public static void closeLinkedDropContext() {
-        java.util.ArrayDeque<Integer> stack = OPEN_LINKED_CONTEXT.get();
+        ArrayDeque<Integer> stack = OPEN_LINKED_CONTEXT.get();
         if (stack.isEmpty()) return;
         int id = stack.pop();
         if (id >= 0) {

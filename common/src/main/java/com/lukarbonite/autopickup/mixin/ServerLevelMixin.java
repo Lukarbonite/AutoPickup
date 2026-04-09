@@ -27,12 +27,10 @@ public abstract class ServerLevelMixin {
     private void autopickup_interceptItemSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         if (entity instanceof ItemEntity itemEntity) {
 
-            // Allow "delayed" items to spawn so other mods (Tree Harvester) can react to them first.
-            if (entity.entityTags().contains("autopickup_delayed")) {
+            // Allow "delayed" items to spawn so other mods can react to them first.
+            if (entity.getTags().contains("autopickup_delayed")) {
                 return;
             }
-
-            ServerLevel world = (ServerLevel) (Object) this;
 
             // Skip items with an owner: player hand-drops, entity-produced items (e.g., chicken eggs)
             Entity ownerEntity = itemEntity.getOwner();
@@ -59,14 +57,14 @@ public abstract class ServerLevelMixin {
                 // If the list is empty, it means the entire stack was picked up.
                 if (remainingItems.isEmpty()) {
                     // Cancel the entity spawn completely.
-                    cir.setReturnValue(true);
+                    cir.setReturnValue(Boolean.TRUE);
                     cir.cancel();
                     return;
                 }
 
                 // If some items remain (e.g., inventory full), update the entity's stack.
                 // The original spawnEntity method will then proceed with this smaller stack.
-                itemEntity.setItem(remainingItems.getFirst());
+                itemEntity.setItem(remainingItems.get(0));
             }
         }
     }
@@ -75,7 +73,7 @@ public abstract class ServerLevelMixin {
     private void autopickup_cleanupDelayedSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
         // If we allowed an item to spawn via the "delayed" tag, try to pick it up now
         // that other mods have had their chance to react to ENTITY_LOAD.
-        if (entity instanceof ItemEntity itemEntity && entity.entityTags().contains("autopickup_delayed")) {
+        if (entity instanceof ItemEntity itemEntity && entity.getTags().contains("autopickup_delayed")) {
             // If the item is dead or empty, another mod (Tree Harvester) consumed it.
             if (!itemEntity.isAlive() || itemEntity.getItem().isEmpty()) {
                 return;
@@ -103,7 +101,7 @@ public abstract class ServerLevelMixin {
                 if (remainingItems.isEmpty()) {
                     itemEntity.discard();
                 } else {
-                    itemEntity.setItem(remainingItems.getFirst());
+                    itemEntity.setItem(remainingItems.get(0));
                     itemEntity.removeTag("autopickup_delayed");
                 }
             }
