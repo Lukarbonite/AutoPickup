@@ -51,9 +51,8 @@ dependencies {
     // Gives the annotations (@WrapOperation) during compile
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
     // Makes it available at runtime in development
-    implementation("io.github.llamalad7:mixinextras-forge:0.5.3")
-    // Physically embeds it into the production JAR
-    shadowBundle("io.github.llamalad7:mixinextras-forge:0.5.3")
+    // Loom translates "include" into Forge's Jar-in-Jar system automatically
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
 
     modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}-forge"
 
