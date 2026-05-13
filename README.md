@@ -1,113 +1,305 @@
-# Auto Pickup for Fabric
+# Auto Pickup
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.21.0--1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-forge-purple?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
-**Auto Pickup** is a simple, lightweight, server-side Fabric mod that automatically places items and experience directly into your inventory from broken blocks and slain mobs. No more chasing drops, no more lost items.
+**Auto Pickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
+
+---
 
 ## ✨ Features
 
-*   **Seamless Collection:** Items from broken blocks and mob drops are instantly added to your inventory.
-*   **Automatic Experience:** Experience orbs are collected directly by a caching system, without ever spawning as entities in the world.
-*   **Lag-Free:** Prevents item and experience orb entities from spawning, which can help reduce server lag.
-*   **Smart Handling:** If your inventory is full, any items that cannot be picked up will be safely dropped at your feet.
-*   **Broad Mod Compatibility:** Automatically works with most mods.
-*   **Granular Control:** Toggle specific features via commands or config file.
-*   **Client Control:** Optional setting to allow players to toggle their own auto-pickup settings using Mod Menu.
+### Core Functionality
+- **🎒 Seamless Collection:** Items from broken blocks and mob kills are instantly added to your inventory
+- **⭐ Smart Experience Handling:** Experience is cached and applied after a short delay, ensuring tools take durability damage *before* Mending activates
+- **🚀 Lag-Free:** Prevents item and experience orb entities from spawning, reducing server load
+- **📦 Overflow Protection:** If your inventory is full, items safely drop at your feet
+- **🔧 Granular Control:** Toggle individual features independently via commands or config GUI
 
-![OneBlock](https://github.com/user-attachments/assets/5e3afe38-de87-4a3a-a0fa-3de2fa9a7a8f)
+### Advanced Features
+- **👥 Mob Loot Splitting:** Share mob drops and XP with nearby players who participated in the kill
+- **🎮 Per-Player Permissions:** Server admins can override settings for specific players
+- **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
+- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
+
+![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
+
+---
 
 ## ⚙️ Configuration
 
-Auto Pickup is no longer controlled by GameRules. It now uses a configuration file (`config/autopickup.toml`) and in-game commands.
+Auto Pickup uses a flexible three-tier permission system:
 
-### 🖥️ Mod Menu Integration (Client)
-If you have **Mod Menu** installed, you can configure the mod directly via the Mods button in the main menu or pause screen.
-*   **Note:** Changing settings here will only affect the server if the server admin has enabled `allowClientControl`.
+1. **Server Defaults** - Global fallback settings
+2. **Admin Overrides** - Per-player forced settings (highest priority)
+3. **Client Preferences** - Individual player choices (only if server allows)
+
+### 🖥️ Configuration Menu (Client)
+
+You can configure your personal preferences via the menu. Use **Mod Menu** for a easy access on Fabric.
+Otherwise, use /autopickup gui
+
+**Settings available:**
+- Master Toggle
+- Block Item Pickup
+- Block Experience Pickup
+- Mob Loot Pickup
+- Mob Experience Pickup
+- Split Mob Loot (share drops with nearby attackers)
+- Split Mob XP (share experience with nearby attackers)
+
+> **Note:** Your client settings only apply if the server admin has enabled the corresponding "Allow" setting for that feature.
+
+![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/YACL_MENU.gif)
+
+---
 
 ### 📜 Commands (Server Admin)
-Server operators (OP Level 2+) can configure the global defaults using the `/autopickup` command.
 
-| Command | Description                                                                                                                                     | Default |
-| :--- |:------------------------------------------------------------------------------------------------------------------------------------------------| :--- |
-| `/autopickup` | View current configuration status.                                                                                                              | - |
-| `/autopickup master <bool>` | Global master switch. If false, disables mod entirely.                                                                                          | `true` |
-| `/autopickup blocks <bool>` | Toggle picking up items from broken blocks.                                                                                                     | `true` |
-| `/autopickup mobloot <bool>` | Toggle picking up loot from killed mobs.                                                                                                        | `false` |
-| `/autopickup xp <bool>` | Toggle picking up experience orbs.                                                                                                              | `true` |
-| `/autopickup allowClientControl <bool>` | Toggle so players can use their own config settings to toggle pickup on/off individually. If false, the server defaults are forced on everyone. | `false` |
+Server operators (OP Level 2+) can manage global defaults and player overrides using `/autopickup`.
 
-### 📂 Configuration File
-The configuration is stored in `config/autopickup.toml`. You can edit this file directly if you prefer.
+#### Menu Access
 
-```toml
-# AutoPickup Configuration
+| Command           | Description                              |
+|:------------------|:-----------------------------------------|
+| `/autopickup gui` | Access to configuration menu via command |
 
-auto_pickup = true
-auto_pickup_blocks = true
-auto_pickup_mob_loot = false
-auto_pickup_xp = true
-allow_client_control = false
-```
+#### Global Configuration
 
-## 📦 Installation
+| Command | Description                                    | Default |
+|:--------|:-----------------------------------------------|:--------|
+| `/autopickup` | Display current configuration status           | - |
+| `/autopickup master <true\|false>` | Master toggle - disables mod entirely if false | `true` |
+| `/autopickup blocks <true\|false>` | Autopickup items from broken blocks            | `true` |
+| `/autopickup blockxp <true\|false>` | Autopickup experience from broken blocks       | `true` |
+| `/autopickup mobloot <true\|false>` | Autopickup loot from killed mobs               | `false` |
+| `/autopickup mobxp <true\|false>` | Autopickup experience from killed mobs         | `false` |
+| `/autopickup splitmobloot <true\|false>` | Share mob loot among nearby attackers          | `false` |
+| `/autopickup splitmobxp <true\|false>` | Share mob XP among nearby attackers            | `false` |
 
-This is a standard Fabric mod.
+#### Client Control Allowances
 
-1.  Ensure you have [Fabric Loader](https://fabricmc.net/use/) installed.
-2.  Download the **Fabric API** and place it in your `mods` folder.
-3.  Download the **Auto Pickup** JAR from the releases page.
-4.  Place the `auto-pickup-x.x.x.jar` file into your `mods` folder.
+These commands determine whether players can override server defaults with their client settings.
 
-## ✅ Compatibility
+| Command | Description | Default |
+|:--------|:------------|:--------|
+| `/autopickup allow master <true\|false>` | Allow clients to toggle master switch | `false` |
+| `/autopickup allow blocks <true\|false>` | Allow clients to toggle block item pickup | `false` |
+| `/autopickup allow blockxp <true\|false>` | Allow clients to toggle block XP pickup | `false` |
+| `/autopickup allow mobloot <true\|false>` | Allow clients to toggle mob loot pickup | `false` |
+| `/autopickup allow mobxp <true\|false>` | Allow clients to toggle mob XP pickup | `false` |
+| `/autopickup allow splitmobloot <true\|false>` | Allow clients to toggle mob loot splitting | `false` |
+| `/autopickup allow splitmobxp <true\|false>` | Allow clients to toggle mob XP splitting | `false` |
 
-Auto Pickup is designed for maximum compatibility by hooking into fundamental Minecraft mechanics.
+#### Per-Player Overrides
 
-*   **Veinminer / Liteminer:** Fully supported. Mining a vein will instantly pick up all drops and XP.
-*   **Tree Harvester:** Fully supported. When chopping a tree, logs and other drops are picked up, while saplings needed for auto-replanting are replanted.
-*   **Traveler's Backpack:** Fully supported (1.21+). If you have a backpack with the **Auto Pickup Upgrade**, items will be routed to your backpack filter first. If the backpack is full or the item isn't filtered, it falls back to your main inventory.
-*   **General Mod Support:** Works with most mods that use vanilla block‑breaking and loot hooks.
+Force specific settings for individual players (overrides both server defaults and client preferences).
 
-![MultiBlock](https://github.com/user-attachments/assets/63267ae6-2c95-47ea-821b-2cc5b50218bb)
+| Command | Description |
+|:--------|:------------|
+| `/autopickup override <player> master <true\|false\|default>` | Override player's master toggle |
+| `/autopickup override <player> blocks <true\|false\|default>` | Override player's block pickup |
+| `/autopickup override <player> blockxp <true\|false\|default>` | Override player's block XP |
+| `/autopickup override <player> mobloot <true\|false\|default>` | Override player's mob loot |
+| `/autopickup override <player> mobxp <true\|false\|default>` | Override player's mob XP |
+| `/autopickup override <player> splitmobloot <true\|false\|default>` | Override player's loot splitting |
+| `/autopickup override <player> splitmobxp <true\|false\|default>` | Override player's XP splitting |
+| `/autopickup override <player> clear` | Remove all overrides for a player |
 
-## 👩‍💻 For Developers: Using the API
+> Use `default` to remove a specific override while keeping others.
 
-The compatibility design hooks into `ServerPlayerInteractionManager.tryBreakBlock`, `BlockState.getDroppedStacks`, and `ServerWorld.spawnEntity`. As long as your mod uses these standard methods, Auto Pickup will work with it automatically.
+---
 
-If you have custom logic (e.g., giving items via command), you can use the API to route items through the Auto Pickup logic.
+### 📂 Configuration Files
 
-**1. Add Auto Pickup as a Dependency**
+**Server Config:** `config/AutoPickup/global_config.json`
 
-```groovy
-dependencies {
-    modCompileOnly(files("libs/auto-pickup-x.x.x.jar"))
+```json
+{
+  "autoPickup": true,
+  "autoPickupBlocks": true,
+  "autoPickupBlockXp": true,
+  "autoPickupMobLoot": false,
+  "autoPickupMobXp": false,
+  "autoPickupSplitMobLoot": false,
+  "autoPickupSplitMobXp": false,
+  "allowMaster": true,
+  "allowBlocks": true,
+  "allowBlockXp": true,
+  "allowMobLoot": true,
+  "allowMobXp": true,
+  "allowSplitMobLoot": true,
+  "allowSplitMobXp": true
 }
 ```
 
-**2. Using the API**
+**Client Config:** `config/AutoPickup/client_default.toml` (or per-server profiles in `presets/`)
+
+```toml
+# AutoPickup Client Configuration
+master = true
+blocks = true
+blockXp = true
+mobLoot = false
+mobXp = false
+splitMobLoot = false
+splitMobXp = false
+```
+
+**Player Overrides:** `config/AutoPickup/player_overrides.json`
+
+```json
+{
+  "player-uuid-here": {
+    "overrideMaster": true,
+    "overrideBlocks": null,
+    ...
+  }
+}
+```
+
+### Optional But Recommended Client Dependencies
+
+- **Mod Menu** - Access config screen in-game
+- **YetAnotherConfigLib (YACL)** - Required for config GUI (Vanilla GUI fallback)
+
+---
+
+## ✅ Compatibility
+
+Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most mods out of the box.
+
+### 🔧 Explicitly Supported Mods
+
+| Mod |   Status    | Notes |
+|:----|:-----------:|:------|
+| **VeinMiner** | Fabric Only | All vein blocks picked up instantly with XP |
+| **TreeHarvester** |    Full     | Logs/leaves collected; saplings auto-replanted if enabled |
+| **Traveler's Backpack** |    Full     | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
+| **General Block Breakers** | Compatible  | Any mod using vanilla break hooks |
+
+### 📋 Technical Details
+
+Auto Pickup intercepts drops at these injection points:
+
+- `Block.dropStacks()` - Primary block drop handling
+- `ServerWorld.spawnEntity()` - Item entity spawning
+- `LivingEntity.dropLoot()` - Mob loot generation
+- `Block.dropExperience()` - Block XP orbs
+- `LivingEntity.dropExperience()` - Mob XP orbs
+
+This broad compatibility means **most mods work automatically** without explicit support.
+
+![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/MULTI_BLOCK.gif)
+
+---
+
+## 🎮 Mob Loot Splitting
+
+When **Split Mob Loot** or **Split Mob XP** is enabled, rewards from mob kills are shared among participants:
+
+### How It Works
+
+1. **Damage Tracking:** The mod tracks the last 10 unique players who damaged each mob
+2. **Eligibility Check:** On mob death, only players who:
+    - Are online and not spectating
+    - Have **Master** enabled
+    - Have the specific **Mob Pickup** feature enabled
+    - Have the specific **Split** feature enabled
+    - Are in the same world as the killer
+3. **Distribution:**
+    - Items are split evenly; the killer receives any remainder
+    - Experience is split evenly; the killer receives any remainder
+    - Items that don't fit in inventories are dropped at the mob's location
+
+### Example
+
+Player A (killer), B, and C all damaged a zombie. Settings:
+
+- **Player A:** Master ✅, Mob Loot ✅, Split Mob Loot ✅
+- **Player B:** Master ✅, Mob Loot ✅, Split Mob Loot ✅
+- **Player C:** Master ✅, Mob Loot ✅, Split Mob Loot ❌
+
+**Result:** Only A and B receive split loot. Player C gets nothing because they disabled splitting.
+
+---
+
+## 👩‍💻 Developer API
+
+### Adding as a Dependency
+
+**Gradle:**
+
+```groovy
+dependencies {
+    compileOnly(files("libs/autopickup-platform-x.x.x.jar"))
+}
+```
+
+### Using the API
 
 ```java
 import com.lukarbonite.autopickup.AutoPickupApi;
-import net.fabricmc.loader.api.FabricLoader;
 
-public void giveQuestReward(PlayerEntity player, List<ItemStack> rewards, int xp) {
-    if (FabricLoader.getInstance().isModLoaded("auto-pickup")) {
-        // This handles inventory insertion, backpack routing, and config checks automatically.
-        // Returns list of items that could NOT be picked up (full inventory).
-        List<ItemStack> remaining = AutoPickupApi.tryPickup(player, rewards);
-        
-        // Handle Experience
-        AutoPickupApi.tryPickupExperience(player, xp);
-        
-        // Drop remaining items
-        for (ItemStack stack : remaining) {
-            player.dropItem(stack, false);
+public class QuestRewards {
+    
+    public void giveReward(Player player, List<ItemStack> items, int xp) {
+        if (!isModLoaded("autopickup")) {
+            // Fallback: manual drops
+            items.forEach(stack -> player.dropItem(stack, false));
+            player.addExperience(xp);
+            return;
         }
-    } else {
-        // Fallback logic
+        
+        // Auto Pickup handles:
+        // - Inventory insertion
+        // - Traveler's Backpack routing
+        // - Config checks (Master, Blocks, etc.)
+        List<ItemStack> remaining = AutoPickupApi.tryPickup(player, items);
+        
+        // Drop items that didn't fit
+        remaining.forEach(stack -> player.dropItem(stack, false));
+        
+        // Auto Pickup handles:
+        // - Mending calculations
+        // - Config checks
+        AutoPickupApi.tryPickupBlockExperience(player, xp);
+    }
+    
+    // For mob-related rewards
+    public void giveMobReward(Player player, List<ItemStack> loot, int xp) {
+        List<ItemStack> remaining = AutoPickupApi.tryPickupFromMob(player, loot);
+        remaining.forEach(stack -> player.dropItem(stack, false));
+        
+        AutoPickupApi.tryPickupMobExperience(player, xp);
     }
 }
 ```
 
+### API Methods
+
+| Method | Description                                                  |
+|:-------|:-------------------------------------------------------------|
+| `tryPickup(PlayerEntity, List<ItemStack>)` | Pickup items from blocks (respects Master + Blocks settings) |
+| `tryPickupFromMob(PlayerEntity, List<ItemStack>)` | Pickup items from mobs (respects Master + MobLoot settings)  |
+| `tryPickupBlockExperience(PlayerEntity, int)` | Give block XP (respects Master + BlockXP settings)           |
+| `tryPickupMobExperience(PlayerEntity, int)` | Give mob XP (respects Master + MobXP settings)               |
+| `isMasterEnabled(PlayerEntity)` | Check if autopickup is enabled for player                    |
+| `isBlocksEnabled(PlayerEntity)` | Check block item pickup setting                              |
+| `isBlockXpEnabled(PlayerEntity)` | Check block XP pickup setting                                |
+| `isMobLootEnabled(PlayerEntity)` | Check mob loot pickup setting                                |
+| `isMobXpEnabled(PlayerEntity)` | Check mob XP pickup setting                                  |
+
+> **Note:** All `try*` methods return lists of items that could not be picked up (full inventory).
+
+---
+
 ## 📜 License
 
-This project is licensed under the **AGPL 3.0 License**. See the `LICENSE` file for more details. Feel free to use it in your modpacks.
+This project is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
+
+You are free to:
+- ✅ Use in modpacks
+- ✅ Modify for personal use
+- ✅ Distribute modified versions (must also be AGPL-3.0)
+
+See the [LICENSE](LICENSE) file for full details.
