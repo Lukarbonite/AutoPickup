@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.lukarbonite.autopickup.mixin",
+  "refmap": "autopickup-refmap.json",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
+  "mixins": [
+    "BlockMixin",
+    "BlockDropExperienceMixin",
+    "ServerPlayerGameModeMixin",
+    "MobLootMixin",
+    "ServerTickMixin",
+    "ServerLevelMixin",
+    "LevelBreakBlockMixin",
+    "DamageTrackerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

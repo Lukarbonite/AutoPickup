@@ -1,0 +1,17 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.lukarbonite.neoforge.mixin",
+  "plugin": "com.lukarbonite.neoforge.mixin.NeoforgeMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
+    "compat.travelersbackpack.AutoPickupTBMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

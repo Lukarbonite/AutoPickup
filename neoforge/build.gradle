@@ -1,0 +1,67 @@
+plugins {
+    id 'net.neoforged.moddev' version "${neoforge_gradle_version}"
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-neoforge"
+}
+
+repositories {
+    maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases' }
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [project(':common').file('src/main/java')]
+        }
+        resources {
+            srcDirs += [project(':common').file('src/main/resources')]
+        }
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "autopickup" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    compileOnly(files("../libs/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("../libs/travelersbackpack-neoforge-1.21.1-10.1.23.jar"))
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_neoforge_version}"
+}
+
+processResources {
+    var replaceProperties = [
+            version: project.mod_version,
+            minecraft_version: project.minecraft_version,
+            neoforge_version: project.neoforge_version
+    ]
+    inputs.properties replaceProperties
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand replaceProperties
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${project.archives_base_name}-neoforge"
+            from components.java
+        }
+    }
+}

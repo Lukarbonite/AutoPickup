@@ -1,0 +1,21 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.lukarbonite.forge.mixin",
+  "refmap": "autopickup-refmap.json",
+  "plugin": "com.lukarbonite.forge.mixin.ForgeMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
+    "compat.travelersbackpack.AutoPickupTBMixin"
+  ],
+  "client": [
+    "client.ChatListenerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.lukarbonite.fabric.mixin",
+  "plugin": "com.lukarbonite.fabric.mixin.FabricMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "compat.veinminer.VeinMinerEventMixin",
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
+    "compat.travelersbackpack.AutoPickupTBMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,88 @@
+plugins {
+    id 'dev.architectury.loom' version "${arch_loom_version}"
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-forge"
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp = true
+        defaultRefmapName = "autopickup-refmap.json"
+    }
+
+    forge {
+        mixinConfigs = [
+            "autopickup.mixins.json",
+            "autopickup.compat.mixins.json",
+            "autopickup.forge.mixins.json"
+        ]
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [project(':common').file('src/main/java')]
+        }
+        resources {
+            srcDirs += [project(':common').file('src/main/resources')]
+        }
+    }
+}
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+}
+
+configurations.all {
+    // Forge 51.x / modlauncher 10.2.1 was compiled with jopt-simple 5.0.4 (module name 'jopt.simple').
+    // jopt-simple 6.0-alpha-3 has Automatic-Module-Name 'joptsimple', causing a FindException at
+    // bootstrap time. Force 5.0.4 so the module graph resolves correctly.
+    resolutionStrategy.force 'net.sf.jopt-simple:jopt-simple:5.0.4'
+
+    // Loom injects fabric-log4j-util into the runtime classpath, but Forge already ships
+    // terminalconsoleappender which exports the same package (net.minecrell.terminalconsole.util).
+    // ForgeBootstrap scans all named JARs on the classpath and both end up in its module layer,
+    // causing a ResolutionException. Exclude the Fabric one — Forge's own version is sufficient.
+    exclude group: 'net.fabricmc', module: 'fabric-log4j-util'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${forge_version}"
+
+    annotationProcessor project(":common")
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
+
+    compileOnly(files("../libs/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("../libs/travelersbackpack-forge-1.21.1-10.1.11.jar"))
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('META-INF/mods.toml') {
+        expand version: inputs.properties.version
+    }
+}
+
+tasks.named('jar', Jar) {
+    from("${buildDir}/resources/main/autopickup-refmap.json")
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${project.archives_base_name}-forge"
+            from components.java
+        }
+    }
+}
