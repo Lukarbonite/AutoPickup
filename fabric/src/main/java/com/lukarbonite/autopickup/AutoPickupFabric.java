@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
  * All logic lives in {@link AutoPickupCommon}; platform services are resolved via
  * {@code FabricPlatformHelper} (registered as a {@code META-INF/services} provider).
  */
-public class AutoPickup implements ModInitializer {
+public class AutoPickupFabric implements ModInitializer {
 
     @Override
     public void onInitialize() {

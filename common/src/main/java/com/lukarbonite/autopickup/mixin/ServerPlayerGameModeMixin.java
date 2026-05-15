@@ -1,6 +1,6 @@
 package com.lukarbonite.autopickup.mixin;
 
-import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerPlayerGameMode;
 import net.minecraft.core.BlockPos;
@@ -16,16 +16,18 @@ public class ServerPlayerGameModeMixin {
     @Shadow
     public ServerPlayer player;
 
-    /**
-     * This is the earliest reliable point to capture the player breaking a block.
-     * By injecting here, player context is set for the entire tick. This context
-     * will then be available to all subsequent events and methods called by vanilla
-     * or other mods like Liteminer during this tick.
-     */
     @Inject(method = "destroyBlock", at = @At("HEAD"))
     private void autopickup_onTryBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
-        // Start or refresh a per-player mining session and record this break position.
-        com.lukarbonite.autopickup.AutoPickupSessions.begin(this.player);
-        com.lukarbonite.autopickup.AutoPickupSessions.addBreak(this.player, pos);
+        AutoPickupSessions.begin(this.player);
+        AutoPickupSessions.addBreak(this.player, pos);
+        // Open a drop context for the entire destroyBlock call so NeoForge's XP
+        // pipeline (which runs after dropResources) reaches BlockDropExperienceMixin
+        // without BlockMixin needing to cancel dropResources.
+        AutoPickupSessions.beginDropContext(this.player, pos);
+    }
+
+    @Inject(method = "destroyBlock", at = @At("RETURN"))
+    private void autopickup_onBreakBlockReturn(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        AutoPickupSessions.endDropContext(this.player);
     }
 }

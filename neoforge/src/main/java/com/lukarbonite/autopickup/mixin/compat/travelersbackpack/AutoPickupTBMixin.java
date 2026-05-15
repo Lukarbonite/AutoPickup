@@ -1,7 +1,7 @@
 package com.lukarbonite.autopickup.mixin.compat.travelersbackpack;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.tiviacz.travelersbackpack.capability.AttachmentUtils;
+import com.tiviacz.travelersbackpack.attachment.AttachmentUtils;
 import com.tiviacz.travelersbackpack.inventory.BackpackWrapper;
 import com.tiviacz.travelersbackpack.inventory.StorageAccessWrapper;
 import com.tiviacz.travelersbackpack.inventory.upgrades.pickup.AutoPickupUpgrade;

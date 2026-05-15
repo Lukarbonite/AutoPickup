@@ -1,19 +1,18 @@
 package com.lukarbonite.autopickup;
 
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.core.registries.Registries;
-import net.minecraft.core.Holder;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 public final class AutoPickupApi {
@@ -131,18 +130,11 @@ public final class AutoPickupApi {
         Level world = player.level();
         if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel)) return;
 
-        Optional<Holder.Reference<Enchantment>> mendingOpt = world.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).get(Enchantments.MENDING.identifier());
-        if (mendingOpt.isEmpty()) {
-            player.giveExperiencePoints(experience);
-            return;
-        }
-        Holder<Enchantment> mending = mendingOpt.get();
-
         List<ItemStack> mendable = new ArrayList<>();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
                 ItemStack stack = player.getItemBySlot(slot);
-                if (!stack.isEmpty() && stack.isDamaged() && EnchantmentHelper.getItemEnchantmentLevel(mending, stack) > 0) {
+                if (!stack.isEmpty() && stack.isDamaged() && hasMending(stack)) {
                     mendable.add(stack);
                 }
             }
@@ -153,12 +145,26 @@ public final class AutoPickupApi {
             return;
         }
 
-        ItemStack item = mendable.get(player.getRandom().nextInt(mendable.size()));
-        int repair = Math.min(experience * 2, item.getDamageValue());
-        item.setDamageValue(item.getDamageValue() - repair);
-        int consumed = (repair + 1) / 2;
-        int remaining = experience - consumed;
+        // Distribute XP across all damaged Mending items, matching vanilla's per-orb
+        // random selection but exhausting remaining XP rather than stopping after one pick.
+        while (experience > 0 && !mendable.isEmpty()) {
+            ItemStack item = mendable.get(player.getRandom().nextInt(mendable.size()));
+            int repair = Math.min(experience * 2, item.getDamageValue());
+            item.setDamageValue(item.getDamageValue() - repair);
+            int consumed = (repair + 1) / 2;
+            experience -= consumed;
+            if (!item.isDamaged()) mendable.remove(item);
+        }
 
-        if (remaining > 0) player.giveExperiencePoints(remaining);
+        if (experience > 0) player.giveExperiencePoints(experience);
+    }
+
+    private static boolean hasMending(ItemStack stack) {
+        ItemEnchantments enchantments = stack.get(DataComponents.ENCHANTMENTS);
+        if (enchantments == null) return false;
+        for (Holder<Enchantment> holder : enchantments.keySet()) {
+            if (holder.is(Enchantments.MENDING)) return true;
+        }
+        return false;
     }
 }

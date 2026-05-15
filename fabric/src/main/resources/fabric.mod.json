@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.lukarbonite.autopickup.AutoPickup"
+			"com.lukarbonite.autopickup.AutoPickupFabric"
 		],
         "client": [
-            "com.lukarbonite.autopickup.client.AutoPickupClient"
+			"com.lukarbonite.autopickup.client.AutoPickupFabricClient"
         ],
         "modmenu": [
             "com.lukarbonite.autopickup.compat.ModMenuIntegration"

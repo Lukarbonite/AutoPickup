@@ -1,6 +1,6 @@
 # Auto Pickup
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **Auto Pickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
 
@@ -21,7 +21,7 @@
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
 - **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
 
-![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/ONE_BLOCK.gif)
+![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/ONE_BLOCK.gif)
 
 ---
 
@@ -49,7 +49,7 @@ Otherwise, use /autopickup gui
 
 > **Note:** Your client settings only apply if the server admin has enabled the corresponding "Allow" setting for that feature.
 
-![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/YACL_MENU.gif)
+![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/YACL_MENU.gif)
 
 ---
 
@@ -189,7 +189,7 @@ Auto Pickup intercepts drops at these injection points:
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
-![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.9-11/assets/MULTI_BLOCK.gif)
+![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/MULTI_BLOCK.gif)
 
 ---
 

@@ -31,22 +31,25 @@ public abstract class BlockMixin {
             return;
         }
 
+        // If a drop context is already open (normal break via ServerPlayerGameMode),
+        // let dropResources run normally so NeoForge's XP pipeline is not cut off.
+        // ServerLevelMixin intercepts the item spawns via the active context.
+        if (AutoPickupSessions.hasDropContext(player)) {
+            return;
+        }
+
+        // No context yet: this is a direct dropResources call from a mod (e.g. LiteMiner).
+        // Handle manually and cancel to prevent double-spawning.
         AutoPickupSessions.begin(player);
         AutoPickupSessions.addBreak(player, pos);
         AutoPickupSessions.beginDropContext(player, pos);
         try {
             List<ItemStack> drops = Block.getDrops(state, serverWorld, pos, blockEntity, entity, tool);
-
-            // tryPickup now handles the config checks (Master & Blocks) internally.
-            // If disabled, it simply returns the original list.
             List<ItemStack> remainingDrops = AutoPickupApi.tryPickup(player, drops);
-
             for (ItemStack stack : remainingDrops) {
                 Block.popResource(world, pos, stack);
             }
-
             state.spawnAfterBreak(serverWorld, pos, tool, true);
-
             ci.cancel();
         } finally {
             AutoPickupSessions.endDropContext(player);

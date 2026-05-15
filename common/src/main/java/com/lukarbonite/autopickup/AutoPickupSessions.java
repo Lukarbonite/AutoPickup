@@ -25,6 +25,9 @@ public final class AutoPickupSessions {
     // Per-player stack of active drop contexts (tight radius around a specific broken block)
     private static final ConcurrentHashMap<Integer, ArrayDeque<DropGuard>> DROP_GUARDS = new ConcurrentHashMap<>();
 
+    // Exact block-position → player-id ownership for deferred XP attribution (VeinMiner etc.)
+    private static final ConcurrentHashMap<Long, Integer> BREAK_OWNERS = new ConcurrentHashMap<>();
+
     // Tunables (can be moved to config later if needed)
     private static final int MAX_RECENT_POSITIONS = 64;         // Positions to remember per session
     private static final double INTERCEPT_RADIUS2 = 36.0;       // 6-block radius squared (session proximity)
@@ -84,6 +87,7 @@ public final class AutoPickupSessions {
         Session s = SESSIONS.computeIfAbsent(player.getId(), id -> new Session(player));
         s.touch();
         s.addPos(pos);
+        BREAK_OWNERS.put(pos.asLong(), player.getId());
     }
 
     /**
@@ -93,6 +97,12 @@ public final class AutoPickupSessions {
         if (player == null || pos == null) return;
         ArrayDeque<DropGuard> stack = DROP_GUARDS.computeIfAbsent(player.getId(), id -> new ArrayDeque<>());
         stack.push(new DropGuard(pos));
+    }
+
+    public static boolean hasDropContext(Player player) {
+        if (player == null) return false;
+        ArrayDeque<DropGuard> stack = DROP_GUARDS.get(player.getId());
+        return stack != null && !stack.isEmpty();
     }
 
     /**
@@ -150,6 +160,21 @@ public final class AutoPickupSessions {
             }
         }
         return best;
+    }
+
+    /**
+     * Exact-position lookup for deferred XP attribution. Converts the spawn Vec3 to the
+     * containing BlockPos and looks up the registered break owner. Safer than radius-based
+     * findOwner when multiple players may be mining nearby simultaneously.
+     */
+    public static Player findOwnerByBreakPos(Vec3 spawnPos) {
+        long key = BlockPos.containing(spawnPos).asLong();
+        Integer id = BREAK_OWNERS.get(key);
+        if (id == null) return null;
+        Session s = SESSIONS.get(id);
+        if (s == null) return null;
+        Player p = s.playerRef.get();
+        return (p != null && !p.isSpectator()) ? p : null;
     }
 
     // --- Linked-break helpers for veinminer/liteminer compatibility ---
@@ -240,12 +265,14 @@ public final class AutoPickupSessions {
             if (s.playerRef.get() == null) {
                 it.remove();
                 DROP_GUARDS.remove(id);
+                BREAK_OWNERS.values().removeIf(ownerId -> ownerId.equals(id));
                 continue;
             }
             s.ticksToLive--;
             if (s.ticksToLive <= 0) {
                 it.remove();
                 DROP_GUARDS.remove(id);
+                BREAK_OWNERS.values().removeIf(ownerId -> ownerId.equals(id));
             }
         }
     }

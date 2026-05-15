@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 
-public class AutoPickupClient implements ClientModInitializer {
+public class AutoPickupFabricClient implements ClientModInitializer {
 
     private boolean pendingSync = false;
 

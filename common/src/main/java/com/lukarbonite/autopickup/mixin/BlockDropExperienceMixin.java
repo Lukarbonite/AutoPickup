@@ -18,9 +18,9 @@ public class BlockDropExperienceMixin {
 
     @Inject(method = "popExperience", at = @At("HEAD"), cancellable = true)
     private void autopickup_captureAndCacheExperience(ServerLevel world, BlockPos pos, int size, CallbackInfo ci) {
-        // Attribute block XP to the nearest active mining session at this position.
         Vec3 posCenter = new Vec3(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-        Player player = AutoPickupSessions.findOwner(posCenter);
+        Player player = AutoPickupSessions.findOwnerInDropContext(posCenter);
+        if (player == null) player = AutoPickupSessions.findOwnerByBreakPos(posCenter);
 
         if (player != null && !world.isClientSide()
                 && AutoPickupApi.isMasterEnabled(player)
