@@ -10,6 +10,7 @@
     "compat.treeharvester.LeafEventsMixin",
     "compat.treeharvester.LeafProcessingMixin",
     "compat.treeharvester.TreeCutEventsMixin",
+    "compat.treeharvester.LeavesBlockDecayMixin",
     "compat.travelersbackpack.AutoPickupTBMixin"
   ],
   "client": [
