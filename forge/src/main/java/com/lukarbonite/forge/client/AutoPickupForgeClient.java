@@ -2,15 +2,21 @@ package com.lukarbonite.forge.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommand;
 import com.lukarbonite.autopickup.AutoPickupCommon;
+import com.lukarbonite.autopickup.client.AutoPickupKeyBindings;
 import com.lukarbonite.autopickup.client.ClientConfigManager;
 import com.lukarbonite.autopickup.client.ClientSyncHandler;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * Forge client-side event handler.
@@ -20,6 +26,20 @@ import net.minecraftforge.fml.common.Mod;
 public final class AutoPickupForgeClient {
 
     private static boolean pendingSync = false;
+
+    static final KeyMapping KEY_TOGGLE_AUTOPICKUP_MASTER = new KeyMapping(
+            "key.autopickup.toggle_master",
+            GLFW.GLFW_KEY_SEMICOLON,
+            "key.categories.autopickup"
+    );
+
+    static {
+        AutoPickupKeyBindings.toggleMaster = KEY_TOGGLE_AUTOPICKUP_MASTER;
+    }
+
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(KEY_TOGGLE_AUTOPICKUP_MASTER);
+    }
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -41,6 +61,25 @@ public final class AutoPickupForgeClient {
                 sendConfig(client);
                 client.player.connection.sendCommand("autopickup check_perm");
                 client.player.connection.sendCommand("autopickup query_global");
+            }
+
+            while (KEY_TOGGLE_AUTOPICKUP_MASTER.consumeClick()) {
+                if (client.player != null) {
+                    if (ClientConfigManager.allowMaster) {
+                        ClientConfigManager.getProfile().master = !ClientConfigManager.getProfile().master;
+                        ClientConfigManager.save();
+                        sendConfig(client);
+                        client.player.sendSystemMessage(
+                                Component.literal("AutoPickup Master Toggled: " + ClientConfigManager.isMaster())
+                                        .withStyle(ChatFormatting.YELLOW)
+                        );
+                    } else {
+                        client.player.sendSystemMessage(
+                                Component.literal("The server does not allow changing the AutoPickup Master preference.")
+                                        .withStyle(ChatFormatting.RED)
+                        );
+                    }
+                }
             }
         }
     }

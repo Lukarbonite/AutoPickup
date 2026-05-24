@@ -6,10 +6,10 @@ license = "AGPL-3.0-only"
 [[mods]]
 modId = "autopickup"
 version = "${version}"
-displayName = "Auto Pickup"
+displayName = "AutoPickup"
 authors = "lukarbonite"
-description = '''Auto Pickup mod by lukarbonite'''
-logoFile = "autopickup/icon.png"
+description = '''AutoPickup mod by lukarbonite'''
+logoFile = "assets/autopickup/icon.png"
 
 [[dependencies.autopickup]]
 modId = "forge"

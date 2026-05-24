@@ -57,7 +57,7 @@ dependencies {
     modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}-forge"
 
     modCompileOnly(files("../libs/treeharvester-1.20.1-9.1.jar"))
-    modCompileOnly(files("../libs/travelersbackpack-forge-1.20.1-9.1.53.jar"))
+    modCompileOnly(files("../libs/travelersbackpack-forge-1.20.1-9.1.54.jar"))
 }
 
 processResources {

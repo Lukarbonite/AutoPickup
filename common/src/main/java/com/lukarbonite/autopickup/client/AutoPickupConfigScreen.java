@@ -1,11 +1,16 @@
 package com.lukarbonite.autopickup.client;
 
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.sounds.SoundEvents;
+import com.mojang.blaze3d.platform.InputConstants;
 
 import java.util.function.Consumer;
 
@@ -17,6 +22,9 @@ public class AutoPickupConfigScreen extends Screen {
 
     private final Screen parent;
     private int currentTab = 0; // 0 = Client, 1 = Server, 2 = Player
+
+    private boolean listeningForKey = false;
+    private Button keybindBtn = null;
 
     public AutoPickupConfigScreen(Screen parent) {
         super(Component.literal("Auto Pickup Config"));
@@ -32,6 +40,8 @@ public class AutoPickupConfigScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        listeningForKey = false; // reset on any rebuild
+
         for (int i = 0; i < 7; i++) {
             ui_sVals[i] = ClientSyncHandler.sVals[i];
             ui_sAllows[i] = ClientSyncHandler.sAllows[i];
@@ -55,13 +65,20 @@ public class AutoPickupConfigScreen extends Screen {
         // --- TAB CONTENT ---
         if (currentTab == 0) {
             ClientConfigManager.ClientProfile profile = ClientConfigManager.getProfile();
-            addClientToggle(leftX, startY, "Master Toggle", profile.master, v -> profile.master = v, ClientConfigManager.allowMaster);
-            addClientToggle(rightX, startY, "Pickup Blocks", profile.blocks, v -> profile.blocks = v, ClientConfigManager.allowBlocks);
-            addClientToggle(leftX, startY + 24, "Pickup Block XP", profile.blockXp, v -> profile.blockXp = v, ClientConfigManager.allowBlockXp);
-            addClientToggle(rightX, startY + 24, "Pickup Mob Loot", profile.mobLoot, v -> profile.mobLoot = v, ClientConfigManager.allowMobLoot);
-            addClientToggle(leftX, startY + 48, "Pickup Mob XP", profile.mobXp, v -> profile.mobXp = v, ClientConfigManager.allowMobXp);
-            addClientToggle(rightX, startY + 48, "Split Mob Loot", profile.splitMobLoot, v -> profile.splitMobLoot = v, ClientConfigManager.allowSplitMobLoot);
-            addClientToggle(leftX, startY + 72, "Split Mob XP", profile.splitMobXp, v -> profile.splitMobXp = v, ClientConfigManager.allowSplitMobXp);
+
+            keybindBtn = this.addRenderableWidget(Button.builder(getKeybindLabel(), btn -> {
+                listeningForKey = true;
+                keybindBtn.setMessage(Component.literal("> Press a key <").withStyle(ChatFormatting.YELLOW));
+            }).bounds(leftX, startY, 310, 20).build());
+
+            int toggleStartY = startY + 28;
+            addClientToggle(leftX, toggleStartY, "Master Toggle", profile.master, v -> profile.master = v, ClientConfigManager.allowMaster);
+            addClientToggle(rightX, toggleStartY, "Pickup Blocks", profile.blocks, v -> profile.blocks = v, ClientConfigManager.allowBlocks);
+            addClientToggle(leftX, toggleStartY + 24, "Pickup Block XP", profile.blockXp, v -> profile.blockXp = v, ClientConfigManager.allowBlockXp);
+            addClientToggle(rightX, toggleStartY + 24, "Pickup Mob Loot", profile.mobLoot, v -> profile.mobLoot = v, ClientConfigManager.allowMobLoot);
+            addClientToggle(leftX, toggleStartY + 48, "Pickup Mob XP", profile.mobXp, v -> profile.mobXp = v, ClientConfigManager.allowMobXp);
+            addClientToggle(rightX, toggleStartY + 48, "Split Mob Loot", profile.splitMobLoot, v -> profile.splitMobLoot = v, ClientConfigManager.allowSplitMobLoot);
+            addClientToggle(leftX, toggleStartY + 72, "Split Mob XP", profile.splitMobXp, v -> profile.splitMobXp = v, ClientConfigManager.allowSplitMobXp);
 
         } else if (currentTab == 1 && ClientSyncHandler.isAdmin) {
             for (int i = 0; i < 7; i++) {
@@ -120,6 +137,30 @@ public class AutoPickupConfigScreen extends Screen {
                 .bounds(this.width / 2 - 100, this.height - 30, 200, 20).build());
     }
 
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (listeningForKey && keybindBtn != null) {
+            listeningForKey = false;
+            if (keyCode != org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+                if (km != null) {
+                    km.setKey(InputConstants.getKey(keyCode, scanCode));
+                    KeyMapping.resetMapping();
+                    if (this.minecraft != null) this.minecraft.options.save();
+                }
+            }
+            keybindBtn.setMessage(getKeybindLabel());
+            return true;
+        }
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    private Component getKeybindLabel() {
+        KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+        Component keyName = (km != null) ? km.getTranslatedKeyMessage() : Component.literal("None");
+        return Component.literal("Toggle Master Keybind: [").append(keyName).append("]");
+    }
+
     private void addClientToggle(int x, int y, String name, boolean currentVal, Consumer<Boolean> setter, boolean allowed) {
         CycleButton<Boolean> btn = CycleButton.onOffBuilder(currentVal)
                 .create(x, y, 150, 20, Component.literal(name), (b, val) -> setter.accept(val));
@@ -156,7 +197,6 @@ public class AutoPickupConfigScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics);
-
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 8, 0xFFFFFF);
     }

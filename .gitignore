@@ -43,3 +43,5 @@ replay_*.log
 libs/*
 !libs/.ignoreme
 /.architectury-transformer/
+/.claude/
+/.cache/

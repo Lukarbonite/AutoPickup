@@ -1,10 +1,13 @@
 package com.lukarbonite.autopickup.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -12,7 +15,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.Style;
-import net.minecraft.ChatFormatting;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
@@ -47,6 +49,7 @@ public class AutoPickupYACLConfigScreen {
 
         ConfigCategory clientCat = ConfigCategory.createBuilder()
                 .name(new DynamicTabTitle("Client Settings", clientOptions, 0))
+                .option(createKeybindOption())
                 .option(clientBool("Master Toggle", () -> profile.master, v -> profile.master = v, () -> ClientConfigManager.allowMaster))
                 .group(OptionGroup.createBuilder().name(Component.literal("Blocks"))
                         .option(clientBool("Pickup Blocks", () -> profile.blocks, v -> profile.blocks = v, () -> ClientConfigManager.allowBlocks))
@@ -180,6 +183,72 @@ public class AutoPickupYACLConfigScreen {
                             @Override
                             public void updateNarration(NarrationElementOutput output) {
                             }
+                        };
+                    }
+                }).build();
+    }
+
+    private static Option<Boolean> createKeybindOption() {
+        return Option.<Boolean>createBuilder()
+                .name(Component.literal("Toggle Master Keybind"))
+                .binding(false, () -> false, v -> {})
+                .customController(o -> new Controller<Boolean>() {
+                    @Override public Option<Boolean> option() { return o; }
+                    @Override public Component formatValue() { return Component.empty(); }
+                    @Override public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> dim) {
+                        return new AbstractWidget(dim) {
+                            private boolean listening = false;
+                            private boolean focused = false;
+                            @Override public void setFocused(boolean f) { this.focused = f; }
+                            @Override public boolean isFocused() { return this.focused; }
+
+                            @Override
+                            public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
+                                int x = getDimension().x(), y = getDimension().y(),
+                                    w = getDimension().width(), h = getDimension().height();
+                                KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+                                Component keyName = (km != null) ? km.getTranslatedKeyMessage() : Component.literal("None");
+                                Component label = Component.literal("Toggle Master Keybind: ");
+                                Component btnLabel = listening
+                                        ? Component.literal("> Press a key <").withStyle(ChatFormatting.YELLOW)
+                                        : Component.literal("[").append(keyName).append("]");
+                                int labelW = Minecraft.getInstance().font.width(label);
+                                graphics.drawString(Minecraft.getInstance().font, label, x + 6, y + (h - 8) / 2, 0xFFFFFFFF, true);
+                                int btnX = x + 6 + labelW + 4;
+                                int btnW = w - labelW - 16;
+                                drawButtonRect(graphics, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY) && !listening, true);
+                                graphics.drawCenteredString(Minecraft.getInstance().font, btnLabel, btnX + btnW / 2, y + (h - 8) / 2, 0xFFFFFFFF);
+                            }
+
+                            @Override
+                            public boolean mouseClicked(double mouseX, double mouseY, int button) {
+                                if (isMouseOver(mouseX, mouseY)) {
+                                    listening = true;
+                                    playDownSound();
+                                    return true;
+                                }
+                                return false;
+                            }
+
+                            @Override
+                            public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+                                if (listening) {
+                                    listening = false;
+                                    if (keyCode != org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE) {
+                                        KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+                                        if (km != null) {
+                                            km.setKey(InputConstants.getKey(keyCode, scanCode));
+                                            KeyMapping.resetMapping();
+                                            if (Minecraft.getInstance().options != null) Minecraft.getInstance().options.save();
+                                        }
+                                    }
+                                    return true;
+                                }
+                                return false;
+                            }
+
+                            @Override public NarrationPriority narrationPriority() { return NarrationPriority.NONE; }
+                            @Override public void updateNarration(NarrationElementOutput output) {}
                         };
                     }
                 }).build();

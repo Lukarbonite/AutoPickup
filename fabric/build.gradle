@@ -52,7 +52,7 @@ dependencies {
     modCompileOnly(files("../libs/treeharvester-1.20.1-9.1.jar"))
     modCompileOnly(files("../libs/cardinal-components-base-5.2.3.jar"))
     modCompileOnly(files("../libs/cardinal-components-entity-5.2.3.jar"))
-    modCompileOnly(files("../libs/travelersbackpack-fabric-1.20.1-9.1.51.jar"))
+    modCompileOnly(files("../libs/travelersbackpack-fabric-1.20.1-9.1.52.jar"))
 }
 
 processResources {
