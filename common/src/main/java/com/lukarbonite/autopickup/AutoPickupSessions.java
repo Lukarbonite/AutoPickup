@@ -177,6 +177,9 @@ public final class AutoPickupSessions {
     public static void openLinkedDropContext(BlockPos pos) {
         Player owner = findLinkedOwnerForBreak(pos);
         if (owner != null) {
+            // Add the chained position so subsequent hops (e.g. bamboo/sugarcane segments
+            // further up the stalk) can still find the session within LINK_RADIUS2.
+            addBreak(owner, pos);
             beginDropContext(owner, pos);
             OPEN_LINKED_CONTEXT.get().push(owner.getId());
         } else {
