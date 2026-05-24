@@ -1,6 +1,7 @@
 package com.lukarbonite.autopickup;
 
 import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
+import com.lukarbonite.autopickup.client.AutoPickupNeoForgeClient;
 import com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -25,6 +26,7 @@ public class AutoPickupNeoForge {
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
+        modEventBus.addListener(AutoPickupNeoForgeClient::onRegisterKeyMappings);
 
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, parentScreen) -> {
 

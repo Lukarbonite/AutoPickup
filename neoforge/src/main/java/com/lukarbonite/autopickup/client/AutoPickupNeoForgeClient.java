@@ -2,7 +2,6 @@ package com.lukarbonite.autopickup.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommand;
 import com.lukarbonite.autopickup.AutoPickupCommon;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -31,12 +30,10 @@ public final class AutoPickupNeoForgeClient {
                     Identifier.fromNamespaceAndPath(AutoPickupCommon.MOD_ID, "key.categories.autopickup")
             );
 
-    private static final KeyMapping KEY_TOGGLE_AUTOPICKUP_MASTER = KeyMappingHelper.registerKeyMapping(
-            new KeyMapping(
-                    "key.autopickup.toggle_master",
-                    GLFW.GLFW_KEY_SEMICOLON,
-                    AUTOPICKUP_CATEGORY
-            )
+    private static final KeyMapping KEY_TOGGLE_AUTOPICKUP_MASTER = new KeyMapping(
+            "key.autopickup.toggle_master",
+            GLFW.GLFW_KEY_SEMICOLON,
+            AUTOPICKUP_CATEGORY
     );
 
     static {
@@ -108,7 +105,7 @@ public final class AutoPickupNeoForgeClient {
         client.player.connection.sendCommand("ap_config_sync " + mask);
     }
 
-    private void registerKeyMappings(RegisterKeyMappingsEvent event) {
+    public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(KEY_TOGGLE_AUTOPICKUP_MASTER);
     }
 }
