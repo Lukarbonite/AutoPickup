@@ -2,14 +2,17 @@ package com.lukarbonite.autopickup;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.minecraft.server.MinecraftServer;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class AutoPickupConfig {
-    private static Path getPath() { return AutoPickupCommon.getConfigDir().resolve("global_config.json"); }
+    private static final Path DEFAULT_PATH = AutoPickupCommon.getConfigDir().resolve("global_config.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static AutoPickupConfig INSTANCE;
+    private static Path currentPath = DEFAULT_PATH;
 
     // --- Core States ---
     public boolean autoPickup = true;
@@ -34,14 +37,35 @@ public class AutoPickupConfig {
         return INSTANCE;
     }
 
+    /**
+     * Called when a world/server starts. Saves any existing config, switches to
+     * the per-world path (singleplayer) or the shared path (dedicated), then loads.
+     */
+    public static void loadForWorld(MinecraftServer server) {
+        // Save whatever was loaded before switching paths
+        if (INSTANCE != null) INSTANCE.save();
+
+        if (server.isDedicatedServer()) {
+            currentPath = DEFAULT_PATH;
+        } else {
+            String worldName = server.getWorldData().getLevelName()
+                    .replaceAll("[^a-zA-Z0-9_\\-.]", "_");
+            Path worldsDir = AutoPickupCommon.getConfigDir().resolve("worlds");
+            try { Files.createDirectories(worldsDir); } catch (IOException e) { AutoPickupCommon.LOGGER.error("Failed to create worlds config dir", e); }
+            currentPath = worldsDir.resolve("global_" + worldName + ".json");
+        }
+
+        INSTANCE = new AutoPickupConfig();
+        INSTANCE.load();
+    }
+
     public void load() {
-        Path path = getPath();
-        if (!Files.exists(path)) {
+        if (!Files.exists(currentPath)) {
             save();
             return;
         }
         try {
-            String json = Files.readString(path);
+            String json = Files.readString(currentPath);
             INSTANCE = GSON.fromJson(json, AutoPickupConfig.class);
         } catch (IOException e) {
             AutoPickupCommon.LOGGER.error("Failed to load global config", e);
@@ -50,7 +74,7 @@ public class AutoPickupConfig {
 
     public void save() {
         try {
-            Files.writeString(getPath(), GSON.toJson(this));
+            Files.writeString(currentPath, GSON.toJson(this));
         } catch (IOException e) {
             AutoPickupCommon.LOGGER.error("Failed to save global config", e);
         }

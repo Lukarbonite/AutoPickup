@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
 /**
  * Fabric entry point — thin wrapper only.
@@ -17,5 +18,15 @@ public class AutoPickupFabric implements ModInitializer {
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher, registryAccess, environment) ->
                         AutoPickupCommon.registerCommands(dispatcher));
+
+        ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+            AutoPickupConfig.loadForWorld(server);
+            PlayerConfigs.loadForWorld(server);
+        });
+
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            AutoPickupConfig.getInstance().save();
+            PlayerConfigs.save();
+        });
     }
 }

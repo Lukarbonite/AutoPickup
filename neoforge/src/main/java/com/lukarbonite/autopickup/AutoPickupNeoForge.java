@@ -9,6 +9,8 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.server.ServerStoppingEvent;
 
 /**
  * NeoForge entry point — thin wrapper only.
@@ -21,6 +23,8 @@ public class AutoPickupNeoForge {
     public AutoPickupNeoForge(IEventBus modEventBus, ModContainer modContainer) {
         AutoPickupCommon.init();
         NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
+        NeoForge.EVENT_BUS.addListener(this::onServerStarted);
+        NeoForge.EVENT_BUS.addListener(this::onServerStopping);
 
         modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, parentScreen) -> {
 
@@ -36,5 +40,15 @@ public class AutoPickupNeoForge {
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
         AutoPickupCommon.registerCommands(event.getDispatcher());
+    }
+
+    private void onServerStarted(ServerStartedEvent event) {
+        AutoPickupConfig.loadForWorld(event.getServer());
+        PlayerConfigs.loadForWorld(event.getServer());
+    }
+
+    private void onServerStopping(ServerStoppingEvent event) {
+        AutoPickupConfig.getInstance().save();
+        PlayerConfigs.save();
     }
 }

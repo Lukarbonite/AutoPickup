@@ -3,6 +3,7 @@ package com.lukarbonite.autopickup;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import net.minecraft.server.MinecraftServer;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -15,8 +16,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerConfigs {
-    private static Path getOverridesPath() { return AutoPickupCommon.getConfigDir().resolve("player_overrides.json"); }
+    private static final Path DEFAULT_PATH = AutoPickupCommon.getConfigDir().resolve("player_overrides.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static Path currentPath = DEFAULT_PATH;
 
     public static class PlayerState {
         // Preference: What the client requested (Transient)
@@ -42,6 +44,28 @@ public class PlayerConfigs {
 
     public static PlayerState getState(UUID uuid) {
         return STATES.computeIfAbsent(uuid, k -> new PlayerState());
+    }
+
+    /**
+     * Called when a world/server starts. Saves any existing overrides, switches to
+     * the per-world path (singleplayer) or the shared path (dedicated), then loads.
+     */
+    public static void loadForWorld(MinecraftServer server) {
+        // Save and clear before switching worlds
+        if (!STATES.isEmpty()) save();
+        STATES.clear();
+
+        if (server.isDedicatedServer()) {
+            currentPath = DEFAULT_PATH;
+        } else {
+            String worldName = server.getWorldData().getLevelName()
+                    .replaceAll("[^a-zA-Z0-9_\\-.]", "_");
+            // The worlds/ directory is guaranteed to exist by AutoPickupConfig.loadForWorld
+            currentPath = AutoPickupCommon.getConfigDir().resolve("worlds")
+                    .resolve("overrides_" + worldName + ".json");
+        }
+
+        load();
     }
 
     public static void setClientPreference(UUID uuid, boolean master, boolean blocks, boolean blockXp, boolean mobLoot, boolean mobXp, boolean splitMobLoot, boolean splitMobXp) {
@@ -70,9 +94,8 @@ public class PlayerConfigs {
     }
 
     public static void load() {
-        Path path = getOverridesPath();
-        if (!Files.exists(path)) return;
-        try (Reader reader = Files.newBufferedReader(path)) {
+        if (!Files.exists(currentPath)) return;
+        try (Reader reader = Files.newBufferedReader(currentPath)) {
             Type type = new TypeToken<Map<UUID, PlayerState>>(){}.getType();
             Map<UUID, PlayerState> loaded = GSON.fromJson(reader, type);
             if (loaded != null) {
@@ -84,7 +107,7 @@ public class PlayerConfigs {
     }
 
     public static void save() {
-        try (Writer writer = Files.newBufferedWriter(getOverridesPath())) {
+        try (Writer writer = Files.newBufferedWriter(currentPath)) {
             GSON.toJson(STATES, writer);
         } catch (IOException e) {
             AutoPickupCommon.LOGGER.error("Failed to save player overrides", e);

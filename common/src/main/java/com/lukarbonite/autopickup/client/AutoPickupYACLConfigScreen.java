@@ -1,19 +1,23 @@
 package com.lukarbonite.autopickup.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import dev.isxander.yacl3.api.utils.Dimension;
 import dev.isxander.yacl3.gui.AbstractWidget;
 import dev.isxander.yacl3.gui.YACLScreen;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.Style;
 import net.minecraft.ChatFormatting;
 import net.minecraft.util.FormattedCharSequence;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,6 +51,7 @@ public class AutoPickupYACLConfigScreen {
 
         ConfigCategory clientCat = ConfigCategory.createBuilder()
                 .name(new DynamicTabTitle("Client Settings", clientOptions, 0))
+                .option(createKeybindOption())
                 .option(clientBool("Master Toggle", () -> profile.master, v -> profile.master = v, () -> ClientConfigManager.allowMaster))
                 .group(OptionGroup.createBuilder().name(Component.literal("Blocks"))
                         .option(clientBool("Pickup Blocks", () -> profile.blocks, v -> profile.blocks = v, () -> ClientConfigManager.allowBlocks))
@@ -136,6 +141,73 @@ public class AutoPickupYACLConfigScreen {
             ClientNetworkManager.sendConfig();
             if (ClientSyncHandler.isAdmin) ConfigUIUtils.applyAdminChanges();
         }).build().generateScreen(parent);
+    }
+
+    private static Option<Boolean> createKeybindOption() {
+        return Option.<Boolean>createBuilder()
+                .name(Component.literal("Toggle Master Keybind"))
+                .binding(false, () -> false, v -> {})
+                .customController(o -> new Controller<Boolean>() {
+                    @Override public Option<Boolean> option() { return o; }
+                    @Override public Component formatValue() {
+                        KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+                        return (km != null) ? km.getTranslatedKeyMessage() : Component.literal("None");
+                    }
+                    @Override public AbstractWidget provideWidget(YACLScreen screen, Dimension<Integer> dim) {
+                        return new AbstractWidget(dim) {
+                            private boolean listening = false;
+                            private boolean focused = false;
+
+                            @Override public void setFocused(boolean f) { this.focused = f; if (!f) listening = false; }
+                            @Override public boolean isFocused() { return focused; }
+
+                            @Override
+                            public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
+                                int x = getDimension().x(), y = getDimension().y();
+                                int w = getDimension().width(), h = getDimension().height();
+
+                                graphics.text(Minecraft.getInstance().font, o.name(), x + 6, y + (h - 8) / 2, 0xFFFFFFFF, true);
+
+                                int btnW = 100, btnX = x + w - btnW - 6;
+                                drawButtonRect(graphics, btnX, y, btnX + btnW, y + h, isMouseOver(mouseX, mouseY), true);
+
+                                Component label = listening
+                                        ? Component.literal("> Press a key <").withStyle(ChatFormatting.YELLOW)
+                                        : formatValue();
+                                graphics.centeredText(Minecraft.getInstance().font, label, btnX + btnW / 2, y + (h - 8) / 2, 0xFFFFFFFF);
+                            }
+
+                            @Override
+                            public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+                                if (isMouseOver(event.x(), event.y())) {
+                                    listening = true;
+                                    setFocused(true);
+                                    playDownSound();
+                                    return true;
+                                }
+                                return false;
+                            }
+
+                            @Override
+                            public boolean keyPressed(KeyEvent event) {
+                                if (listening) {
+                                    listening = false;
+                                    setFocused(false);
+                                    if (event.key() != GLFW.GLFW_KEY_ESCAPE) {
+                                        KeyMapping km = AutoPickupKeyBindings.toggleMaster;
+                                        if (km != null) {
+                                            km.setKey(InputConstants.getKey(event));
+                                            KeyMapping.resetMapping();
+                                            Minecraft.getInstance().options.save();
+                                        }
+                                    }
+                                    return true;
+                                }
+                                return false;
+                            }
+                        };
+                    }
+                }).build();
     }
 
     private static Option<Boolean> clientBool(String name, Supplier<Boolean> g, Consumer<Boolean> s, Supplier<Boolean> allowed) {

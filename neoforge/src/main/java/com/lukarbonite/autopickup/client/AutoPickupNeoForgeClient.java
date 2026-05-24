@@ -2,13 +2,20 @@ package com.lukarbonite.autopickup.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommand;
 import com.lukarbonite.autopickup.AutoPickupCommon;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
+import org.lwjgl.glfw.GLFW;
 
 /**
  * NeoForge client-side event handler.
@@ -18,6 +25,23 @@ import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 public final class AutoPickupNeoForgeClient {
 
     private static boolean pendingSync = false;
+
+    private static final KeyMapping.Category AUTOPICKUP_CATEGORY =
+            KeyMapping.Category.register(
+                    Identifier.fromNamespaceAndPath(AutoPickupCommon.MOD_ID, "key.categories.autopickup")
+            );
+
+    private static final KeyMapping KEY_TOGGLE_AUTOPICKUP_MASTER = KeyMappingHelper.registerKeyMapping(
+            new KeyMapping(
+                    "key.autopickup.toggle_master",
+                    GLFW.GLFW_KEY_SEMICOLON,
+                    AUTOPICKUP_CATEGORY
+            )
+    );
+
+    static {
+        AutoPickupKeyBindings.toggleMaster = KEY_TOGGLE_AUTOPICKUP_MASTER;
+    }
 
     @SubscribeEvent
     public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
@@ -38,6 +62,25 @@ public final class AutoPickupNeoForgeClient {
             sendConfig(client);
             client.player.connection.sendCommand("autopickup check_perm");
             client.player.connection.sendCommand("autopickup query_global");
+        }
+
+        while (KEY_TOGGLE_AUTOPICKUP_MASTER.consumeClick()) {
+            if (client.player != null) {
+                if (ClientConfigManager.allowMaster) {
+                    ClientConfigManager.getProfile().master = !ClientConfigManager.getProfile().master;
+                    ClientConfigManager.save();
+                    sendConfig(client);
+                    client.player.sendSystemMessage(
+                            Component.literal("AutoPickup Master Toggled: " + ClientConfigManager.isMaster())
+                                    .withStyle(ChatFormatting.YELLOW)
+                    );
+                } else {
+                    client.player.sendSystemMessage(
+                            Component.literal("The server does not allow changing the AutoPickup Master preference.")
+                                    .withStyle(ChatFormatting.RED)
+                    );
+                }
+            }
         }
     }
 
@@ -63,5 +106,9 @@ public final class AutoPickupNeoForgeClient {
         if (ClientConfigManager.isSplitMobLoot()) mask |= AutoPickupCommand.FLAG_SPLIT_LOOT;
         if (ClientConfigManager.isSplitMobXp())   mask |= AutoPickupCommand.FLAG_SPLIT_XP;
         client.player.connection.sendCommand("ap_config_sync " + mask);
+    }
+
+    private void registerKeyMappings(RegisterKeyMappingsEvent event) {
+        event.register(KEY_TOGGLE_AUTOPICKUP_MASTER);
     }
 }
