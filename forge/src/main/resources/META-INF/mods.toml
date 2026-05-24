@@ -6,8 +6,8 @@ issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
 [[mods]]
     modId       = "autopickup"
     version     = "${version}"
-    displayName = "Auto Pickup"
-    description = '''Auto Pickup mod by lukarbonite'''
+    displayName = "AutoPickup"
+    description = '''AutoPickup mod by lukarbonite'''
     logoFile    = "assets/autopickup/icon.png"
     authors     = "lukarbonite"
 

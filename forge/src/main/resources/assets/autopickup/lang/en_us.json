@@ -1,4 +1,6 @@
 {
   "gamerule.autoPickup": "Enable Auto Pickup of Block Drops",
-  "gamerule.autoPickup.description": "If true, items from mined blocks are sent directly to the player's inventory."
+  "gamerule.autoPickup.description": "If true, items from mined blocks are sent directly to the player's inventory.",
+  "key.categories.autopickup": "AutoPickup",
+  "key.autopickup.toggle_master": "Toggle AutoPickup Master"
 }

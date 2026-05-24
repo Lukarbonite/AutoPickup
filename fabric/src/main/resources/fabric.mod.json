@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "autopickup",
 	"version": "${version}",
-	"name": "Auto Pickup",
-	"description": "Auto Pickup mod by lukarbonite",
+	"name": "AutoPickup",
+	"description": "AutoPickup mod by lukarbonite",
 	"authors": [
 		"lukarbonite"
 	],
