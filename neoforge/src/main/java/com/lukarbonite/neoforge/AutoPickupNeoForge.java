@@ -3,14 +3,12 @@ package com.lukarbonite.neoforge;
 import com.lukarbonite.autopickup.AutoPickupCommon;
 import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.PlayerConfigs;
-import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
 import com.lukarbonite.neoforge.client.AutoPickupNeoForgeClient;
-import com.lukarbonite.neoforge.client.AutoPickupYACLConfigScreen;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -33,12 +31,8 @@ public class AutoPickupNeoForge {
         // Register key mappings on the MOD bus (client-only event)
         modEventBus.addListener(AutoPickupNeoForgeClient::onRegisterKeyMappings);
 
-        if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
-            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
-                    (container, parentScreen) -> AutoPickupYACLConfigScreen.create(parentScreen));
-        } else {
-            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
-                    (container, parentScreen) -> AutoPickupConfigScreen.create(parentScreen));
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            AutoPickupNeoForgeClient.registerConfigScreens(modContainer);
         }
     }
 

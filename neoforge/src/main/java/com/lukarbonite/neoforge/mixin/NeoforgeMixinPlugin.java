@@ -21,14 +21,9 @@ public class NeoforgeMixinPlugin implements IMixinConfigPlugin {
             }
         }
         if (mixinClassName.contains(".compat.travelersbackpack")) {
-            try {
-                if (FMLLoader.getLoadingModList() == null ||
-                        FMLLoader.getLoadingModList().getModFileById("travelersbackpack") == null) return false;
-                Class.forName("com.tiviacz.travelersbackpack.inventory.upgrades.pickup.AutoPickupUpgrade");
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
+            // Just check if the mod is present in the container list.
+            // Do NOT use Class.forName here.
+            return FMLLoader.getLoadingModList().getModFileById("travelersbackpack") != null;
         }
         return true;
     }

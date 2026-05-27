@@ -42,3 +42,4 @@ replay_*.log
 /libs/*
 /.cache/
 /.claude/
+/.architectury-transformer/

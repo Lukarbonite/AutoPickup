@@ -3,14 +3,14 @@ package com.lukarbonite.forge;
 import com.lukarbonite.autopickup.AutoPickupCommon;
 import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.PlayerConfigs;
-import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
 import com.lukarbonite.forge.client.AutoPickupForgeClient;
-import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -36,9 +36,9 @@ public class AutoPickupForge {
         // Register key mappings on the MOD bus (client-only event)
         modEventBus.addListener(AutoPickupForgeClient::onRegisterKeyMappings);
 
-        modContainer.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
-                () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parentScreen) ->
-                        AutoPickupConfigScreen.create(parentScreen)));
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            AutoPickupForgeClient.registerConfigScreens(modContainer);
+        }
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {

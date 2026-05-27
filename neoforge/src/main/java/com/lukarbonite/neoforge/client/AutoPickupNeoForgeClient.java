@@ -1,10 +1,7 @@
 package com.lukarbonite.neoforge.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommon;
-import com.lukarbonite.autopickup.client.AutoPickupKeyBindings;
-import com.lukarbonite.autopickup.client.ClientConfigManager;
-import com.lukarbonite.autopickup.client.ClientNetworkManager;
-import com.lukarbonite.autopickup.client.ClientSyncHandler;
+import com.lukarbonite.autopickup.client.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -13,6 +10,8 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -81,6 +80,16 @@ public final class AutoPickupNeoForgeClient {
                     );
                 }
             }
+        }
+    }
+
+    public static void registerConfigScreens(ModContainer modContainer) {
+        if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
+                    (container, parentScreen) -> AutoPickupYACLConfigScreen.create(parentScreen));
+        } else {
+            modContainer.registerExtensionPoint(IConfigScreenFactory.class,
+                    (container, parentScreen) -> AutoPickupConfigScreen.create(parentScreen));
         }
     }
 

@@ -1,6 +1,7 @@
 package com.lukarbonite.forge.client;
 
 import com.lukarbonite.autopickup.AutoPickupCommon;
+import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
 import com.lukarbonite.autopickup.client.AutoPickupKeyBindings;
 import com.lukarbonite.autopickup.client.ClientConfigManager;
 import com.lukarbonite.autopickup.client.ClientNetworkManager;
@@ -10,6 +11,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.ModContainer;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
@@ -79,6 +82,12 @@ public final class AutoPickupForgeClient {
                 }
             }
         }
+    }
+
+    public static void registerConfigScreens(ModContainer modContainer) {
+        modContainer.registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+                () -> new ConfigScreenHandler.ConfigScreenFactory((minecraft, parentScreen) ->
+                        AutoPickupConfigScreen.create(parentScreen)));
     }
 
     @SubscribeEvent
