@@ -1,4 +1,4 @@
-package com.lukarbonite.fabric.mixin.compat.travelersbackpack;
+package com.lukarbonite.fabric.compat.travelersbackpack;
 
 import com.tiviacz.travelersbackpack.component.ComponentUtils;
 import com.tiviacz.travelersbackpack.inventory.BackpackWrapper;

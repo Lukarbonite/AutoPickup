@@ -1,6 +1,7 @@
 package com.lukarbonite.forge.mixin.compat.travelersbackpack;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
+import com.lukarbonite.forge.compat.travelersbackpack.AutoPickupTBBridge;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;

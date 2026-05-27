@@ -1,4 +1,4 @@
-package com.lukarbonite.forge.mixin.compat.travelersbackpack;
+package com.lukarbonite.neoforge.compat.travelersbackpack;
 
 import com.tiviacz.travelersbackpack.capability.AttachmentUtils;
 import com.tiviacz.travelersbackpack.inventory.BackpackWrapper;
@@ -11,11 +11,10 @@ public class AutoPickupTBBridge {
         BackpackWrapper wrapper = AttachmentUtils.getBackpackWrapper(player);
         if (wrapper == null) return stack;
 
-        var upgradeOpt = wrapper.getUpgradeManager().pickupUpgrade;
+        var upgradeOpt = wrapper.getUpgradeManager().getUpgrade(AutoPickupUpgrade.class);
         if (upgradeOpt.isPresent() && upgradeOpt.get().canPickup(stack)) {
             var storage = wrapper.getStorage();
-            int slots = storage.getSlots();
-            for (int i = 0; i < slots; i++) {
+            for (int i = 0; i < storage.getSlots(); i++) {
                 stack = storage.insertItem(i, stack, false);
                 if (stack.isEmpty()) break;
             }
