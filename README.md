@@ -4,7 +4,7 @@
 ![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
-**AutoPickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
+**AutoPickup** is a highly configurable server-side mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
 
 ---
 
