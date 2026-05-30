@@ -62,6 +62,11 @@ public abstract class ServerLevelMixin {
                 owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
             }
 
+            // Wider 6-block fallback during active right-click use interactions (e.g. tall sugarcane via RightClickHarvest)
+            if (owner == null) {
+                owner = AutoPickupSessions.findOwnerInUseContext(spawnPos);
+            }
+
             if (owner != null
                     && !owner.isSpectator()
                     && AutoPickupApi.isMasterEnabled(owner)

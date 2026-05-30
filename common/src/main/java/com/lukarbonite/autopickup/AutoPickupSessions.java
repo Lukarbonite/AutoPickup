@@ -201,6 +201,69 @@ public final class AutoPickupSessions {
         }
     }
 
+    // --- Block-use (right-click) context for harvesting interactions (e.g. sweet berries, RightClickHarvest) ---
+
+    private static final ThreadLocal<ArrayDeque<Integer>> OPEN_USE_CONTEXT = ThreadLocal.withInitial(ArrayDeque::new);
+
+    // Player IDs with at least one open use context — used by ServerLevelMixin for wider attribution.
+    private static final ConcurrentHashMap<Integer, Integer> ACTIVE_USE_CONTEXT_DEPTH = new ConcurrentHashMap<>();
+
+    /**
+     * Open a drop context for a player right-clicking a block.
+     * Also registers a wider 6-block session fallback so multi-block harvests
+     * (e.g. tall sugarcane via RightClickHarvest) are attributed correctly.
+     */
+    public static void openUseContext(Player player, BlockPos pos) {
+        if (player == null || pos == null) return;
+        begin(player);
+        addBreak(player, pos);
+        beginDropContext(player, pos);
+        OPEN_USE_CONTEXT.get().push(player.getId());
+        ACTIVE_USE_CONTEXT_DEPTH.merge(player.getId(), 1, Integer::sum);
+    }
+
+    /**
+     * Close the drop context opened by {@link #openUseContext}.
+     */
+    public static void closeUseContext() {
+        ArrayDeque<Integer> stack = OPEN_USE_CONTEXT.get();
+        if (stack.isEmpty()) return;
+        int id = stack.pop();
+        if (id >= 0) {
+            Session s = SESSIONS.get(id);
+            Player p = s != null ? s.playerRef.get() : null;
+            if (p != null) {
+                endDropContext(p);
+            }
+            ACTIVE_USE_CONTEXT_DEPTH.compute(id, (k, v) -> (v == null || v <= 1) ? null : v - 1);
+        }
+    }
+
+    private static final double USE_CONTEXT_RADIUS2 = 1.0; // 1-block radius squared
+
+    /**
+     * Attribution fallback during active right-click use interactions.
+     * Uses a tight 1-block radius against pre-registered column positions
+     * (e.g. every block in a sugarcane column) so attribution is precise.
+     */
+    public static Player findOwnerInUseContext(Vec3 spawnPos) {
+        if (ACTIVE_USE_CONTEXT_DEPTH.isEmpty()) return null;
+        Player best = null;
+        double bestD2 = Double.MAX_VALUE;
+        for (Integer id : ACTIVE_USE_CONTEXT_DEPTH.keySet()) {
+            Session s = SESSIONS.get(id);
+            if (s == null) continue;
+            Player p = s.playerRef.get();
+            if (p == null || p.isSpectator()) continue;
+            double d2 = s.minDist2(spawnPos);
+            if (d2 <= USE_CONTEXT_RADIUS2 && d2 < bestD2) {
+                bestD2 = d2;
+                best = p;
+            }
+        }
+        return best;
+    }
+
     // --- FallingBlock entity tracking for FallingTree FALL_BLOCK mode ---
 
     // Tick-based expiry: immune to TPS fluctuations (a lagging server won't prune early).
