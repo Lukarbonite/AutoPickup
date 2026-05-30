@@ -20,6 +20,9 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains(".compat.treeharvester")) {
             return LoadingModList.get().getModFileById("treeharvester") != null;
         }
+        if (mixinClassName.contains(".compat.fallingtree")) {
+            return LoadingModList.get().getModFileById("fallingtree") != null;
+        }
         if (mixinClassName.contains(".compat.travelersbackpack")) {
             if (LoadingModList.get().getModFileById("travelersbackpack") == null) return false;
             // AutoPickupTBMixin references AttachmentUtils (TB 10.1.x / 1.21.1+).

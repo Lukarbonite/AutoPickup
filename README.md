@@ -1,8 +1,10 @@
-# Auto Pickup
+# AutoPickup
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-forge-purple?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.1-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloaders-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/neoforge-orange?style=for-the-badge)![Forge](https://img.shields.io/badge/forge-purple?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)
+![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
-**Auto Pickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
+**AutoPickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
 
 ---
 
@@ -19,7 +21,7 @@
 - **👥 Mob Loot Splitting:** Share mob drops and XP with nearby players who participated in the kill
 - **🎮 Per-Player Permissions:** Server admins can override settings for specific players
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
-- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
+- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, FallingTree and more
 
 ![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
 
@@ -160,7 +162,7 @@ splitMobXp = false
 ### Optional But Recommended Client Dependencies
 
 - **Mod Menu** - Access config screen in-game
-- **YetAnotherConfigLib (YACL)** - Required for config GUI (Vanilla GUI fallback)
+- **YetAnotherConfigLib (YACL)** - Required for YACL config GUI (Vanilla GUI fallback)
 
 ---
 
@@ -170,12 +172,13 @@ Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most m
 
 ### 🔧 Explicitly Supported Mods
 
-| Mod |   Status    | Notes |
-|:----|:-----------:|:------|
-| **VeinMiner** | Fabric Only | All vein blocks picked up instantly with XP |
-| **TreeHarvester** |    Full     | Logs/leaves collected; saplings auto-replanted if enabled |
-| **Traveler's Backpack** |    Full     | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
-| **General Block Breakers** | Compatible  | Any mod using vanilla break hooks |
+| Mod                        |      Status       | Notes                                                                               |
+|:---------------------------|:-----------------:|:------------------------------------------------------------------------------------|
+| **VeinMiner**              | Fabric & Neoforge | All vein blocks picked up instantly with XP                                         |
+| **TreeHarvester**          |       Full        | Logs/leaves collected; saplings auto-replanted if enabled                           |
+| **Traveler's Backpack**    |       Full        | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
+| **FallingTree**            |       Full        | Tree items handle the different break modes                                         |
+| **General Block Breakers** |    Compatible     | Any mod using vanilla break hooks                                                   |
 
 ### 📋 Technical Details
 

@@ -37,6 +37,7 @@ dependencies {
     modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
     modCompileOnly(files("../libs/veinminer-fabric-2.4.2.jar"))
     modCompileOnly(files("../libs/treeharvester-1.21.1-9.1.jar"))
+    modCompileOnly(files("../libs/FallingTree-1.21.1-1.21.1.11.jar"))
     modCompileOnly(files("../libs/travelersbackpack-fabric-1.21.1-10.1.19.jar"))
     compileOnly("org.ladysnake.cardinal-components-api:cardinal-components-base:6.1.1")
     compileOnly("org.ladysnake.cardinal-components-api:cardinal-components-entity:6.1.1")

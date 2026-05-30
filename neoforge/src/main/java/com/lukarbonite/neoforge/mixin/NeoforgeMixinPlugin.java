@@ -20,6 +20,14 @@ public class NeoforgeMixinPlugin implements IMixinConfigPlugin {
                 return false;
             }
         }
+        if (mixinClassName.contains(".compat.fallingtree")) {
+            try {
+                return FMLLoader.getLoadingModList() != null &&
+                       FMLLoader.getLoadingModList().getModFileById("fallingtree") != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         if (mixinClassName.contains(".compat.travelersbackpack")) {
             // Just check if the mod is present in the container list.
             // Do NOT use Class.forName here.

@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.UUID;
 
 /**
  * Tracks short-lived per-player mining sessions and recent block break positions.
@@ -200,6 +201,73 @@ public final class AutoPickupSessions {
         }
     }
 
+    // --- FallingBlock entity tracking for FallingTree FALL_BLOCK mode ---
+
+    // Tick-based expiry: immune to TPS fluctuations (a lagging server won't prune early).
+    // MC gravity: v = (v - 0.04) * 0.98 per tick, terminal velocity = 2 blocks/tick.
+    // Simulating from rest, falling 384 blocks (max world height) takes ~235 ticks.
+    // 250 ticks covers the full world height with a small buffer.
+    private static final int FALLING_BLOCK_EXPIRY_TICKS = 250;
+    // Pending positions are consumed on entity spawn (same tick or next); 10 ticks is generous.
+    private static final int PENDING_FALL_EXPIRY_TICKS = 10;
+
+    private record FallingBlockEntry(WeakReference<Player> playerRef, int expiryTick) {}
+    private static final ConcurrentHashMap<Integer, FallingBlockEntry> FALLING_BLOCK_OWNERS = new ConcurrentHashMap<>();
+
+    // Pre-registered block positions → player for delayed FallingBlockEntity spawns.
+    // FallingTree's breakTree is synchronous, but Fabric may queue addFreshEntity past the
+    // end of breakTree (and past blockBreaker being cleared). This map bridges that gap.
+    private static final ConcurrentHashMap<BlockPos, FallingBlockEntry> PENDING_FALL_POSITIONS = new ConcurrentHashMap<>();
+
+    /**
+     * Pre-register a block position as belonging to the given player before its FallingBlockEntity
+     * is spawned. The entry is consumed on spawn and expires after a short TTL.
+     */
+    public static void preRegisterFallPosition(BlockPos pos, Player player) {
+        PENDING_FALL_POSITIONS.put(pos.immutable(), new FallingBlockEntry(
+                new WeakReference<>(player),
+                CURRENT_TICK + PENDING_FALL_EXPIRY_TICKS));
+    }
+
+    /**
+     * Consume the pre-registered player for a block position when its FallingBlockEntity spawns.
+     * Returns null if no entry exists or it has expired.
+     */
+    public static Player getAndRemovePendingFallOwner(BlockPos pos) {
+        FallingBlockEntry entry = PENDING_FALL_POSITIONS.remove(pos.immutable());
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
+    /**
+     * Register a FallingBlockEntity as owned by the given player (called when the entity is added to the world).
+     */
+    public static void trackFallingBlock(int entityId, Player player) {
+        FALLING_BLOCK_OWNERS.put(entityId, new FallingBlockEntry(
+                new WeakReference<>(player),
+                CURRENT_TICK + FALLING_BLOCK_EXPIRY_TICKS));
+    }
+
+    /**
+     * Look up the owning player without removing the entry.
+     * Returns null if not tracked or expired.
+     */
+    public static Player peekFallingBlockOwner(int entityId) {
+        FallingBlockEntry entry = FALLING_BLOCK_OWNERS.get(entityId);
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
+    /**
+     * Remove and return the owning player for a FallingBlockEntity.
+     * Returns null if not tracked or expired.
+     */
+    public static Player getAndRemoveFallingBlockOwner(int entityId) {
+        FallingBlockEntry entry = FALLING_BLOCK_OWNERS.remove(entityId);
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
     // --- Same-tick tiny-radius fallback for direct ItemEntity spawns ---
     private static final double SAME_TICK_RADIUS2 = 2.25; // 1.5 blocks squared
 
@@ -234,6 +302,13 @@ public final class AutoPickupSessions {
     public static void onServerTickEnd() {
         // advance global tick counter
         CURRENT_TICK++;
+        // Clean up expired falling-block entries
+        if (!FALLING_BLOCK_OWNERS.isEmpty() || !PENDING_FALL_POSITIONS.isEmpty()) {
+            FALLING_BLOCK_OWNERS.entrySet().removeIf(e ->
+                    e.getValue().playerRef().get() == null || CURRENT_TICK > e.getValue().expiryTick());
+            PENDING_FALL_POSITIONS.entrySet().removeIf(e ->
+                    e.getValue().playerRef().get() == null || CURRENT_TICK > e.getValue().expiryTick());
+        }
         if (SESSIONS.isEmpty()) return;
         Iterator<Map.Entry<Integer, Session>> it = SESSIONS.entrySet().iterator();
         while (it.hasNext()) {

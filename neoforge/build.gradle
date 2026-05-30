@@ -40,6 +40,7 @@ neoForge {
 
 dependencies {
     compileOnly(files("../libs/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("../libs/FallingTree-1.21.1-1.21.1.11.jar"))
     compileOnly(files("../libs/travelersbackpack-neoforge-1.21.1-10.1.23.jar"))
     compileOnly "dev.isxander:yet-another-config-lib:${yacl_neoforge_version}"
 }
