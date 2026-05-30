@@ -33,6 +33,14 @@ public class NeoforgeMixinPlugin implements IMixinConfigPlugin {
             // Do NOT use Class.forName here.
             return FMLLoader.getLoadingModList().getModFileById("travelersbackpack") != null;
         }
+        if (mixinClassName.contains(".compat.pandafallingtrees")) {
+            try {
+                return FMLLoader.getLoadingModList() != null &&
+                       FMLLoader.getLoadingModList().getModFileById("fallingtrees") != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         return true;
     }
 

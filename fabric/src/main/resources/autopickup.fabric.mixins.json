@@ -18,7 +18,8 @@
     "compat.fallingtree.FallingTreeLeavesDecayMixin",
     "compat.fallingtree.LeafForceBreakerMixin",
     "compat.fallingtree.LeafBreakingHandlerMixin",
-    "compat.fallingtree.FallingAnimationHandlerMixin"
+    "compat.fallingtree.FallingAnimationHandlerMixin",
+    "compat.pandafallingtrees.TreeEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

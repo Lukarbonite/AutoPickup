@@ -21,7 +21,7 @@
 - **👥 Mob Loot Splitting:** Share mob drops and XP with nearby players who participated in the kill
 - **🎮 Per-Player Permissions:** Server admins can override settings for specific players
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
-- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, FallingTree and more
+- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, FallingTree, Panda's Falling Trees and more
 
 ![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
 
@@ -172,13 +172,14 @@ Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most m
 
 ### 🔧 Explicitly Supported Mods
 
-| Mod                        |      Status       | Notes                                                                               |
-|:---------------------------|:-----------------:|:------------------------------------------------------------------------------------|
-| **VeinMiner**              | Fabric & Neoforge | All vein blocks picked up instantly with XP                                         |
-| **TreeHarvester**          |       Full        | Logs/leaves collected; saplings auto-replanted if enabled                           |
-| **Traveler's Backpack**    |       Full        | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
-| **FallingTree**            |       Full        | Tree items handle the different break modes                                         |
-| **General Block Breakers** |    Compatible     | Any mod using vanilla break hooks                                                   |
+| Mod                        |   Status   | Notes                                                                               |
+|:---------------------------|:----------:|:------------------------------------------------------------------------------------|
+| **VeinMiner**              |    Full    | All vein blocks picked up instantly with XP                                         |
+| **TreeHarvester**          |    Full    | Logs/leaves collected; saplings auto-replanted if enabled                           |
+| **Traveler's Backpack**    |    Full    | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
+| **FallingTree**            |    Full    | Tree items handle the different break modes                                         |
+| **Panda's Falling Trees**  |    Full    | Tree items are handled by AutoPickup after fall animation                           |
+| **General Block Breakers** | Compatible | Any mod using vanilla break hooks                                                   |
 
 ### 📋 Technical Details
 
