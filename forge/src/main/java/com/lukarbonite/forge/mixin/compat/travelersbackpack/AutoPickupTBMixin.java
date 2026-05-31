@@ -1,10 +1,7 @@
 package com.lukarbonite.forge.mixin.compat.travelersbackpack;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
-import com.tiviacz.travelersbackpack.capability.CapabilityUtils;
-import com.tiviacz.travelersbackpack.inventory.BackpackWrapper;
-import com.tiviacz.travelersbackpack.inventory.StorageAccessWrapper;
-import com.tiviacz.travelersbackpack.inventory.upgrades.pickup.AutoPickupUpgrade;
+import com.lukarbonite.forge.compat.travelersbackpack.AutoPickupTBBridge;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,22 +33,10 @@ public class AutoPickupTBMixin {
 
     @Unique
     private static ItemStack insertIntoTB(Player player, ItemStack stack) {
-        BackpackWrapper wrapper = CapabilityUtils.getBackpackWrapper(player);
-        if (wrapper == null)
+        try {
+            return AutoPickupTBBridge.insertIntoTB(player, stack);
+        } catch (NoClassDefFoundError | Exception e) {
             return stack;
-
-        var upgradeOpt = wrapper.getUpgradeManager().getUpgrade(AutoPickupUpgrade.class);
-        if (upgradeOpt.isPresent() && upgradeOpt.get().canPickup(stack)) {
-
-            StorageAccessWrapper storage = wrapper.getStorageForInputOutput();
-
-            for (int i = 0; i < storage.getSlots(); i++) {
-                stack = storage.insertItem(i, stack, false);
-
-                if (stack.isEmpty())
-                    break;
-            }
         }
-        return stack;
     }
 }

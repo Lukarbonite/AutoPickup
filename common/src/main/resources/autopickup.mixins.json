@@ -9,6 +9,8 @@
   ],
   "mixins": [
     "BlockMixin",
+    "BlockUseWithoutItemMixin",
+    "ItemFrameMixin",
     "BlockDropExperienceMixin",
     "ServerPlayerGameModeMixin",
     "MobLootMixin",

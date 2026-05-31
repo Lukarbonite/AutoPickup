@@ -21,6 +21,12 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains(".compat.travelersbackpack")) {
             return FabricLoader.getInstance().isModLoaded("travelersbackpack");
         }
+        if (mixinClassName.contains(".compat.fallingtree")) {
+            return FabricLoader.getInstance().isModLoaded("fallingtree");
+        }
+        if (mixinClassName.contains(".compat.pandafallingtrees")) {
+            return FabricLoader.getInstance().isModLoaded("fallingtrees");
+        }
         return true;
     }
 

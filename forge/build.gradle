@@ -57,6 +57,9 @@ dependencies {
     modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}-forge"
 
     modCompileOnly(files("../libs/treeharvester-1.20.1-9.1.jar"))
+    modCompileOnly(files("../libs/FallingTree-1.20.1-4.3.4.jar"))
+    modCompileOnly(files("../libs/fallingtrees-forge-mc1.20-0.13.2-SNAPSHOT.jar"))
+    modCompileOnly(files("../libs/pandalib-forge-mc1.20-0.5.2-SNAPSHOT.jar"))
     modCompileOnly(files("../libs/travelersbackpack-forge-1.20.1-9.1.54.jar"))
 }
 

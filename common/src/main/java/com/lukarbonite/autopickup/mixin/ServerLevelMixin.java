@@ -3,6 +3,7 @@ package com.lukarbonite.autopickup.mixin;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +26,22 @@ public abstract class ServerLevelMixin {
      */
     @Inject(method = "addFreshEntity", at = @At("HEAD"), cancellable = true)
     private void autopickup_interceptItemSpawns(Entity entity, CallbackInfoReturnable<Boolean> cir) {
+        // Track FallingBlockEntity additions caused by block-breaking mods (e.g. FallingTree FALL_BLOCK mode).
+        // FallingTree calls level.addFreshEntity() directly rather than FallingBlockEntity.fall(), so
+        // we must hook here — this is the only guaranteed interception point.
+        if (entity instanceof FallingBlockEntity fbe) {
+            Player breaker = AutoPickupApi.getBlockBreaker();
+            if (breaker == null) {
+                // FallingTree schedules animation per-tick, so entities often spawn after blockBreaker
+                // is cleared and the session has expired. Fall back to pre-registered positions.
+                breaker = AutoPickupSessions.getAndRemovePendingFallOwner(fbe.blockPosition());
+            }
+            if (breaker != null) {
+                AutoPickupSessions.trackFallingBlock(fbe.getId(), breaker);
+            }
+            return; // never intercept FallingBlockEntity as an item pickup
+        }
+
         if (entity instanceof ItemEntity itemEntity) {
 
             // Allow "delayed" items to spawn so other mods can react to them first.
@@ -43,6 +60,17 @@ public abstract class ServerLevelMixin {
             // Same-tick tiny-radius fallback if no active drop context matched (for mods that spawn ItemEntity directly)
             if (owner == null) {
                 owner = AutoPickupSessions.findOwnerSameTickTight(spawnPos);
+            }
+
+            // Session-radius fallback for mods that spread drops across multiple ticks (e.g. FallingTree FALL_ITEM mode).
+            // Uses the session's registered break positions within a 6-block radius, bounded by the session TTL.
+            if (owner == null) {
+                owner = AutoPickupSessions.findOwner(spawnPos);
+            }
+
+            // Wider 6-block fallback during active right-click use interactions (e.g. tall sugarcane via RightClickHarvest)
+            if (owner == null) {
+                owner = AutoPickupSessions.findOwnerInUseContext(spawnPos);
             }
 
             if (owner != null

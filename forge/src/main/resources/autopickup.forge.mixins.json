@@ -11,7 +11,17 @@
     "compat.treeharvester.LeafProcessingMixin",
     "compat.treeharvester.TreeCutEventsMixin",
     "compat.treeharvester.LeavesBlockDecayMixin",
-    "compat.travelersbackpack.AutoPickupTBMixin"
+    "compat.travelersbackpack.AutoPickupTBMixin",
+    "compat.fallingtree.FallingTreeFallingBlockMixin",
+    "compat.fallingtree.TreeBreakingHandlerMixin",
+    "compat.fallingtree.FallingTreeLeavesDecayMixin",
+    "compat.fallingtree.LeafForceBreakerMixin",
+    "compat.fallingtree.LeafBreakingHandlerMixin",
+    "compat.fallingtree.FallingAnimationHandlerMixin",
+    "compat.pandafallingtrees.TreeEntityMixin"
+  ],
+  "client": [
+    "client.ChatListenerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

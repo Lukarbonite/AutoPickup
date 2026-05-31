@@ -10,6 +10,8 @@ import java.util.Set;
 
 public class ForgeMixinPlugin implements IMixinConfigPlugin {
     private boolean hasTreeHarvester;
+    private boolean hasFallingTree;
+    private boolean hasPandaFallingTrees;
     private boolean hasTravelersBackpack;
 
     @Override
@@ -21,6 +23,8 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
         System.out.println("========================================");
 
         hasTreeHarvester = checkClass("com.natamus.treeharvester_common_forge.events.TreeCutEvents");
+        hasFallingTree = checkClass("fr.rakambda.fallingtree.common.tree.Tree");
+        hasPandaFallingTrees = checkClass("me.pandamods.fallingtrees.entity.TreeEntity");
         hasTravelersBackpack = checkClass("com.tiviacz.travelersbackpack.TravelersBackpack");
 
         System.out.println("TreeHarvester found: " + hasTreeHarvester);
@@ -31,6 +35,10 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
         if (mixinClassName.contains(".compat.treeharvester"))
             return hasTreeHarvester;
+        if (mixinClassName.contains(".compat.fallingtree"))
+            return hasFallingTree;
+        if (mixinClassName.contains(".compat.pandafallingtrees"))
+            return hasPandaFallingTrees;
         if (mixinClassName.contains(".compat.travelersbackpack"))
             return hasTravelersBackpack;
         return true;
