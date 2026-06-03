@@ -9,9 +9,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import org.lwjgl.glfw.GLFW;
@@ -107,5 +110,14 @@ public final class AutoPickupNeoForgeClient {
 
     public static void onRegisterKeyMappings(RegisterKeyMappingsEvent event) {
         event.register(KEY_TOGGLE_AUTOPICKUP_MASTER);
+    }
+
+    public static void registerConfigScreens(ModContainer modContainer) {
+        modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, parentScreen) -> {
+            if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
+                return AutoPickupYACLConfigScreen.create(parentScreen);
+            }
+            return AutoPickupConfigScreen.create(parentScreen);
+        });
     }
 }

@@ -46,6 +46,7 @@ dependencies {
     compileOnly(files("../libs/veinminer-neoforge-2.8.2.jar"))
     compileOnly(files("../libs/treeharvester-26.1.2-9.4.jar"))
     compileOnly(files("../libs/travelersbackpack-neoforge-26.1.2-11.2.4.jar"))
+    compileOnly(files("../libs/FallingTree-26.1.2-25.jar"))
 }
 
 tasks.named('jar', Jar) {

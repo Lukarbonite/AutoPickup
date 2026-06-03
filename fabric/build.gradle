@@ -51,6 +51,7 @@ dependencies {
     compileOnly(files("../libs/veinminer-common-2.8.2.jar"))
     compileOnly(files("../libs/treeharvester-26.1.2-9.4.jar"))
     compileOnly(files("../libs/travelersbackpack-fabric-26.1.2-11.2.6.jar"))
+    compileOnly(files("../libs/FallingTree-26.1.2-25.jar"))
 }
 
 processResources {

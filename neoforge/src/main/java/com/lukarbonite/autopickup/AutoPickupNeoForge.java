@@ -1,13 +1,11 @@
 package com.lukarbonite.autopickup;
 
-import com.lukarbonite.autopickup.client.AutoPickupConfigScreen;
 import com.lukarbonite.autopickup.client.AutoPickupNeoForgeClient;
-import com.lukarbonite.autopickup.client.AutoPickupYACLConfigScreen;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
@@ -28,16 +26,9 @@ public class AutoPickupNeoForge {
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
         modEventBus.addListener(AutoPickupNeoForgeClient::onRegisterKeyMappings);
 
-        modContainer.registerExtensionPoint(IConfigScreenFactory.class, (container, parentScreen) -> {
-
-            // Check if YACL is installed
-            if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
-                return AutoPickupYACLConfigScreen.create(parentScreen);
-            }
-
-            // Vanilla GUI
-            return AutoPickupConfigScreen.create(parentScreen);
-        });
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+            AutoPickupNeoForgeClient.registerConfigScreens(modContainer);
+        }
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {

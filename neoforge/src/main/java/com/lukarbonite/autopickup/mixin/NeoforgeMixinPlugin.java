@@ -36,6 +36,14 @@ public class NeoforgeMixinPlugin implements IMixinConfigPlugin {
                 return false;
             }
         }
+        if (mixinClassName.contains(".compat.fallingtree")) {
+            try {
+                return FMLLoader.getCurrent().getLoadingModList() != null &&
+                        FMLLoader.getCurrent().getLoadingModList().getModFileById("fallingtree") != null;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         return true;
     }
 

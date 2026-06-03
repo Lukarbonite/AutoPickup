@@ -8,6 +8,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -225,6 +226,86 @@ public final class AutoPickupSessions {
         }
     }
 
+    // --- Block-use (right-click) context for harvesting interactions ---
+
+    private static final ThreadLocal<ArrayDeque<Integer>> OPEN_USE_CONTEXT = ThreadLocal.withInitial(ArrayDeque::new);
+    private static final ConcurrentHashMap<Integer, Integer> ACTIVE_USE_CONTEXT_DEPTH = new ConcurrentHashMap<>();
+
+    public static void openUseContext(Player player, BlockPos pos) {
+        if (player == null || pos == null) return;
+        begin(player);
+        addBreak(player, pos);
+        beginDropContext(player, pos);
+        OPEN_USE_CONTEXT.get().push(player.getId());
+        ACTIVE_USE_CONTEXT_DEPTH.merge(player.getId(), 1, Integer::sum);
+    }
+
+    public static void closeUseContext() {
+        ArrayDeque<Integer> stack = OPEN_USE_CONTEXT.get();
+        if (stack.isEmpty()) return;
+        int id = stack.pop();
+        if (id >= 0) {
+            Session s = SESSIONS.get(id);
+            Player p = s != null ? s.playerRef.get() : null;
+            if (p != null) endDropContext(p);
+            ACTIVE_USE_CONTEXT_DEPTH.compute(id, (k, v) -> (v == null || v <= 1) ? null : v - 1);
+        }
+    }
+
+    private static final double USE_CONTEXT_RADIUS2 = 1.0;
+
+    public static Player findOwnerInUseContext(Vec3 spawnPos) {
+        if (ACTIVE_USE_CONTEXT_DEPTH.isEmpty()) return null;
+        Player best = null;
+        double bestD2 = Double.MAX_VALUE;
+        for (Integer id : ACTIVE_USE_CONTEXT_DEPTH.keySet()) {
+            Session s = SESSIONS.get(id);
+            if (s == null) continue;
+            Player p = s.playerRef.get();
+            if (p == null || p.isSpectator()) continue;
+            double d2 = s.minDist2(spawnPos);
+            if (d2 <= USE_CONTEXT_RADIUS2 && d2 < bestD2) { bestD2 = d2; best = p; }
+        }
+        return best;
+    }
+
+    // --- FallingBlock entity tracking for FallingTree FALL_BLOCK mode ---
+
+    private static final int FALLING_BLOCK_EXPIRY_TICKS = 250;
+    private static final int PENDING_FALL_EXPIRY_TICKS = 10;
+
+    private record FallingBlockEntry(WeakReference<Player> playerRef, int expiryTick) {}
+    private static final ConcurrentHashMap<Integer, FallingBlockEntry> FALLING_BLOCK_OWNERS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<BlockPos, FallingBlockEntry> PENDING_FALL_POSITIONS = new ConcurrentHashMap<>();
+
+    public static void preRegisterFallPosition(BlockPos pos, Player player) {
+        PENDING_FALL_POSITIONS.put(pos.immutable(), new FallingBlockEntry(
+                new WeakReference<>(player), CURRENT_TICK + PENDING_FALL_EXPIRY_TICKS));
+    }
+
+    public static Player getAndRemovePendingFallOwner(BlockPos pos) {
+        FallingBlockEntry entry = PENDING_FALL_POSITIONS.remove(pos.immutable());
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
+    public static void trackFallingBlock(int entityId, Player player) {
+        FALLING_BLOCK_OWNERS.put(entityId, new FallingBlockEntry(
+                new WeakReference<>(player), CURRENT_TICK + FALLING_BLOCK_EXPIRY_TICKS));
+    }
+
+    public static Player peekFallingBlockOwner(int entityId) {
+        FallingBlockEntry entry = FALLING_BLOCK_OWNERS.get(entityId);
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
+    public static Player getAndRemoveFallingBlockOwner(int entityId) {
+        FallingBlockEntry entry = FALLING_BLOCK_OWNERS.remove(entityId);
+        if (entry == null || CURRENT_TICK > entry.expiryTick()) return null;
+        return entry.playerRef().get();
+    }
+
     // --- Same-tick tiny-radius fallback for direct ItemEntity spawns ---
     private static final double SAME_TICK_RADIUS2 = 2.25; // 1.5 blocks squared
 
@@ -259,6 +340,13 @@ public final class AutoPickupSessions {
     public static void onServerTickEnd() {
         // advance global tick counter
         CURRENT_TICK++;
+        // Clean up expired falling-block entries
+        if (!FALLING_BLOCK_OWNERS.isEmpty() || !PENDING_FALL_POSITIONS.isEmpty()) {
+            FALLING_BLOCK_OWNERS.entrySet().removeIf(e ->
+                    e.getValue().playerRef().get() == null || CURRENT_TICK > e.getValue().expiryTick());
+            PENDING_FALL_POSITIONS.entrySet().removeIf(e ->
+                    e.getValue().playerRef().get() == null || CURRENT_TICK > e.getValue().expiryTick());
+        }
         if (SESSIONS.isEmpty()) return;
         Iterator<Map.Entry<Integer, Session>> it = SESSIONS.entrySet().iterator();
         while (it.hasNext()) {
