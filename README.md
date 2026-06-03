@@ -1,8 +1,10 @@
-# Auto Pickup
+# AutoPickup
 
-![Fabric](https://img.shields.io/badge/modloader-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/modloader-neoforge-orange?style=for-the-badge)![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
+![Fabric](https://img.shields.io/badge/modloaders-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/neoforge-orange?style=for-the-badge)![Forge](https://img.shields.io/badge/forge-purple?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)
+![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
-**Auto Pickup** is a highly configurable server-side Fabric mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
+**AutoPickup** is a highly configurable server-side mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
 
 ---
 
@@ -19,15 +21,15 @@
 - **👥 Mob Loot Splitting:** Share mob drops and XP with nearby players who participated in the kill
 - **🎮 Per-Player Permissions:** Server admins can override settings for specific players
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
-- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, and more
+- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, FallingTree, Panda's Falling Trees and more
 
-![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/ONE_BLOCK.gif)
+![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
 
 ---
 
 ## ⚙️ Configuration
 
-Auto Pickup uses a flexible three-tier permission system:
+AutoPickup uses a flexible three-tier permission system:
 
 1. **Server Defaults** - Global fallback settings
 2. **Admin Overrides** - Per-player forced settings (highest priority)
@@ -49,7 +51,7 @@ Otherwise, use /autopickup gui
 
 > **Note:** Your client settings only apply if the server admin has enabled the corresponding "Allow" setting for that feature.
 
-![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/YACL_MENU.gif)
+![YACL Menu](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/YACL_MENU.gif)
 
 ---
 
@@ -160,36 +162,41 @@ splitMobXp = false
 ### Optional But Recommended Client Dependencies
 
 - **Mod Menu** - Access config screen in-game
-- **YetAnotherConfigLib (YACL)** - Required for config GUI (Vanilla GUI fallback)
+- **YetAnotherConfigLib (YACL)** - Required for YACL config GUI (Vanilla GUI fallback)
 
 ---
 
 ## ✅ Compatibility
 
-Auto Pickup hooks into core Minecraft mechanics and works seamlessly with most mods out of the box.
+AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mods out of the box.
 
 ### 🔧 Explicitly Supported Mods
 
-| Mod |   Status    | Notes |
-|:----|:-----------:|:------|
-| **VeinMiner** | Fabric only | All vein blocks picked up instantly with XP |
-| **TreeHarvester** |    Full     | Logs/leaves collected; saplings auto-replanted if enabled |
-| **Traveler's Backpack** |    Full     | Items route to backpack filter first (1.21.9+ with Auto Pickup upgrade) |
-| **General Block Breakers** | Compatible  | Any mod using vanilla break hooks |
+| Mod                        |   Status   | Notes                                                                               |
+|:---------------------------|:----------:|:------------------------------------------------------------------------------------|
+| **VeinMiner**              |    Full    | All vein blocks picked up instantly with XP                                         |
+| **TreeHarvester**          |    Full    | Logs/leaves collected; saplings auto-replanted if enabled                           |
+| **Traveler's Backpack**    |    Full    | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
+| **FallingTree**            |    Full    | Tree items handle the different break modes                                         |
+| **Panda's Falling Trees**  |    Full    | Tree items are handled by AutoPickup after fall animation                           |
+| **RightClickHarvest**      |    Full    | Right-click crop harvests (including tall sugarcane) picked up automatically        |
+| **General Block Breakers** | Compatible | Any mod using vanilla break hooks                                                   |
 
 ### 📋 Technical Details
 
-Auto Pickup intercepts drops at these injection points:
+AutoPickup intercepts drops at these injection points:
 
 - `Block.dropStacks()` - Primary block drop handling
-- `ServerWorld.spawnEntity()` - Item entity spawning
+- `ServerWorld.spawnEntity()` - Item entity spawning and falling block entity tracking (FallingTree)
 - `LivingEntity.dropLoot()` - Mob loot generation
 - `Block.dropExperience()` - Block XP orbs
 - `LivingEntity.dropExperience()` - Mob XP orbs
+- `ServerPlayerGameMode.useItemOn()` - Right-click harvesting (sweet berries, jukebox disc ejection, crops via the RightClickHarvest mod, etc.)
+- `ItemFrame.hurt()` - Items removed from item frames by left-clicking
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
-![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/26.1/assets/MULTI_BLOCK.gif)
+![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/MULTI_BLOCK.gif)
 
 ---
 
@@ -201,15 +208,15 @@ When **Split Mob Loot** or **Split Mob XP** is enabled, rewards from mob kills a
 
 1. **Damage Tracking:** The mod tracks the last 10 unique players who damaged each mob
 2. **Eligibility Check:** On mob death, only players who:
-    - Are online and not spectating
-    - Have **Master** enabled
-    - Have the specific **Mob Pickup** feature enabled
-    - Have the specific **Split** feature enabled
-    - Are in the same world as the killer
+   - Are online and not spectating
+   - Have **Master** enabled
+   - Have the specific **Mob Pickup** feature enabled
+   - Have the specific **Split** feature enabled
+   - Are in the same world as the killer
 3. **Distribution:**
-    - Items are split evenly; the killer receives any remainder
-    - Experience is split evenly; the killer receives any remainder
-    - Items that don't fit in inventories are dropped at the mob's location
+   - Items are split evenly; the killer receives any remainder
+   - Experience is split evenly; the killer receives any remainder
+   - Items that don't fit in inventories are dropped at the mob's location
 
 ### Example
 
@@ -241,37 +248,37 @@ dependencies {
 import com.lukarbonite.autopickup.AutoPickupApi;
 
 public class QuestRewards {
-    
-    public void giveReward(Player player, List<ItemStack> items, int xp) {
-        if (!isModLoaded("autopickup")) {
-            // Fallback: manual drops
-            items.forEach(stack -> player.dropItem(stack, false));
-            player.addExperience(xp);
-            return;
-        }
-        
-        // Auto Pickup handles:
-        // - Inventory insertion
-        // - Traveler's Backpack routing
-        // - Config checks (Master, Blocks, etc.)
-        List<ItemStack> remaining = AutoPickupApi.tryPickup(player, items);
-        
-        // Drop items that didn't fit
-        remaining.forEach(stack -> player.dropItem(stack, false));
-        
-        // Auto Pickup handles:
-        // - Mending calculations
-        // - Config checks
-        AutoPickupApi.tryPickupBlockExperience(player, xp);
-    }
-    
-    // For mob-related rewards
-    public void giveMobReward(Player player, List<ItemStack> loot, int xp) {
-        List<ItemStack> remaining = AutoPickupApi.tryPickupFromMob(player, loot);
-        remaining.forEach(stack -> player.dropItem(stack, false));
-        
-        AutoPickupApi.tryPickupMobExperience(player, xp);
-    }
+
+   public void giveReward(Player player, List<ItemStack> items, int xp) {
+      if (!isModLoaded("autopickup")) {
+         // Fallback: manual drops
+         items.forEach(stack -> player.dropItem(stack, false));
+         player.addExperience(xp);
+         return;
+      }
+
+      // AutoPickup handles:
+      // - Inventory insertion
+      // - Traveler's Backpack routing
+      // - Config checks (Master, Blocks, etc.)
+      List<ItemStack> remaining = AutoPickupApi.tryPickup(player, items);
+
+      // Drop items that didn't fit
+      remaining.forEach(stack -> player.dropItem(stack, false));
+
+      // AutoPickup handles:
+      // - Mending calculations
+      // - Config checks
+      AutoPickupApi.tryPickupBlockExperience(player, xp);
+   }
+
+   // For mob-related rewards
+   public void giveMobReward(Player player, List<ItemStack> loot, int xp) {
+      List<ItemStack> remaining = AutoPickupApi.tryPickupFromMob(player, loot);
+      remaining.forEach(stack -> player.dropItem(stack, false));
+
+      AutoPickupApi.tryPickupMobExperience(player, xp);
+   }
 }
 ```
 
