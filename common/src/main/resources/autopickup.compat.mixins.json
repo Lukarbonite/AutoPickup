@@ -4,8 +4,6 @@
   "compatibilityLevel": "JAVA_25",
   "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
   "mixins": [
-    "BlockUseWithoutItemMixin",
-    "ItemFrameMixin"
   ],
   "injectors": {
     "defaultRequire": 1

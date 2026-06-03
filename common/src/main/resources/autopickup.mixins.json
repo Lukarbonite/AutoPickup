@@ -12,7 +12,11 @@
     "ServerTickMixin",
     "ServerLevelMixin",
     "LevelBreakBlockMixin",
-    "DamageTrackerMixin"
+    "DamageTrackerMixin",
+    "BlockUseWithoutItemMixin",
+    "ItemFrameMixin",
+    "BrushableBlockMixin",
+    "BrushEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
