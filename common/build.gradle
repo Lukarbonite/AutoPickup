@@ -1,0 +1,11 @@
+plugins {
+    id 'java-library'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-common"
+}
+
+// common is a source-only container; platforms compile it via srcDirs +=.
+compileJava.enabled = false
+jar.enabled = false

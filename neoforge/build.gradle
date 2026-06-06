@@ -1,0 +1,71 @@
+// :neoforge — NeoForge-specific entry points and event registrations.
+plugins {
+    id 'net.neoforged.moddev' version "${neoforge_gradle_version}"
+    id 'maven-publish'
+}
+
+base {
+    archivesName = "${project.archives_base_name}-neoforge"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [project(':common').file('src/main/java')]
+        }
+        resources {
+            srcDirs += [project(':common').file('src/main/resources')]
+        }
+    }
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "autopickup" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+dependencies {
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_neoforge_version}"
+    compileOnly(files("../libs/veinminer-neoforge-2.10.1+1.21.11.jar"))
+    compileOnly(files("../libs/treeharvester-1.21.11-9.3.jar"))
+    compileOnly(files("../libs/travelersbackpack-neoforge-1.21.11-10.11.5.jar"))
+    compileOnly(files("../libs/fallingtrees-neoforge-1.21.11-0.14.0.jar"))
+    compileOnly(files("../libs/pandalib-neoforge-1.21.11-0.6.0.jar"))
+    compileOnly(files("../libs/FallingTree-1.21.11-1.21.11.3.jar"))
+}
+
+processResources {
+    var replaceProperties = [
+            version          : project.mod_version,
+            minecraft_version: project.minecraft_version,
+            neoforge_version : project.neoforge_version
+    ]
+    inputs.properties replaceProperties
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand replaceProperties
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${project.archives_base_name}-neoforge"
+            from components.java
+        }
+    }
+}

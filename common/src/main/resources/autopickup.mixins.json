@@ -1,0 +1,24 @@
+{
+  "required": true,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
+  "mixins": [
+    "BlockMixin",
+    "BlockDropExperienceMixin",
+    "ExperienceOrbAwardMixin",
+    "ServerPlayerGameModeMixin",
+    "MobLootMixin",
+    "ServerTickMixin",
+    "ServerLevelMixin",
+    "LevelBreakBlockMixin",
+    "DamageTrackerMixin",
+    "BlockUseWithoutItemMixin",
+    "ItemFrameMixin",
+    "BrushableBlockMixin",
+    "BrushEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
