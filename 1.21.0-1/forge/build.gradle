@@ -1,0 +1,104 @@
+// MC 1.21.0-1 (targets 1.21.0 through 1.21.1) — Forge, Mojang mappings, Java 21
+plugins {
+    id 'dev.architectury.loom' version "${arch_loom_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${mc_version_range}"
+
+base {
+    archivesName = "${archives_base_name}-forge"
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp  = true
+        defaultRefmapName = "autopickup.refmap.json"
+    }
+
+    forge {
+        mixinConfigs = [
+            "autopickup.mixins.json",
+            "autopickup.compat.mixins.json",
+            "autopickup.forge.mixins.json"
+        ]
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                project(':forge').file('src/main/java'),
+                file('../src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                project(':forge').file('src/main/resources'),
+                file('../src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release  = 21
+}
+
+configurations.all {
+    resolutionStrategy.force 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    exclude group: 'net.fabricmc', module: 'fabric-log4j-util'
+}
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${forge_version}"
+
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
+
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/FallingTree-1.21.1-1.21.1.11.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/travelersbackpack-forge-1.21.1-10.1.11.jar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property "version", project.version
+    filesMatching("META-INF/mods.toml") {
+        expand version: inputs.properties.version
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-forge"
+            from components.java
+        }
+    }
+}

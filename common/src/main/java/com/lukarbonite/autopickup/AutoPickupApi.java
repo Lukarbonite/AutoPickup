@@ -1,14 +1,10 @@
 package com.lukarbonite.autopickup;
 
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
+import com.lukarbonite.autopickup.platform.VersionHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantment;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -23,30 +19,15 @@ public final class AutoPickupApi {
     public static void clearBlockBreaker() { blockBreaker.remove(); }
     public static Player getBlockBreaker() { return blockBreaker.get(); }
 
-    /**
-     * Permission Resolution Logic:
-     * 1. Admin Override (Highest Priority)
-     * 2. Client Preference (Only if the server specifically allows this feature to be controlled)
-     * 3. Server Global Fallback (Default)
-     */
     private static boolean resolve(Player player,
                                    Function<PlayerConfigs.PlayerState, Boolean> overrideGetter,
                                    Function<PlayerConfigs.PlayerState, Boolean> clientGetter,
                                    boolean specificAllowance,
                                    boolean serverDefault) {
-
         PlayerConfigs.PlayerState state = PlayerConfigs.getState(player.getUUID());
-
-        // 1. Check Admin Override
         Boolean override = overrideGetter.apply(state);
         if (override != null) return override;
-
-        // 2. Check Client preference IF server allows it for this specific setting
-        if (specificAllowance) {
-            return clientGetter.apply(state);
-        }
-
-        // 3. Fallback to Server global config
+        if (specificAllowance) return clientGetter.apply(state);
         return serverDefault;
     }
 
@@ -79,8 +60,6 @@ public final class AutoPickupApi {
         return resolve(player, s -> s.overrideSplitMobXp, s -> s.clientSplitMobXp, cfg.allowSplitMobXp, cfg.autoPickupSplitMobXp);
     }
 
-    // --- Logic Implementation ---
-
     public static List<ItemStack> tryPickup(Player player, List<ItemStack> drops) {
         Level world = player.level();
         if (world.isClientSide() || !(world instanceof ServerLevel) || player.isSpectator()
@@ -101,14 +80,10 @@ public final class AutoPickupApi {
 
     private static List<ItemStack> insertDrops(Player player, List<ItemStack> drops) {
         List<ItemStack> unpicked = new ArrayList<>();
-
         for (ItemStack stack : drops) {
-            if (stack.isEmpty())
-                continue;
-
+            if (stack.isEmpty()) continue;
             if (player.getInventory().add(stack)) {
-                if (!stack.isEmpty())
-                    unpicked.add(stack);
+                if (!stack.isEmpty()) unpicked.add(stack);
             } else {
                 unpicked.add(stack);
             }
@@ -128,13 +103,15 @@ public final class AutoPickupApi {
 
     private static void giveExperience(Player player, int experience) {
         Level world = player.level();
-        if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel)) return;
+        if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel serverLevel)) return;
+
+        VersionHelper vh = VersionHelper.INSTANCE;
 
         List<ItemStack> mendable = new ArrayList<>();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
-            if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR || slot == EquipmentSlot.MAINHAND || slot == EquipmentSlot.OFFHAND) {
+            if (vh.isArmorOrHandSlot(slot)) {
                 ItemStack stack = player.getItemBySlot(slot);
-                if (!stack.isEmpty() && stack.isDamaged() && hasMending(stack)) {
+                if (!stack.isEmpty() && stack.isDamaged() && vh.hasMending(stack, serverLevel)) {
                     mendable.add(stack);
                 }
             }
@@ -145,8 +122,7 @@ public final class AutoPickupApi {
             return;
         }
 
-        // Distribute XP across all damaged Mending items, matching vanilla's per-orb
-        // random selection but exhausting remaining XP rather than stopping after one pick.
+        // Distribute XP across all damaged Mending items, exhausting remaining XP rather than stopping after one pick.
         while (experience > 0 && !mendable.isEmpty()) {
             ItemStack item = mendable.get(player.getRandom().nextInt(mendable.size()));
             int repair = Math.min(experience * 2, item.getDamageValue());
@@ -157,14 +133,5 @@ public final class AutoPickupApi {
         }
 
         if (experience > 0) player.giveExperiencePoints(experience);
-    }
-
-    private static boolean hasMending(ItemStack stack) {
-        ItemEnchantments enchantments = stack.get(DataComponents.ENCHANTMENTS);
-        if (enchantments == null) return false;
-        for (Holder<Enchantment> holder : enchantments.keySet()) {
-            if (holder.is(Enchantments.MENDING)) return true;
-        }
-        return false;
     }
 }

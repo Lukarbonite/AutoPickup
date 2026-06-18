@@ -1,0 +1,27 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.lukarbonite.fabric.mixin",
+  "plugin": "com.lukarbonite.fabric.mixin.FabricMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "compat.veinminer.VeinMinerEventMixin",
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
+    "compat.treeharvester.LeavesBlockDecayMixin",
+    "compat.travelersbackpack.AutoPickupTBMixin",
+    "compat.fallingtree.BlockBreakListenerMixin",
+    "compat.fallingtree.FallingTreeFallingBlockMixin",
+    "compat.fallingtree.TreeBreakingHandlerMixin",
+    "compat.fallingtree.FallingTreeLeavesDecayMixin",
+    "compat.fallingtree.LeafForceBreakerMixin",
+    "compat.fallingtree.LeafBreakingHandlerMixin",
+    "compat.fallingtree.FallingAnimationHandlerMixin",
+    "compat.pandafallingtrees.TreeEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,65 +1,29 @@
-// :fabric — Fabric-specific entry points, events, and client UI.
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-    id 'maven-publish'
+    id 'java-library'
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
 }
 
 base {
     archivesName = "${project.archives_base_name}-fabric"
 }
 
-repositories {
-    mavenLocal()
-    maven { name = "Terraformers"; url = "https://maven.terraformersmc.com/" }
-    maven { name = "Xander Maven";  url = "https://maven.isxander.dev/releases" }
-}
+// Source-only container for Fabric-specific code (entry points, events, compat).
+// Version builds compile this via:  srcDirs += project(':fabric').file('src/main/java')
+// Version-specific metadata (fabric.mod.json) lives in each MC version's directory.
+compileJava.enabled = false
+jar.enabled = false
+tasks.matching { it.name == 'remapJar' }.configureEach { enabled = false }
 
 loom {
-    mixin {
-        defaultRefmapName = "autopickup.refmap.json"
-    }
+    noIntermediateMappings()
 }
 
-sourceSets {
-    main {
-        java {
-            srcDirs += [project(':common').file('src/main/java')]
-        }
-        resources {
-            srcDirs += [project(':common').file('src/main/resources')]
-        }
-    }
-}
-
+// Loom is applied here ONLY to give IDEs a Minecraft + Fabric API classpath
+// for code insight in fabric/src. Pinned to 26.1.2 (unobfuscated). Actual
+// compilation always happens in the version projects via srcDirs +=, against
+// each version's own Minecraft + mappings.
 dependencies {
-    minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.officialMojangMappings()
-
-    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
-
-    modCompileOnly "com.terraformersmc:modmenu:${modmenu_version}"
-    modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
-    modCompileOnly(files("../libs/veinminer-fabric-2.10.3+1.21.11.jar"))
-    modCompileOnly(files("../libs/treeharvester-1.21.11-9.3.jar"))
-    modCompileOnly(files("../libs/travelersbackpack-fabric-1.21.11-10.11.9.jar"))
-    modCompileOnly(files("../libs/fallingtrees-fabric-1.21.11-0.14.0.jar"))
-    modCompileOnly(files("../libs/pandalib-fabric-1.21.11-0.6.0.jar"))
-    modCompileOnly(files("../libs/FallingTree-1.21.11-1.21.11.3.jar"))
-}
-
-processResources {
-    inputs.property "version", project.version
-    filesMatching("fabric.mod.json") {
-        expand version: inputs.properties.version
-    }
-}
-
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            artifactId = project.archives_base_name
-            from components.java
-        }
-    }
+    minecraft 'com.mojang:minecraft:26.1.2'
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation 'net.fabricmc.fabric-api:fabric-api:0.148.2+26.1.2'
 }

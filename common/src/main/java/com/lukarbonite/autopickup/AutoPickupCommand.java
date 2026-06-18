@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.lukarbonite.autopickup.platform.VersionHelper;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.Commands;
@@ -95,7 +96,7 @@ public class AutoPickupCommand {
     private static boolean checkPermission(CommandSourceStack source) {
         ServerPlayer player = source.getPlayer();
         if (player != null) {
-            return source.getServer().getPlayerList().isOp(player.nameAndId());
+            return VersionHelper.INSTANCE.isOp(player, source.getServer());
         }
         return true;
     }

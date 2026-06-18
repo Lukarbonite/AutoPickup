@@ -1,0 +1,108 @@
+// MC 1.20.1 — Forge, Mojang mappings, Java 17 bytecode
+plugins {
+    id 'dev.architectury.loom' version "${arch_loom_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${minecraft_version}"
+
+base {
+    archivesName = "${archives_base_name}-forge"
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp  = true
+        defaultRefmapName = "autopickup.refmap.json"
+    }
+
+    forge {
+        mixinConfigs = [
+            "autopickup.mixins.json",
+            "autopickup.compat.mixins.json",
+            "autopickup.forge.mixins.json"
+        ]
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                project(':forge').file('src/main/java'),
+                file('../src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                project(':forge').file('src/main/resources'),
+                file('../src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release  = 17
+}
+
+configurations.all {
+    resolutionStrategy.force 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    exclude group: 'net.fabricmc', module: 'fabric-log4j-util'
+}
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${forge_version}"
+
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.3"))
+    implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
+
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_forge_version}"
+
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/treeharvester-1.20.1-9.1.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/FallingTree-1.20.1-4.3.4.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/fallingtrees-forge-mc1.20-0.13.2-SNAPSHOT.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/pandalib-forge-mc1.20-0.5.2-SNAPSHOT.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/travelersbackpack-forge-1.20.1-9.1.54.jar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property "version", project.version
+    filesMatching("META-INF/mods.toml") {
+        expand version: inputs.properties.version
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-forge"
+            from components.java
+        }
+    }
+}

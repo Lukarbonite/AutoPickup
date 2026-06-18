@@ -1,0 +1,43 @@
+{
+	"schemaVersion": 1,
+	"id": "autopickup",
+	"version": "${version}",
+	"name": "AutoPickup",
+	"description": "AutoPickup mod by lukarbonite",
+	"authors": [
+		"lukarbonite"
+	],
+	"contact": {
+		"homepage": "https://github.com/Lukarbonite/AutoPickup",
+		"sources": "https://github.com/Lukarbonite/AutoPickup"
+	},
+	"license": "AGPL-3.0-only",
+	"icon": "assets/autopickup/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.lukarbonite.fabric.AutoPickupFabric"
+		],
+		"client": [
+			"com.lukarbonite.fabric.client.AutoPickupClient"
+		],
+		"modmenu": [
+			"com.lukarbonite.fabric.compat.ModMenuIntegration"
+		]
+	},
+	"mixins": [
+		"autopickup.mixins.json",
+		"autopickup.compat.mixins.json",
+		"autopickup.fabric.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.12",
+		"minecraft": "~1.21",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"modmenu": "*",
+		"yet_another_config_lib_v3": ">=3.8.2+1.21.1-fabric"
+	}
+}

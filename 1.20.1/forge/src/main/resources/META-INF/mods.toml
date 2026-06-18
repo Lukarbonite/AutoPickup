@@ -1,0 +1,46 @@
+modLoader    = "javafml"
+loaderVersion = "[47,)"
+license       = "AGPL-3.0-only"
+issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
+
+[[mods]]
+    modId       = "autopickup"
+    version     = "${version}"
+    displayName = "AutoPickup"
+    description = '''AutoPickup mod by lukarbonite'''
+    logoFile    = "assets/autopickup/icon.png"
+    authors     = "lukarbonite"
+
+    [[mods.contacts]]
+        homepage = "https://github.com/Lukarbonite/AutoPickup"
+        sources  = "https://github.com/Lukarbonite/AutoPickup"
+
+[[dependencies."autopickup"]]
+    modId        = "forge"
+    mandatory    = true
+    versionRange = "[47,48)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies."autopickup"]]
+    modId        = "minecraft"
+    mandatory    = true
+    versionRange = "[1.20.1,1.21)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies."autopickup"]]
+    modId        = "mixinextras"
+    mandatory    = false
+    versionRange = "[0.5.3,)"
+    ordering     = "BEFORE"
+    side         = "BOTH"
+
+[[mixins]]
+    config = "autopickup.mixins.json"
+
+[[mixins]]
+    config = "autopickup.compat.mixins.json"
+
+[[mixins]]
+    config = "autopickup.forge.mixins.json"

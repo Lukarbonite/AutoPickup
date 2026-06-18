@@ -1,0 +1,93 @@
+// MC 26.1 — NeoForge, unobfuscated, Java 25
+plugins {
+    id 'net.neoforged.moddev' version "${neoforge_gradle_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${minecraft_version}"
+
+base {
+    archivesName = "${archives_base_name}-neoforge"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                file('../src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                file('../src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(25) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release  = 25
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "autopickup" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+dependencies {
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
+
+    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/veinminer-neoforge-2.8.2.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/treeharvester-26.1.2-9.4.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/travelersbackpack-neoforge-26.1.2-11.2.4.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/FallingTree-26.1.2-25.jar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    var replaceProperties = [
+            version          : project.mod_version,
+            minecraft_version: project.minecraft_version,
+            neoforge_version : project.neoforge_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand replaceProperties
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-neoforge"
+            from components.java
+        }
+    }
+}

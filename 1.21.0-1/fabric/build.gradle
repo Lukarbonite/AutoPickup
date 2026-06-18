@@ -1,0 +1,95 @@
+// MC 1.21.0-1 (targets 1.21.0 through 1.21.1) — Fabric, Mojang mappings, Java 21
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${mc_version_range}"
+
+base {
+    archivesName = "${archives_base_name}-fabric"
+}
+
+repositories {
+    mavenLocal()
+    maven { name = "Terraformers"; url = "https://maven.terraformersmc.com/" }
+    maven { name = "Ladysnake";    url = "https://maven.ladysnake.org/releases" }
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+loom {
+    mixin {
+        defaultRefmapName = "autopickup.refmap.json"
+    }
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                file('../src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                file('../src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release  = 21
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+
+    modCompileOnly "com.terraformersmc:modmenu:${modmenu_version}"
+    modCompileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
+
+    // Cardinal Components (required by TravelersBackpack 1.21.1)
+    compileOnly "org.ladysnake.cardinal-components-api:cardinal-components-base:6.1.1"
+    compileOnly "org.ladysnake.cardinal-components-api:cardinal-components-entity:6.1.1"
+
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/veinminer-fabric-2.10.3+1.21.1.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.1.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/FallingTree-1.21.1-1.21.1.11.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/fallingtrees-fabric-1.21.1-0.14.0.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/pandalib-fabric-1.21.1-0.6.0.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/travelersbackpack-fabric-1.21.1-10.1.19.jar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand version: inputs.properties.version
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-fabric"
+            from components.java
+        }
+    }
+}

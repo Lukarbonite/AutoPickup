@@ -16,7 +16,8 @@
     "BlockUseWithoutItemMixin",
     "ItemFrameMixin",
     "BrushableBlockMixin",
-    "BrushEntityMixin"
+    "BrushEntityMixin",
+    "ShearMixin"
   ],
   "injectors": {
     "defaultRequire": 1

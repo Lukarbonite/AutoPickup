@@ -4,6 +4,7 @@
   "plugin": "com.lukarbonite.autopickup.mixin.NeoforgeMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ShearsItemMixin",
     "compat.veinminer.VeinMinerEventMixin",
     "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
     "compat.treeharvester.LeafEventsMixin",

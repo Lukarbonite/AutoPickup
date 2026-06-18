@@ -1,0 +1,54 @@
+// Source container — no compilation here. Version builds pull src via srcDirs +=
+// Forge entry points, events, compat, platform impl — shared by :mc1_21_0_1-forge.
+plugins {
+    id 'java-library'
+    id 'dev.architectury.loom' version "${arch_loom_version}"
+}
+
+base {
+    archivesName = "${project.archives_base_name}-forge"
+}
+
+compileJava.enabled = false
+jar.enabled = false
+tasks.matching { it.name == 'remapJar' }.configureEach { enabled = false }
+
+loom {
+    silentMojangMappingsLicense()
+}
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+}
+
+// project(':common') and 1.21.0-1/forge/src/main/java are added here ONLY so
+// the IDE can resolve common business-logic classes (e.g. AutoPickupCommon,
+// AutoPickupConfig, PlayerConfigs) and version-specific classes (e.g.
+// AutoPickupForgeClient) referenced by forge/src; :mc1_21_0_1-forge already
+// includes both independently.
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                file('../1.21.0-1/forge/src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [file('../1.21.0-1/forge/src/main/resources')]
+        }
+    }
+}
+
+// Loom is applied here ONLY to give IDEs a Minecraft + Forge classpath for
+// code insight in forge/src. 26.1 has no Forge target, so this is pinned to
+// 1.21.1 (the newest Forge target) instead. Actual compilation always
+// happens in the version projects via srcDirs +=, against each version's
+// own Minecraft + mappings.
+dependencies {
+    minecraft 'com.mojang:minecraft:1.21.1'
+    mappings loom.officialMojangMappings()
+    forge 'net.minecraftforge:forge:1.21.1-52.1.14'
+
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/FallingTree-1.21.1-1.21.1.11.jar"))
+}

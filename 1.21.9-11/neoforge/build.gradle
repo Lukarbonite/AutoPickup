@@ -1,0 +1,98 @@
+// MC 1.21.9-11 — NeoForge, Mojang mappings, Java 21
+plugins {
+    id 'net.neoforged.moddev' version "${neoforge_gradle_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${mc_version_range}"
+
+base {
+    archivesName = "${archives_base_name}-neoforge"
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                file('../src/main/java'),
+                project(':neoforge').file('src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                project(':common').file('src/main/resources'),
+                file('../src/main/resources'),
+                project(':neoforge').file('src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release  = 21
+}
+
+neoForge {
+    version = project.neoforge_version
+
+    runs {
+        client { client() }
+        server { server() }
+    }
+
+    mods {
+        "autopickup" {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    maven { name = "Xander Maven"; url = "https://maven.isxander.dev/releases" }
+}
+
+dependencies {
+    compileOnly "dev.isxander:yet-another-config-lib:${yacl_neoforge_version}"
+
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/veinminer-neoforge-2.10.1+1.21.11.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/treeharvester-1.21.11-9.3.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/travelersbackpack-neoforge-1.21.11-10.11.5.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/fallingtrees-neoforge-1.21.11-0.14.0.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/pandalib-neoforge-1.21.11-0.6.0.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.9-11/FallingTree-1.21.11-1.21.11.3.jar"))
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    var replaceProperties = [
+            version          : project.mod_version,
+            minecraft_version: project.minecraft_version,
+            neoforge_version : project.neoforge_version
+    ]
+    inputs.properties replaceProperties
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand replaceProperties
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-neoforge"
+            from components.java
+        }
+    }
+}

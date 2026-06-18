@@ -1,43 +1,19 @@
-// Root build — shared conventions only.
-// Each subproject (:common, :fabric, :neoforge) carries its own plugins and deps.
+// Root build — minimal shared conventions.
+//
+// Source containers (:common, :fabric, :neoforge) have compileJava disabled;
+// they exist only so version builds can reference their src dirs.
+//
+// Version builds (e.g. :mc1_21_9_11-fabric) manage their own plugins, toolchain,
+// and Java release target — DO NOT set a global toolchain here because MC 26.1
+// requires Java 25 while MC 1.20.1 targets Java 17 bytecode.
 
 subprojects {
-    apply plugin: 'java-library'
-
-    group   = project.maven_group
-    version = project.mod_version
-
-    java {
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
-        withSourcesJar()
-    }
+    group = project.maven_group
 
     repositories {
         mavenCentral()
-        maven {
-            name = 'Mojang'
-            url = 'https://libraries.minecraft.net/'
-        }
-        maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
-        }
-        maven {
-            name = 'NeoForge'
-            url = 'https://maven.neoforged.net/releases'
-        }
-    }
-
-    tasks.withType(JavaCompile).configureEach {
-        options.encoding = 'UTF-8'
-        options.release  = 21
-    }
-
-    jar {
-        from(rootProject.file("LICENSE")) {
-            rename { "${it}_${project.base.archivesName.get()}" }
-        }
+        maven { name = 'Mojang';   url = 'https://libraries.minecraft.net/' }
+        maven { name = 'Fabric';   url = 'https://maven.fabricmc.net/' }
+        maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases' }
     }
 }

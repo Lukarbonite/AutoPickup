@@ -1,7 +1,9 @@
 pluginManagement {
     repositories {
-        maven { name = 'Fabric';   url = 'https://maven.fabricmc.net/' }
-        maven { name = 'NeoForge'; url = 'https://maven.neoforged.net/releases' }
+        maven { name = 'Fabric';        url = 'https://maven.fabricmc.net/' }
+        maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
+        maven { name = 'Forge';        url = 'https://maven.minecraftforge.net/' }
+        maven { name = 'NeoForge';     url = 'https://maven.neoforged.net/releases' }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -9,6 +11,34 @@ pluginManagement {
 
 rootProject.name = 'autopickup'
 
-include ':common'
-include ':fabric'
-include ':neoforge'
+// ─── Shared source containers (no build output, Java source only) ────────────
+include ':common'   // Business logic, config, API, mixins, platform interface
+include ':fabric'   // Fabric entry points, events, compat, platform impl
+include ':forge'    // Forge entry points, events, compat, platform impl (1.21.0-1)
+include ':neoforge' // NeoForge entry points, events, compat, platform impl
+
+// ─── MC 1.20.1 — Fabric + Forge, Mojang mappings, Java 17 bytecode ──────────
+include ':mc1_20_1-fabric'
+project(':mc1_20_1-fabric').projectDir = file('1.20.1/fabric')
+include ':mc1_20_1-forge'
+project(':mc1_20_1-forge').projectDir  = file('1.20.1/forge')
+
+// ─── MC 1.21.0-1 — Fabric + Forge + NeoForge, Mojang mappings, Java 21 ──────
+include ':mc1_21_0_1-fabric'
+project(':mc1_21_0_1-fabric').projectDir   = file('1.21.0-1/fabric')
+include ':mc1_21_0_1-forge'
+project(':mc1_21_0_1-forge').projectDir    = file('1.21.0-1/forge')
+include ':mc1_21_0_1-neoforge'
+project(':mc1_21_0_1-neoforge').projectDir = file('1.21.0-1/neoforge')
+
+// ─── MC 1.21.9-11 — Fabric + NeoForge, Mojang mappings, Java 21 ─────────────
+include ':mc1_21_9_11-fabric'
+project(':mc1_21_9_11-fabric').projectDir   = file('1.21.9-11/fabric')
+include ':mc1_21_9_11-neoforge'
+project(':mc1_21_9_11-neoforge').projectDir = file('1.21.9-11/neoforge')
+
+// ─── MC 26.1 — Fabric + NeoForge, unobfuscated (no mappings needed), Java 25 ─
+include ':mc26_1-fabric'
+project(':mc26_1-fabric').projectDir   = file('26.1/fabric')
+include ':mc26_1-neoforge'
+project(':mc26_1-neoforge').projectDir = file('26.1/neoforge')
