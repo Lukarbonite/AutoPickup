@@ -44,12 +44,21 @@ public final class AutoPickupSessions {
         final ArrayDeque<BlockPos> recent = new ArrayDeque<>();
         int ticksToLive = SESSION_TTL_TICKS;
         int lastTouchedTick = 0; // tick when this session was last updated
+        // Tick of the most recent *real block break* by this player. Right-click "use" contexts
+        // (levers, jukeboxes, sweet berries, item frames, sugar-cane harvest, ...) deliberately do
+        // NOT update this. The broad proximity finders (findOwner / findOwnerSameTickTight) only
+        // attribute drops to a session that has actually broken a block recently, so a mere
+        // interaction can't turn the player into a 6-block magnet for unrelated drops (a redstone
+        // dropper dispensing, a piston breaking carpet, etc.).
+        int lastBreakTick = -1000;
 
         Session(Player p) {
             this.playerRef = new WeakReference<>(p);
         }
 
         void touch() { this.ticksToLive = SESSION_TTL_TICKS; this.lastTouchedTick = CURRENT_TICK; }
+
+        boolean brokeRecently() { return (CURRENT_TICK - lastBreakTick) <= SESSION_TTL_TICKS; }
 
         void addPos(BlockPos pos) {
             recent.addLast(pos.immutable());
@@ -87,8 +96,22 @@ public final class AutoPickupSessions {
         if (player == null || pos == null) return;
         Session s = SESSIONS.computeIfAbsent(player.getId(), id -> new Session(player));
         s.touch();
+        s.lastBreakTick = CURRENT_TICK;
         s.addPos(pos);
         BREAK_OWNERS.put(pos.asLong(), player.getId());
+    }
+
+    /**
+     * Register a position touched by a right-click "use" interaction (not a block break).
+     * Feeds only the tightly-scoped use-context finders (findOwnerInUseContext /
+     * findOwnerInDropContext) — never the broad break-proximity finders. This is what keeps
+     * interacting with a lever/jukebox/etc. from making the player a magnet for nearby drops.
+     */
+    public static void addUsePos(Player player, BlockPos pos) {
+        if (player == null || pos == null) return;
+        Session s = SESSIONS.computeIfAbsent(player.getId(), id -> new Session(player));
+        s.touch();
+        s.addPos(pos);
     }
 
     /**
@@ -126,6 +149,7 @@ public final class AutoPickupSessions {
             Session s = e.getValue();
             Player p = s.playerRef.get();
             if (p == null || p.isSpectator()) continue;
+            if (!s.brokeRecently()) continue; // use-only sessions never claim drops by proximity
             double d2 = s.minDist2(spawnPos);
             if (d2 <= INTERCEPT_RADIUS2 && d2 < bestD2) {
                 bestD2 = d2;
@@ -188,6 +212,11 @@ public final class AutoPickupSessions {
             Session s = e.getValue();
             Player p = s.playerRef.get();
             if (p == null || p.isSpectator()) continue;
+            // Linked attribution is for non-player destroyBlock calls that *cascade from* a real
+            // player break (liteminer/veinminer). It must NOT fire for use-only sessions, or a
+            // mere interaction (e.g. flipping a lever) lets nearby redstone/piston-driven block
+            // removals — a sticky-piston carpet farm duplicating breaks — be linked to the player.
+            if (!s.brokeRecently()) continue;
             double d2 = s.minDist2(center);
             if (d2 <= LINK_RADIUS2 && d2 < bestD2) {
                 bestD2 = d2;
@@ -234,7 +263,7 @@ public final class AutoPickupSessions {
     public static void openUseContext(Player player, BlockPos pos) {
         if (player == null || pos == null) return;
         begin(player);
-        addBreak(player, pos);
+        addUsePos(player, pos);
         beginDropContext(player, pos);
         OPEN_USE_CONTEXT.get().push(player.getId());
         ACTIVE_USE_CONTEXT_DEPTH.merge(player.getId(), 1, Integer::sum);
@@ -320,6 +349,7 @@ public final class AutoPickupSessions {
             Player p = s.playerRef.get();
             if (p == null || p.isSpectator() || s.recent.isEmpty()) continue;
             if (s.lastTouchedTick != CURRENT_TICK) continue;
+            if (!s.brokeRecently()) continue; // same-tick fallback is for real breaks, not use contexts
             double sx = spawnPos.x, sy = spawnPos.y, sz = spawnPos.z;
             int checked = 0;
             for (var itPos = s.recent.descendingIterator(); itPos.hasNext() && checked < 6; checked++) {

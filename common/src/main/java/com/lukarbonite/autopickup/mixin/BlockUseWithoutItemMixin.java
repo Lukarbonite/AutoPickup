@@ -31,7 +31,16 @@ public abstract class BlockUseWithoutItemMixin {
         }
     }
 
-    @Inject(method = "useItemOn", at = @At("TAIL"))
+    // RETURN (not TAIL): useItemOn has several early-return paths (e.g. when the clicked
+    // block's interaction returns a non-PASS result, as a lever/button does). TAIL only
+    // injects before the final return, so early returns would leak the use context — leaving
+    // a multi-block pickup zone alive for the session's lifetime. That leaked guard is what
+    // let redstone-driven items (a dropper dispensing on its scheduled tick, piston-farm
+    // drops, etc.) get attributed to the player. Closing on every return scopes the context
+    // to the synchronous interaction only: genuine harvest drops (sweet berries, jukebox
+    // eject, sugar-cane/cactus columns) still spawn in-call and are picked up, while anything
+    // a functional block ejects asynchronously falls outside the window. No block list needed.
+    @Inject(method = "useItemOn", at = @At("RETURN"))
     private void autopickup_closeUseContext(ServerPlayer player, Level level, ItemStack stack, InteractionHand hand, BlockHitResult hitResult, CallbackInfoReturnable<InteractionResult> cir) {
         AutoPickupSessions.closeUseContext();
     }
@@ -39,12 +48,12 @@ public abstract class BlockUseWithoutItemMixin {
     private static void registerColumn(ServerPlayer player, Level level, BlockPos clicked, Block block) {
         BlockPos scan = clicked.below();
         while (level.getBlockState(scan).is(block)) {
-            AutoPickupSessions.addBreak(player, scan);
+            AutoPickupSessions.addUsePos(player, scan);
             scan = scan.below();
         }
         scan = clicked.above();
         while (level.getBlockState(scan).is(block)) {
-            AutoPickupSessions.addBreak(player, scan);
+            AutoPickupSessions.addUsePos(player, scan);
             scan = scan.above();
         }
     }

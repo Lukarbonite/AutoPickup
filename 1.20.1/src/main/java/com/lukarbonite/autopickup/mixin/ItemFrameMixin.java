@@ -19,8 +19,13 @@ public abstract class ItemFrameMixin {
         AutoPickupSessions.openUseContext(player, self.blockPosition());
     }
 
-    @Inject(method = "hurt", at = @At("TAIL"))
+    // RETURN + same player guard as HEAD: hurt has many early-return paths, and TAIL only
+    // covers the last one — early returns would leak the context (and an unconditional close
+    // could pop an outer use context). Balancing open/close on the player condition keeps the
+    // context scoped to the actual player interaction.
+    @Inject(method = "hurt", at = @At("RETURN"))
     private void autopickup_closeFrameContext(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        if (!(source.getEntity() instanceof ServerPlayer)) return;
         AutoPickupSessions.closeUseContext();
     }
 }
