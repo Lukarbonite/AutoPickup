@@ -1,0 +1,25 @@
+{
+  "required": false,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "plugin": "com.lukarbonite.autopickup.mixin.NeoforgeMixinPlugin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "ShearsItemMixin",
+    "compat.veinminer.VeinMinerEventMixin",
+    "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
+    "compat.treeharvester.LeafEventsMixin",
+    "compat.treeharvester.LeafProcessingMixin",
+    "compat.treeharvester.TreeCutEventsMixin",
+    "compat.treeharvester.LeavesBlockDecayMixin",
+    "compat.travelersbackpack.AutoPickupTBMixin",
+    "compat.fallingtree.FallingTreeFallingBlockMixin",
+    "compat.fallingtree.TreeBreakingHandlerMixin",
+    "compat.fallingtree.FallingTreeLeavesDecayMixin",
+    "compat.fallingtree.LeafForceBreakerMixin",
+    "compat.fallingtree.LeafBreakingHandlerMixin",
+    "compat.fallingtree.FallingAnimationHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

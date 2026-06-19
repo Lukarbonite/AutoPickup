@@ -42,3 +42,9 @@ include ':mc26_1-fabric'
 project(':mc26_1-fabric').projectDir   = file('26.1/fabric')
 include ':mc26_1-neoforge'
 project(':mc26_1-neoforge').projectDir = file('26.1/neoforge')
+
+// ─── MC 26.2 — Fabric + NeoForge, unobfuscated (no mappings needed), Java 25 ─
+include ':mc26_2-fabric'
+project(':mc26_2-fabric').projectDir   = file('26.2/fabric')
+include ':mc26_2-neoforge'
+project(':mc26_2-neoforge').projectDir = file('26.2/neoforge')
