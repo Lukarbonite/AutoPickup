@@ -1,7 +1,7 @@
 # AutoPickup
 
 ![Fabric](https://img.shields.io/badge/modloaders-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/neoforge-orange?style=for-the-badge)![Forge](https://img.shields.io/badge/forge-purple?style=for-the-badge)
-![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.1.2-green?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.2-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **AutoPickup** is a highly configurable server-side mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
@@ -186,13 +186,17 @@ AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mo
 
 AutoPickup intercepts drops at these injection points:
 
-- `Block.dropStacks()` - Primary block drop handling
-- `ServerWorld.spawnEntity()` - Item entity spawning and falling block entity tracking (FallingTree)
-- `LivingEntity.dropLoot()` - Mob loot generation
-- `Block.dropExperience()` - Block XP orbs
+- `Block.dropResources()` - Primary block drop handling
+- `ServerLevel.addFreshEntity()` - Item entity spawning and falling-block entity tracking (FallingTree and any mod that spawns drops directly)
+- `LivingEntity.dropFromLootTable()` - Mob loot generation
 - `LivingEntity.dropExperience()` - Mob XP orbs
+- `Block.popExperience()` - Block XP orbs
+- `ExperienceOrb.award()` - Captures XP spawned directly by block-breaking mods (e.g. VeinMiner)
 - `ServerPlayerGameMode.useItemOn()` - Right-click harvesting (sweet berries, jukebox disc ejection, crops via the RightClickHarvest mod, etc.)
-- `ItemFrame.hurt()` - Items removed from item frames by left-clicking
+- `ItemFrame.hurt()` / `hurtServer()` - Items removed from item frames by left-clicking
+- `Mob.interact()` / `ShearsItem.interactLivingEntity()` - Shearing drops (wool, snow golem pumpkins, mooshroom mushrooms)
+- `BrushableBlockEntity.dropContent()` - Brushing suspicious sand/gravel
+- `LivingEntity.dropFromEntityInteractLootTable()` - Brushing armadillos for scutes
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
