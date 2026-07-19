@@ -32,10 +32,12 @@ public class AutoPickupForge {
         MinecraftForge.EVENT_BUS.addListener(this::onServerStarted);
         MinecraftForge.EVENT_BUS.addListener(this::onServerStopping);
 
-        // Register key mappings on the MOD bus (client-only event)
-        modEventBus.addListener(AutoPickupForgeClient::onRegisterKeyMappings);
-
+        // Client-only setup. Must be gated behind a dist check so the client class
+        // (and its client-only signatures like net/minecraft/client/Options) is never
+        // referenced/loaded on a dedicated server.
         if (FMLEnvironment.dist == Dist.CLIENT) {
+            // Register key mappings on the MOD bus (client-only event)
+            modEventBus.addListener(AutoPickupForgeClient::onRegisterKeyMappings);
             AutoPickupForgeClient.registerConfigScreens(modContainer);
         }
     }

@@ -28,10 +28,10 @@ public class AutoPickupNeoForge {
         NeoForge.EVENT_BUS.addListener(this::onServerStarted);
         NeoForge.EVENT_BUS.addListener(this::onServerStopping);
 
-        // Register key mappings on the MOD bus (client-only event)
-        modEventBus.addListener(AutoPickupNeoForgeClient::onRegisterKeyMappings);
-
+        // Client-only setup. Must be gated behind a dist check so the client class
+        // (and its client-only signatures) is never referenced/loaded on a server.
         if (FMLEnvironment.dist == Dist.CLIENT) {
+            modEventBus.addListener(AutoPickupNeoForgeClient::onRegisterKeyMappings);
             AutoPickupNeoForgeClient.registerConfigScreens(modContainer);
         }
     }
