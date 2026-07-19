@@ -21,7 +21,8 @@
 - **👥 Mob Loot Splitting:** Share mob drops and XP with nearby players who participated in the kill
 - **🎮 Per-Player Permissions:** Server admins can override settings for specific players
 - **💾 Client Profiles:** Automatic per-server/world configuration profiles for seamless server switching
-- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, TreeHarvester, Traveler's Backpack, FallingTree, Panda's Falling Trees and more
+- **🔌 Extensive Mod Compatibility:** Works automatically with VeinMiner, LiteMiner, TreeHarvester, Traveler's Backpack, FallingTree, Panda's Falling Trees and more
+- **🚜 Farm-Safe:** Only picks up what your own actions break. Automated farms (pistons, water, bonemeal/moss, droppers) running nearby are never siphoned into your inventory
 
 ![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
 
@@ -174,19 +175,22 @@ AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mo
 
 | Mod                        |   Status   | Notes                                                                               |
 |:---------------------------|:----------:|:------------------------------------------------------------------------------------|
-| **VeinMiner**              |    Full    | All vein blocks picked up instantly with XP                                         |
+| **VeinMiner**              |    Full    | Whole vein chain collected with XP, at any length                                   |
 | **TreeHarvester**          |    Full    | Logs/leaves collected; saplings auto-replanted if enabled                           |
 | **Traveler's Backpack**    |    Full    | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
 | **FallingTree**            |    Full    | Tree items handle the different break modes                                         |
 | **Panda's Falling Trees**  |    Full    | Tree items are handled by AutoPickup after fall animation                           |
 | **RightClickHarvest**      |    Full    | Right-click crop harvests (including tall sugarcane) picked up automatically        |
-| **General Block Breakers** | Compatible | Any mod using vanilla break hooks                                                   |
+| **LiteMiner**              |    Full    | Whole vein chain collected with XP, at any length                                   |
+| **General Block Breakers** | Compatible | Any mod or mechanic that breaks blocks and attributes the break to the player       |
 
 ### 📋 Technical Details
 
 AutoPickup intercepts drops at these injection points:
 
 - `Block.dropResources()` - Primary block drop handling
+- `ServerPlayerGameMode.destroyBlock()` - Tracks the player's own block break and marks their break as "on the stack," so drops caused synchronously by that break (chain-mining, plant-column collapse) are attributed while independent farm drops are not
+- `Level.destroyBlock()` - Non-player breaks from mods/vanilla (chain-miners like LiteMiner, and bamboo/sugarcane/cactus columns collapsing after their base is broken)
 - `ServerLevel.addFreshEntity()` - Item entity spawning and falling-block entity tracking (FallingTree and any mod that spawns drops directly)
 - `LivingEntity.dropFromLootTable()` - Mob loot generation
 - `LivingEntity.dropExperience()` - Mob XP orbs

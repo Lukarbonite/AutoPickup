@@ -25,8 +25,17 @@ public class ServerPlayerGameModeMixin {
      */
     @Inject(method = "destroyBlock", at = @At("HEAD"))
     private void autopickup_onTryBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        // Mark that we are on this player's break stack for the whole call, so synchronous non-player
+        // breaks/drops it causes (LiteMiner vein, bamboo cascade) are attributed while independent
+        // world-tick farms are not. Balanced by exitPlayerBreak at RETURN.
+        com.lukarbonite.autopickup.AutoPickupSessions.enterPlayerBreak(this.player);
         // Start or refresh a per-player mining session and record this break position.
         com.lukarbonite.autopickup.AutoPickupSessions.begin(this.player);
         com.lukarbonite.autopickup.AutoPickupSessions.addBreak(this.player, pos);
+    }
+
+    @Inject(method = "destroyBlock", at = @At("RETURN"))
+    private void autopickup_onBreakBlockReturn(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        com.lukarbonite.autopickup.AutoPickupSessions.exitPlayerBreak();
     }
 }

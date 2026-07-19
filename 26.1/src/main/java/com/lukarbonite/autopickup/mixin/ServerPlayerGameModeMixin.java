@@ -19,6 +19,9 @@ public class ServerPlayerGameModeMixin {
 
     @Inject(method = "destroyBlock", at = @At("HEAD"))
     private void autopickup_onTryBreakBlock(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        // On this player's break stack for the whole call (balanced at RETURN): synchronous non-player
+        // breaks/drops it causes are attributed; independent world-tick farms are not.
+        AutoPickupSessions.enterPlayerBreak(this.player);
         AutoPickupSessions.begin(this.player);
         AutoPickupSessions.addBreak(this.player, pos);
         // Open a drop context for the entire destroyBlock call so NeoForge's XP
@@ -30,5 +33,6 @@ public class ServerPlayerGameModeMixin {
     @Inject(method = "destroyBlock", at = @At("RETURN"))
     private void autopickup_onBreakBlockReturn(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
         AutoPickupSessions.endDropContext(this.player);
+        AutoPickupSessions.exitPlayerBreak();
     }
 }
