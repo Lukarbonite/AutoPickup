@@ -45,3 +45,4 @@ libs/*
 /.cache/
 /.claude/
 /ARCHITECTURE.md
+/.architectury-transformer/

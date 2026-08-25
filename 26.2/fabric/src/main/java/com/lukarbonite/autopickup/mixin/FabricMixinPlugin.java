@@ -12,9 +12,6 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.contains(".compat.veinminer")) {
-            return FabricLoader.getInstance().isModLoaded("veinminer");
-        }
         if (mixinClassName.contains(".compat.treeharvester")) {
             return FabricLoader.getInstance().isModLoaded("treeharvester");
         }

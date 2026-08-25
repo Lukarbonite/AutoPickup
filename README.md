@@ -175,7 +175,7 @@ AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mo
 
 | Mod                        |   Status   | Notes                                                                               |
 |:---------------------------|:----------:|:------------------------------------------------------------------------------------|
-| **VeinMiner**              |    Full    | Whole vein chain collected with XP, at any length                                   |
+| **VeinMiner**              |    Full    | Whole vein chain collected with XP, at any length (see note below)                   |
 | **TreeHarvester**          |    Full    | Logs/leaves collected; saplings auto-replanted if enabled                           |
 | **Traveler's Backpack**    |    Full    | Items route to backpack filter first (If the Auto Pickup upgrade is there it works) |
 | **FallingTree**            |    Full    | Tree items handle the different break modes                                         |
@@ -183,6 +183,8 @@ AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mo
 | **RightClickHarvest**      |    Full    | Right-click crop harvests (including tall sugarcane) picked up automatically        |
 | **LiteMiner**              |    Full    | Whole vein chain collected with XP, at any length                                   |
 | **General Block Breakers** | Compatible | Any mod or mechanic that breaks blocks and attributes the break to the player       |
+
+> **VeinMiner** is handled in one of two ways depending on the Minecraft version. VeinMiner **2.12.1+** breaks each vein block through the vanilla player path (`ServerPlayerGameMode.destroyBlock`), so AutoPickup catches it automatically like any general block breaker, so no dedicated code needed. Current Minecraft versions of AutoPickup run against 2.12.1+ and rely on this implicit support, so the explicit compatibility mixin has been **removed in favor of it**. Older Minecraft versions, where VeinMiner has only been updated up to 2.12.0, keep AutoPickup's dedicated VeinMiner compatibility mixin. Either way, whole vein chains are collected with XP.
 
 ### 📋 Technical Details
 
@@ -195,7 +197,7 @@ AutoPickup intercepts drops at these injection points:
 - `LivingEntity.dropFromLootTable()` - Mob loot generation
 - `LivingEntity.dropExperience()` - Mob XP orbs
 - `Block.popExperience()` - Block XP orbs
-- `ExperienceOrb.award()` - Captures XP spawned directly by block-breaking mods (e.g. VeinMiner)
+- `ExperienceOrb.award()` - Captures XP spawned directly by block-breaking mods that bypass the vanilla XP pipeline
 - `ServerPlayerGameMode.useItemOn()` - Right-click harvesting (sweet berries, jukebox disc ejection, crops via the RightClickHarvest mod, etc.)
 - `ItemFrame.hurt()` / `hurtServer()` - Items removed from item frames by left-clicking
 - `Mob.interact()` / `ShearsItem.interactLivingEntity()` - Shearing drops (wool, snow golem pumpkins, mooshroom mushrooms)

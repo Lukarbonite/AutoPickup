@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_25",
   "mixins": [
     "ShearsItemMixin",
-    "compat.veinminer.VeinMinerEventMixin",
     "compat.treeharvester.AutoPickupApiMixin_TreeHarvester",
     "compat.treeharvester.LeafEventsMixin",
     "compat.treeharvester.LeafProcessingMixin",
