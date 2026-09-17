@@ -58,7 +58,7 @@ repositories {
 dependencies {
     compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
 
-    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/veinminer-neoforge-2.8.2.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.1.2/veinminer-neoforge-2.10.4.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/26.1.2/treeharvester-26.1.2-9.4.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/26.1.2/travelersbackpack-neoforge-26.1.2-11.2.4.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/26.1.2/FallingTree-26.1.2-25.jar"))

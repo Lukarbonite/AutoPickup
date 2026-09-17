@@ -1,0 +1,11 @@
+{
+  "required": false,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
+  "mixins": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
