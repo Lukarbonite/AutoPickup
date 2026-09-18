@@ -2,7 +2,6 @@ package com.lukarbonite.autopickup;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.minecraft.server.MinecraftServer;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,15 +41,14 @@ public class AutoPickupConfig {
      * Called when a world/server starts. Saves any existing config, switches to
      * the per-world path (singleplayer) or the shared path (dedicated), then loads.
      */
-    public static void loadForWorld(MinecraftServer server) {
+    public static void loadForWorld(boolean dedicatedServer, String levelName) {
         // Save whatever was loaded before switching paths
         if (INSTANCE != null) INSTANCE.save();
 
-        if (server.isDedicatedServer()) {
+        if (dedicatedServer) {
             currentPath = DEFAULT_PATH;
         } else {
-            String worldName = server.getWorldData().getLevelName()
-                    .replaceAll("[^a-zA-Z0-9_\\-.]", "_");
+            String worldName = levelName.replaceAll("[^a-zA-Z0-9_\\-.]", "_");
             Path worldsDir = AutoPickupCommon.getConfigDir().resolve("worlds");
             try { Files.createDirectories(worldsDir); } catch (IOException e) { AutoPickupCommon.LOGGER.error("Failed to create worlds config dir", e); }
             currentPath = worldsDir.resolve("global_" + worldName + ".json");

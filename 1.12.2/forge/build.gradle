@@ -1,0 +1,96 @@
+// MC 1.12.2, Forge: MCP mappings, Java 8 bytecode, built with RetroFuturaGradle.
+//
+// 1.12.2 predates Mojang's mappings (first published for 1.14.4) and Brigadier, so this does not
+// compile common/: it has its own MCP-named copies of the thin classes there (AutoPickupApi,
+// AutoPickupSessions, AutoPickupCommand, ...), all built on the Minecraft-free logic in core/.
+// Loom does not support Forge before 1.14, hence RFG. RFG 2 needs Gradle 9.2+ running on Java 25.
+plugins {
+    id 'java'
+    id 'com.gtnewhorizons.retrofuturagradle' version "${rfg_version}"
+}
+
+version = "${mod_version}+${minecraft_version}"
+
+base {
+    archivesName = "${archives_base_name}-forge"
+}
+
+java {
+    // RFG compiles the patched Minecraft sources with this toolchain too, so it must be Java 8.
+    toolchain { languageVersion = JavaLanguageVersion.of(8) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+minecraft {
+    mcVersion = minecraft_version
+    mcpMappingChannel = mcp_mapping_channel
+    mcpMappingVersion = mcp_mapping_version
+    username = 'Developer'
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [rootProject.file('core/src/main/java')]
+        }
+    }
+}
+
+repositories {
+    maven { name = 'CleanroomMC'; url = 'https://maven.cleanroommc.com' }
+}
+
+configurations {
+    mixinAgent {
+        canBeConsumed = false
+        canBeResolved = true
+        visible = false
+    }
+}
+
+dependencies {
+    // MixinBooter provides Mixin (and MixinExtras) on 1.12.2. enableMixins also wires its
+    // annotation processor to write the MCP-to-SRG refmap.
+    String mixin = modUtils.enableMixins("zone.rong:mixinbooter:${mixin_booter_version}", 'autopickup.refmap.json')
+    implementation(mixin) { transitive = false }
+    annotationProcessor mixin
+    add('mixinAgent', mixin) { transitive = false }
+}
+
+// Lets debug runs hot-swap mixins, as CleanroomMC's template does.
+['runClient', 'runServer', 'runObfClient', 'runObfServer'].each { taskName ->
+    tasks.named(taskName, JavaExec).configure { JavaExec task ->
+        task.doFirst {
+            if (task.debug) task.jvmArgs("-javaagent:${configurations.mixinAgent.singleFile.absolutePath}")
+        }
+    }
+}
+
+// runClient/runServer load the mod from class directories, so the jar's MixinConfigs manifest entry is
+// never read; DevMixinLoader registers the config there instead. The obf runs use the real jar.
+['runClient', 'runServer'].each { taskName ->
+    tasks.named(taskName, JavaExec).configure {
+        jvmArgs '-Dfml.coreMods.load=com.lukarbonite.forge.DevMixinLoader'
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('mcmod.info') {
+        expand version: project.version
+    }
+}
+
+jar {
+    // MixinBooter 11+ reads mixin configs from the manifest; no coremod needed.
+    manifest {
+        attributes('MixinConfigs': 'autopickup.mixins.json')
+    }
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}

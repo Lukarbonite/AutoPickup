@@ -1,0 +1,20 @@
+{
+  "required": true,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "refmap": "autopickup.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "minVersion": "0.8",
+  "mixins": [
+    "BlockMixin",
+    "DamageTrackerMixin",
+    "ItemFrameMixin",
+    "ItemShearsMixin",
+    "PlayerInteractionManagerMixin",
+    "WorldMixin",
+    "WorldServerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

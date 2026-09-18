@@ -31,6 +31,7 @@ sourceSets {
         java {
             srcDirs += [
                 project(':common').file('src/main/java'),
+                rootProject.file('core/src/main/java'),
                 file('../1.21.0-1/forge/src/main/java')
             ]
         }

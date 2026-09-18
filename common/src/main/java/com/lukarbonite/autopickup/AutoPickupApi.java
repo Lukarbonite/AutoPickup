@@ -1,5 +1,7 @@
 package com.lukarbonite.autopickup;
 
+import com.lukarbonite.autopickup.core.Mending;
+import com.lukarbonite.autopickup.core.Settings;
 import com.lukarbonite.autopickup.platform.VersionHelper;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -9,8 +11,11 @@ import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
+/**
+ * Mojang-mapped entry points for the pickup logic (1.16.5 and up). Setting resolution and the
+ * Mending math live in core/, so 1.12.2's MCP-mapped copy of this class shares them.
+ */
 public final class AutoPickupApi {
 
     private static final ThreadLocal<Player> blockBreaker = new ThreadLocal<>();
@@ -19,46 +24,13 @@ public final class AutoPickupApi {
     public static void clearBlockBreaker() { blockBreaker.remove(); }
     public static Player getBlockBreaker() { return blockBreaker.get(); }
 
-    private static boolean resolve(Player player,
-                                   Function<PlayerConfigs.PlayerState, Boolean> overrideGetter,
-                                   Function<PlayerConfigs.PlayerState, Boolean> clientGetter,
-                                   boolean specificAllowance,
-                                   boolean serverDefault) {
-        PlayerConfigs.PlayerState state = PlayerConfigs.getState(player.getUUID());
-        Boolean override = overrideGetter.apply(state);
-        if (override != null) return override;
-        if (specificAllowance) return clientGetter.apply(state);
-        return serverDefault;
-    }
-
-    public static boolean isMasterEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideMaster, s -> s.clientMaster, cfg.allowMaster, cfg.autoPickup);
-    }
-    public static boolean isBlocksEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideBlocks, s -> s.clientBlocks, cfg.allowBlocks, cfg.autoPickupBlocks);
-    }
-    public static boolean isBlockXpEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideBlockXp, s -> s.clientBlockXp, cfg.allowBlockXp, cfg.autoPickupBlockXp);
-    }
-    public static boolean isMobLootEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideMobLoot, s -> s.clientMobLoot, cfg.allowMobLoot, cfg.autoPickupMobLoot);
-    }
-    public static boolean isMobXpEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideMobXp, s -> s.clientMobXp, cfg.allowMobXp, cfg.autoPickupMobXp);
-    }
-    public static boolean isSplitMobLootEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideSplitMobLoot, s -> s.clientSplitMobLoot, cfg.allowSplitMobLoot, cfg.autoPickupSplitMobLoot);
-    }
-    public static boolean isSplitMobXpEnabled(Player player) {
-        AutoPickupConfig cfg = AutoPickupConfig.getInstance();
-        return resolve(player, s -> s.overrideSplitMobXp, s -> s.clientSplitMobXp, cfg.allowSplitMobXp, cfg.autoPickupSplitMobXp);
-    }
+    public static boolean isMasterEnabled(Player player) { return Settings.isMasterEnabled(player.getUUID()); }
+    public static boolean isBlocksEnabled(Player player) { return Settings.isBlocksEnabled(player.getUUID()); }
+    public static boolean isBlockXpEnabled(Player player) { return Settings.isBlockXpEnabled(player.getUUID()); }
+    public static boolean isMobLootEnabled(Player player) { return Settings.isMobLootEnabled(player.getUUID()); }
+    public static boolean isMobXpEnabled(Player player) { return Settings.isMobXpEnabled(player.getUUID()); }
+    public static boolean isSplitMobLootEnabled(Player player) { return Settings.isSplitMobLootEnabled(player.getUUID()); }
+    public static boolean isSplitMobXpEnabled(Player player) { return Settings.isSplitMobXpEnabled(player.getUUID()); }
 
     public static List<ItemStack> tryPickup(Player player, List<ItemStack> drops) {
         Level world = VersionHelper.INSTANCE.getLevel(player);
@@ -118,20 +90,8 @@ public final class AutoPickupApi {
             }
         }
 
-        if (mendable.isEmpty()) {
-            player.giveExperiencePoints(experience);
-            return;
-        }
-
-        // Distribute XP across all damaged Mending items, exhausting remaining XP rather than stopping after one pick.
-        while (experience > 0 && !mendable.isEmpty()) {
-            ItemStack item = mendable.get(player.getRandom().nextInt(mendable.size()));
-            int repair = Math.min(experience * 2, item.getDamageValue());
-            item.setDamageValue(item.getDamageValue() - repair);
-            int consumed = (repair + 1) / 2;
-            experience -= consumed;
-            if (!item.isDamaged()) mendable.remove(item);
-        }
+        experience = Mending.repair(experience, mendable, bound -> player.getRandom().nextInt(bound),
+                ItemStack::getDamageValue, ItemStack::setDamageValue);
 
         if (experience > 0) player.giveExperiencePoints(experience);
     }

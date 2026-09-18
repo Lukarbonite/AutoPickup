@@ -17,11 +17,10 @@ public class AutoPickupFabric implements ModInitializer {
 
         CommandRegistrationCallback.EVENT.register(
                 (dispatcher, registryAccess, environment) ->
-                        AutoPickupCommon.registerCommands(dispatcher));
+                        AutoPickupCommand.register(dispatcher));
 
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-            AutoPickupConfig.loadForWorld(server);
-            PlayerConfigs.loadForWorld(server);
+            WorldConfigs.load(server);
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {

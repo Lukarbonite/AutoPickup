@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.lukarbonite.autopickup.core.CommandLogic;
 import com.lukarbonite.autopickup.platform.VersionHelper;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.commands.SharedSuggestionProvider;
@@ -17,24 +18,22 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.ChatFormatting;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 public class AutoPickupCommand {
 
     private static final VersionHelper VH = VersionHelper.INSTANCE;
 
-    // Bit flags for Boolean configs (Global & Client Sync)
-    public static final int FLAG_MASTER         = 1;       // Bit 0
-    public static final int FLAG_BLOCKS         = 2;       // Bit 1
-    public static final int FLAG_BLOCK_XP       = 4;       // Bit 2
-    public static final int FLAG_MOB_LOOT       = 8;       // Bit 3
-    public static final int FLAG_MOB_XP         = 16;      // Bit 4
-    public static final int FLAG_SPLIT_LOOT     = 32;      // Bit 5
-    public static final int FLAG_SPLIT_XP       = 64;      // Bit 6
-    public static final int FLAG_ALLOW_CLIENT   = 128;     // Bit 7 (Global only)
+    // Bit flags for Boolean configs (Global & Client Sync); defined in core so 1.12.2 shares them.
+    public static final int FLAG_MASTER         = CommandLogic.FLAG_MASTER;
+    public static final int FLAG_BLOCKS         = CommandLogic.FLAG_BLOCKS;
+    public static final int FLAG_BLOCK_XP       = CommandLogic.FLAG_BLOCK_XP;
+    public static final int FLAG_MOB_LOOT       = CommandLogic.FLAG_MOB_LOOT;
+    public static final int FLAG_MOB_XP         = CommandLogic.FLAG_MOB_XP;
+    public static final int FLAG_SPLIT_LOOT     = CommandLogic.FLAG_SPLIT_LOOT;
+    public static final int FLAG_SPLIT_XP       = CommandLogic.FLAG_SPLIT_XP;
+    public static final int FLAG_ALLOW_CLIENT   = CommandLogic.FLAG_ALLOW_CLIENT;
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("autopickup")
@@ -42,10 +41,7 @@ public class AutoPickupCommand {
                 .then(Commands.literal("global")
                         .requires(AutoPickupCommand::checkPermission)
                         .then(Commands.argument("key", StringArgumentType.word())
-                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                        Arrays.asList("master", "allow_master", "blocks", "allow_blocks", "blockXp", "allow_blockXp",
-                                                "mobLoot", "allow_mobLoot", "mobXp", "allow_mobXp", "splitMobLoot", "allow_splitMobLoot",
-                                                "splitMobXp", "allow_splitMobXp"), b))
+                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(CommandLogic.GLOBAL_KEYS, b))
                                 .then(Commands.argument("value", BoolArgumentType.bool())
                                         .executes(ctx -> setGlobal(ctx, false))
                                         .then(Commands.literal("silent")
@@ -57,10 +53,9 @@ public class AutoPickupCommand {
                         .then(Commands.argument("target", EntityArgument.players())
                                 .requires(source -> true)
                                 .then(Commands.argument("key", StringArgumentType.word())
-                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(
-                                                Arrays.asList("master","blocks","blockXp","mobLoot","mobXp","splitMobLoot","splitMobXp","all"), b))
+                                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(CommandLogic.PLAYER_KEY_SUGGESTIONS, b))
                                         .then(Commands.argument("value", StringArgumentType.word())
-                                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(Arrays.asList("true","false","reset"), b))
+                                                .suggests((ctx, b) -> SharedSuggestionProvider.suggest(CommandLogic.OVERRIDE_VALUES, b))
                                                 .executes(ctx -> executeSetPlayerConfig(ctx, false))
                                                 .then(Commands.literal("silent")
                                                         .executes(ctx -> executeSetPlayerConfig(ctx, true)))
@@ -112,26 +107,11 @@ public class AutoPickupCommand {
         return entity instanceof ServerPlayer ? (ServerPlayer) entity : null;
     }
 
-    private static boolean isClientAllowed(AutoPickupConfig config, String key) {
-        switch (key.toLowerCase()) {
-            case "master": return config.allowMaster;
-            case "blocks": return config.allowBlocks;
-            case "blockxp": return config.allowBlockXp;
-            case "mobloot": return config.allowMobLoot;
-            case "mobxp": return config.allowMobXp;
-            case "splitmobloot": return config.allowSplitMobLoot;
-            case "splitmobxp": return config.allowSplitMobXp;
-            default: return false;
-        }
-    }
-
     private static int executeSync(CommandContext<CommandSourceStack> context) {
         try {
             ServerPlayer player = context.getSource().getPlayerOrException();
             int mask = IntegerArgumentType.getInteger(context, "mask");
-            PlayerConfigs.setClientPreference(player.getUUID(),
-                    (mask & FLAG_MASTER) != 0, (mask & FLAG_BLOCKS) != 0, (mask & FLAG_BLOCK_XP) != 0,
-                    (mask & FLAG_MOB_LOOT) != 0, (mask & FLAG_MOB_XP) != 0, (mask & FLAG_SPLIT_LOOT) != 0, (mask & FLAG_SPLIT_XP) != 0);
+            CommandLogic.applyClientSync(player.getUUID(), mask);
         } catch (Exception ignored) {}
         return 1;
     }
@@ -142,18 +122,7 @@ public class AutoPickupCommand {
         ServerPlayer target = context.getSource().getServer().getPlayerList().getPlayerByName(targetName);
 
         if (target != null) {
-            PlayerConfigs.PlayerState s = PlayerConfigs.getState(target.getUUID());
-
-            int mask = 0;
-            mask |= encodeTristate(s.overrideMaster) << 0;
-            mask |= encodeTristate(s.overrideBlocks) << 2;
-            mask |= encodeTristate(s.overrideBlockXp) << 4;
-            mask |= encodeTristate(s.overrideMobLoot) << 6;
-            mask |= encodeTristate(s.overrideMobXp) << 8;
-            mask |= encodeTristate(s.overrideSplitMobLoot) << 10;
-            mask |= encodeTristate(s.overrideSplitMobXp) << 12;
-
-            final int finalMask = mask;
+            final int finalMask = CommandLogic.playerOverrideMask(target.getUUID());
             // Sending feedback directly to the command source (the admin)
             VH.sendSuccess(context.getSource(), VH.literal("[AP_DATA] " + targetName + " " + finalMask), false);
             return 1;
@@ -164,39 +133,9 @@ public class AutoPickupCommand {
     }
 
     private static int executeQueryGlobal(CommandContext<CommandSourceStack> context) {
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
-        int mask = 0;
-
-        // Pack bits in pairs to match the UI loop (i*2 = val, i*2+1 = allow)
-        mask |= (config.autoPickup ? 1 : 0) << 0;
-        mask |= (config.allowMaster ? 1 : 0) << 1;
-
-        mask |= (config.autoPickupBlocks ? 1 : 0) << 2;
-        mask |= (config.allowBlocks ? 1 : 0) << 3;
-
-        mask |= (config.autoPickupBlockXp ? 1 : 0) << 4;
-        mask |= (config.allowBlockXp ? 1 : 0) << 5;
-
-        mask |= (config.autoPickupMobLoot ? 1 : 0) << 6;
-        mask |= (config.allowMobLoot ? 1 : 0) << 7;
-
-        mask |= (config.autoPickupMobXp ? 1 : 0) << 8;
-        mask |= (config.allowMobXp ? 1 : 0) << 9;
-
-        mask |= (config.autoPickupSplitMobLoot ? 1 : 0) << 10;
-        mask |= (config.allowSplitMobLoot ? 1 : 0) << 11;
-
-        mask |= (config.autoPickupSplitMobXp ? 1 : 0) << 12;
-        mask |= (config.allowSplitMobXp ? 1 : 0) << 13;
-
-        final int finalMask = mask;
+        final int finalMask = CommandLogic.globalMask();
         VH.sendSuccess(context.getSource(), VH.literal("[AP_GLOBAL] " + finalMask), false);
         return 1;
-    }
-
-    private static int encodeTristate(Boolean b) {
-        if (b == null) return 0; // Server treats both Unset and Reset as null
-        return b ? 1 : 2;        // 1 = True, 2 = False
     }
 
     private static int executeSetPlayerConfig(CommandContext<CommandSourceStack> context, boolean silent) throws CommandSyntaxException {
@@ -207,21 +146,17 @@ public class AutoPickupCommand {
 
         // UI sends "unset" to mean null (return to server default)
         Boolean value;
-        switch (valueStr.toLowerCase()) {
-            case "true": value = true; break;
-            case "false": value = false; break;
-            case "reset":
-            case "unset": value = null; break;
-            default: throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException().create("Value must be true, false, or reset");
+        try {
+            value = CommandLogic.parseOverride(valueStr);
+        } catch (IllegalArgumentException e) {
+            throw CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherParseException().create(e.getMessage());
         }
 
         boolean isOp = checkPermission(source);
         AutoPickupConfig config = AutoPickupConfig.getInstance();
 
         // Translate the "all" parameter into a loop over all valid keys
-        List<String> keysToProcess = requestedKey.equalsIgnoreCase("all")
-                ? Arrays.asList("master", "blocks", "blockXp", "mobLoot", "mobXp", "splitMobLoot", "splitMobXp")
-                : Collections.singletonList(requestedKey);
+        List<String> keysToProcess = CommandLogic.expandPlayerKey(requestedKey);
 
         for (ServerPlayer target : targets) {
             boolean isSelf = playerOf(source) == target;
@@ -229,7 +164,7 @@ public class AutoPickupCommand {
             for (String key : keysToProcess) {
                 boolean allowed = isOp;
                 if (!allowed && isSelf) {
-                    allowed = isClientAllowed(config, key);
+                    allowed = CommandLogic.isClientAllowed(config, key);
                 }
 
                 if (!allowed) {
@@ -253,34 +188,29 @@ public class AutoPickupCommand {
     }
 
     private static int showServerStatus(CommandContext<CommandSourceStack> context) {
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
         CommandSourceStack s = context.getSource();
 
-        VH.sendSuccess(s, VH.literal("--- AutoPickup Global Configuration ---").withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        VH.sendSuccess(s, VH.literal(CommandLogic.STATUS_TITLE).withStyle(ChatFormatting.LIGHT_PURPLE), false);
 
         // Header for columns
-        VH.sendSuccess(s, VH.literal(String.format("%-20s | %s", "Feature", "Server State")), false);
-        VH.sendSuccess(s, VH.literal("---------------------------------------------").withStyle(ChatFormatting.GRAY), false);
+        VH.sendSuccess(s, VH.literal(CommandLogic.STATUS_HEADER), false);
+        VH.sendSuccess(s, VH.literal(CommandLogic.STATUS_RULE).withStyle(ChatFormatting.GRAY), false);
 
         // Display all rows
-        VH.sendSuccess(s, formatRow("Master Toggle", config.autoPickup, config.allowMaster), false);
-        VH.sendSuccess(s, formatRow("Blocks", config.autoPickupBlocks, config.allowBlocks), false);
-        VH.sendSuccess(s, formatRow("Block XP", config.autoPickupBlockXp, config.allowBlockXp), false);
-        VH.sendSuccess(s, formatRow("Mob Loot", config.autoPickupMobLoot, config.allowMobLoot), false);
-        VH.sendSuccess(s, formatRow("Mob XP", config.autoPickupMobXp, config.allowMobXp), false);
-        VH.sendSuccess(s, formatRow("Split Mob Loot", config.autoPickupSplitMobLoot, config.allowSplitMobLoot), false);
-        VH.sendSuccess(s, formatRow("Split Mob XP", config.autoPickupSplitMobXp, config.allowSplitMobXp), false);
+        for (CommandLogic.StatusRow row : CommandLogic.statusRows()) {
+            VH.sendSuccess(s, formatRow(row), false);
+        }
 
         return 1;
     }
 
-    private static Component formatRow(String name, boolean value, boolean allowed) {
-        MutableComponent row = VH.literal(String.format("%-20s | ", name)).withStyle(ChatFormatting.WHITE);
+    private static Component formatRow(CommandLogic.StatusRow r) {
+        MutableComponent row = VH.literal(r.label()).withStyle(ChatFormatting.WHITE);
 
-        if (allowed) {
+        if (r.clientDecides) {
             row.append(VH.literal("CLIENT DECIDE").withStyle(ChatFormatting.AQUA));
         } else {
-            row.append(VH.literal(value ? "ON" : "OFF").withStyle(value ? ChatFormatting.GREEN : ChatFormatting.RED));
+            row.append(VH.literal(r.value ? "ON" : "OFF").withStyle(r.value ? ChatFormatting.GREEN : ChatFormatting.RED));
         }
 
         return row;
@@ -289,32 +219,7 @@ public class AutoPickupCommand {
     private static int setGlobal(CommandContext<CommandSourceStack> ctx, boolean silent) {
         String key = StringArgumentType.getString(ctx, "key");
         boolean value = BoolArgumentType.getBool(ctx, "value");
-        AutoPickupConfig config = AutoPickupConfig.getInstance();
-
-        switch (key) {
-            case "master": config.autoPickup = value; break;
-            case "allow_master": config.allowMaster = value; break;
-
-            case "blocks": config.autoPickupBlocks = value; break;
-            case "allow_blocks": config.allowBlocks = value; break;
-
-            case "blockXp": config.autoPickupBlockXp = value; break;
-            case "allow_blockXp": config.allowBlockXp = value; break;
-
-            case "mobLoot": config.autoPickupMobLoot = value; break;
-            case "allow_mobLoot": config.allowMobLoot = value; break;
-
-            case "mobXp": config.autoPickupMobXp = value; break;
-            case "allow_mobXp": config.allowMobXp = value; break;
-
-            case "splitMobLoot": config.autoPickupSplitMobLoot = value; break;
-            case "allow_splitMobLoot": config.allowSplitMobLoot = value; break;
-
-            case "splitMobXp": config.autoPickupSplitMobXp = value; break;
-            case "allow_splitMobXp": config.allowSplitMobXp = value; break;
-        }
-
-        config.save();
+        CommandLogic.setGlobal(key, value);
         if (!silent) {
             VH.sendSuccess(ctx.getSource(), VH.literal("Global [" + key + "] set to " + value).withStyle(ChatFormatting.GREEN), false);
         }

@@ -1,0 +1,12 @@
+[{
+    "modid": "autopickup",
+    "name": "AutoPickup",
+    "version": "${version}",
+    "mcversion": "1.12.2",
+    "description": "AutoPickup mod by lukarbonite",
+    "authorList": ["lukarbonite"],
+    "url": "https://github.com/Lukarbonite/AutoPickup",
+    "logoFile": "assets/autopickup/icon.png",
+    "requiredMods": ["mixinbooter"],
+    "dependencies": ["mixinbooter"]
+}]

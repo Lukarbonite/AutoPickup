@@ -1,7 +1,7 @@
 # AutoPickup
 
 ![Fabric](https://img.shields.io/badge/modloaders-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/neoforge-orange?style=for-the-badge)![Forge](https://img.shields.io/badge/forge-purple?style=for-the-badge)
-![Minecraft](https://img.shields.io/badge/minecraft-1.16.5%20--%2026.3-green?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.12.2%20--%2026.3-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **AutoPickup** is a highly configurable server-side mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.
@@ -160,6 +160,10 @@ splitMobXp = false
 }
 ```
 
+### Required on 1.12.2
+
+- **MixinBooter** (11.0 or newer) - Provides Mixin on Forge 1.12.2
+
 ### Optional But Recommended Client Dependencies
 
 - **Mod Menu** - Access config screen in-game
@@ -203,6 +207,8 @@ AutoPickup intercepts drops at these injection points:
 - `Mob.interact()` / `ShearsItem.interactLivingEntity()` - Shearing drops (wool, snow golem pumpkins, mooshroom mushrooms)
 - `BrushableBlockEntity.dropContent()` - Brushing suspicious sand/gravel
 - `LivingEntity.dropFromEntityInteractLootTable()` - Brushing armadillos for scutes
+
+On **1.12.2**, block and mob drops come from Forge's `HarvestDropsEvent`, `LivingDropsEvent` and `LivingExperienceDropEvent`, and the rest from the 1.12.2 equivalents of the hooks above (`PlayerInteractionManager.tryHarvestBlock()` / `processRightClickBlock()`, `World.destroyBlock()`, `WorldServer.spawnEntity()`, `Block.dropXpOnBlockBreak()`, `EntityItemFrame.attackEntityFrom()`, `ItemShears.itemInteractionForEntity()`). The mod compatibility above does not apply there.
 
 This broad compatibility means **most mods work automatically** without explicit support.
 

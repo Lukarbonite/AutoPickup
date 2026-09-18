@@ -4,6 +4,12 @@ pluginManagement {
         maven { name = 'Architectury'; url = 'https://maven.architectury.dev/' }
         maven { name = 'Forge';        url = 'https://maven.minecraftforge.net/' }
         maven { name = 'NeoForge';     url = 'https://maven.neoforged.net/releases' }
+        maven {
+            // RetroFuturaGradle (1.12.2)
+            name = 'GTNH'
+            url = 'https://nexus.gtnewhorizons.com/repository/public/'
+            content { includeGroup 'com.gtnewhorizons'; includeGroup 'com.gtnewhorizons.retrofuturagradle' }
+        }
         mavenCentral()
         gradlePluginPortal()
     }
@@ -12,10 +18,15 @@ pluginManagement {
 rootProject.name = 'autopickup'
 
 // ─── Shared source containers (no build output, Java source only) ────────────
-include ':common'   // Business logic, config, API, mixins, platform interface
+include ':core'     // Minecraft-free logic shared by every version, 1.12.2 included
+include ':common'   // Mojang-mapped API, mixins and version interface over :core (1.16.5+)
 include ':fabric'   // Fabric entry points, events, compat, platform impl
 include ':forge'    // Forge entry points, events, compat, platform impl (1.21.0-1)
 include ':neoforge' // NeoForge entry points, events, compat, platform impl
+
+// ─── MC 1.12.2: Forge only, MCP mappings, Java 8 bytecode (RetroFuturaGradle) ─
+include ':mc1_12_2-forge'
+project(':mc1_12_2-forge').projectDir = file('1.12.2/forge')
 
 // ─── MC 1.16.5: Fabric + Forge, Mojang mappings, Java 8 bytecode ────────────
 include ':mc1_16_5-fabric'

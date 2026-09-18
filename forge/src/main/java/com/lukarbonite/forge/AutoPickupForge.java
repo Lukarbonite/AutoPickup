@@ -1,6 +1,8 @@
 package com.lukarbonite.forge;
 
 import com.lukarbonite.autopickup.AutoPickupCommon;
+import com.lukarbonite.autopickup.AutoPickupCommand;
+import com.lukarbonite.autopickup.WorldConfigs;
 import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.PlayerConfigs;
 import com.lukarbonite.forge.client.AutoPickupForgeClient;
@@ -43,12 +45,11 @@ public class AutoPickupForge {
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
-        AutoPickupCommon.registerCommands(event.getDispatcher());
+        AutoPickupCommand.register(event.getDispatcher());
     }
 
     private void onServerStarted(ServerStartedEvent event) {
-        AutoPickupConfig.loadForWorld(event.getServer());
-        PlayerConfigs.loadForWorld(event.getServer());
+        WorldConfigs.load(event.getServer());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {

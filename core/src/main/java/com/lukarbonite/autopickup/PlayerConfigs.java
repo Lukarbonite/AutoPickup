@@ -3,7 +3,6 @@ package com.lukarbonite.autopickup;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import net.minecraft.server.MinecraftServer;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -50,16 +49,15 @@ public class PlayerConfigs {
      * Called when a world/server starts. Saves any existing overrides, switches to
      * the per-world path (singleplayer) or the shared path (dedicated), then loads.
      */
-    public static void loadForWorld(MinecraftServer server) {
+    public static void loadForWorld(boolean dedicatedServer, String levelName) {
         // Save and clear before switching worlds
         if (!STATES.isEmpty()) save();
         STATES.clear();
 
-        if (server.isDedicatedServer()) {
+        if (dedicatedServer) {
             currentPath = DEFAULT_PATH;
         } else {
-            String worldName = server.getWorldData().getLevelName()
-                    .replaceAll("[^a-zA-Z0-9_\\-.]", "_");
+            String worldName = levelName.replaceAll("[^a-zA-Z0-9_\\-.]", "_");
             // The worlds/ directory is guaranteed to exist by AutoPickupConfig.loadForWorld
             currentPath = AutoPickupCommon.getConfigDir().resolve("worlds")
                     .resolve("overrides_" + worldName + ".json");

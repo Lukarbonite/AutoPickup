@@ -16,6 +16,9 @@ loom {
     noIntermediateMappings()
 }
 
+// So the IDE resolves the core/ classes common/ builds on.
+sourceSets.main.java.srcDirs += rootProject.file('core/src/main/java')
+
 // Loom is applied here ONLY to give IDEs a Minecraft classpath for code
 // insight in common/src (which has no compile task of its own). Pinned to
 // 26.1.2 (unobfuscated, so symbol names match runtime directly); actual

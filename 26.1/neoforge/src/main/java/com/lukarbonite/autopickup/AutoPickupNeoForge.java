@@ -33,12 +33,11 @@ public class AutoPickupNeoForge {
     }
 
     private void onRegisterCommands(RegisterCommandsEvent event) {
-        AutoPickupCommon.registerCommands(event.getDispatcher());
+        AutoPickupCommand.register(event.getDispatcher());
     }
 
     private void onServerStarted(ServerStartedEvent event) {
-        AutoPickupConfig.loadForWorld(event.getServer());
-        PlayerConfigs.loadForWorld(event.getServer());
+        WorldConfigs.load(event.getServer());
     }
 
     private void onServerStopping(ServerStoppingEvent event) {

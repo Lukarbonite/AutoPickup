@@ -15,6 +15,7 @@ sourceSets {
         java {
             srcDirs += [
                 project(':common').file('src/main/java'),
+                rootProject.file('core/src/main/java'),
                 file('../src/main/java'),
                 project(':neoforge').file('src/main/java')
             ]

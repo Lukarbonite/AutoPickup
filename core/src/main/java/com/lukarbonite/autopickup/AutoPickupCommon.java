@@ -1,8 +1,6 @@
 package com.lukarbonite.autopickup;
 
 import com.lukarbonite.autopickup.platform.PlatformHelper;
-import com.mojang.brigadier.CommandDispatcher;
-import net.minecraft.commands.CommandSourceStack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,10 +11,11 @@ import java.nio.file.Path;
 /**
  * Platform-agnostic entry point.
  *
- * <p>Each platform module calls {@link #init()} from its entry class and
- * {@link #registerCommands(CommandDispatcher)} from its command-registration event.
- * The {@link PlatformHelper} implementation is discovered automatically via
- * {@link java.util.ServiceLoader}.
+ * <p>Each platform module calls {@link #init()} from its entry class and registers
+ * {@code AutoPickupCommand} from its command-registration event. The {@link PlatformHelper}
+ * implementation is discovered automatically via {@link java.util.ServiceLoader}.
+ *
+ * <p>Lives in core/, which has no Minecraft dependency, so every version from 1.12.2 up shares it.
  */
 public final class AutoPickupCommon {
 
@@ -48,13 +47,5 @@ public final class AutoPickupCommon {
         PlayerConfigs.load();
 
         LOGGER.info("Auto Pickup Mod initialized!");
-    }
-
-    /**
-     * Registers all commands. Call this from the platform's command-registration event
-     * (Fabric: {@code CommandRegistrationCallback}, NeoForge: {@code RegisterCommandsEvent}).
-     */
-    public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
-        AutoPickupCommand.register(dispatcher);
     }
 }
