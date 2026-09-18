@@ -1,9 +1,10 @@
 package com.lukarbonite.autopickup.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.LootSplittingLogic;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.player.Player;
@@ -19,7 +20,6 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -28,18 +28,18 @@ import java.util.List;
 @Mixin(LivingEntity.class)
 public abstract class MobLootMixin {
 
-    @Redirect(
+    @WrapOperation(
             method = "dropExperience",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/ExperienceOrb;award(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/phys/Vec3;I)V")
     )
-    private void autopickup_redirectExperience(ServerLevel level, Vec3 pos, int amount, @Nullable Entity attacker) {
+    private void autopickup_redirectExperience(ServerLevel level, Vec3 pos, int amount, Operation<Void> original, @Nullable Entity attacker) {
         if (attacker instanceof Player player && !player.isSpectator()
                 && AutoPickupApi.isMasterEnabled(player)
                 && AutoPickupApi.isMobXpEnabled(player)) {
             LootSplittingLogic.distributeXp(player, (LivingEntity) (Object) this, amount);
             return;
         }
-        ExperienceOrb.award(level, pos, amount);
+        original.call(level, pos, amount);
     }
 
     @Inject(

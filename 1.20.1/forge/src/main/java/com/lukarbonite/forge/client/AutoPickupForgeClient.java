@@ -14,9 +14,9 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.lwjgl.glfw.GLFW;
@@ -40,14 +40,17 @@ public final class AutoPickupForgeClient {
         event.register(KEY_TOGGLE_AUTOPICKUP_MASTER);
     }
 
+    // Client-side connection events. PlayerEvent.PlayerLoggedIn/OutEvent are fired by the server,
+    // so on a client they only ever came from the integrated server: the join-time sync never ran
+    // when connecting to a dedicated server.
     @SubscribeEvent
-    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
         ClientConfigManager.updateConnection();
         pendingSync = true;
     }
 
     @SubscribeEvent
-    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientConfigManager.updateConnection();
         pendingSync = false;
     }

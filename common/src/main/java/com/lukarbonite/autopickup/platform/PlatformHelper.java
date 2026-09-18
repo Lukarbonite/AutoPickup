@@ -34,12 +34,14 @@ public interface PlatformHelper {
      */
     static PlatformHelper get() {
         if (INSTANCE[0] == null) {
-            INSTANCE[0] = ServiceLoader.load(PlatformHelper.class)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException(
-                            "No PlatformHelper implementation found on the classpath. " +
-                            "Ensure the platform JAR provides META-INF/services/" +
-                            "com.lukarbonite.autopickup.platform.PlatformHelper"));
+            java.util.Iterator<PlatformHelper> it = ServiceLoader.load(PlatformHelper.class).iterator();
+            if (!it.hasNext()) {
+                throw new IllegalStateException(
+                        "No PlatformHelper implementation found on the classpath. " +
+                        "Ensure the platform JAR provides META-INF/services/" +
+                        "com.lukarbonite.autopickup.platform.PlatformHelper");
+            }
+            INSTANCE[0] = it.next();
         }
         return INSTANCE[0];
     }

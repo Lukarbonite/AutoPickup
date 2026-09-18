@@ -6,6 +6,9 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
+import com.lukarbonite.autopickup.platform.VersionHelper;
+import net.minecraft.util.Mth;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
 import java.util.Iterator;
@@ -67,7 +70,15 @@ public final class AutoPickupSessions {
     public static Player currentActionPlayer() { return ACTION_PLAYER.get(); }
 
     /** A recorded break: its position plus the block type that was there (null if unknown). */
-    private record Anchor(BlockPos pos, Block block) {}
+    private static final class Anchor {
+        final BlockPos pos;
+        final Block block;
+
+        Anchor(BlockPos pos, Block block) {
+            this.pos = pos;
+            this.block = block;
+        }
+    }
 
     private static final class Session {
         final WeakReference<Player> playerRef;
@@ -178,7 +189,7 @@ public final class AutoPickupSessions {
     private static Block blockAt(Player player, BlockPos pos) {
         if (player == null || pos == null) return null;
         try {
-            BlockState state = player.level().getBlockState(pos);
+            BlockState state = VersionHelper.INSTANCE.getLevel(player).getBlockState(pos);
             return state.isAir() ? null : state.getBlock();
         } catch (Throwable ignored) {
             return null;
@@ -270,7 +281,7 @@ public final class AutoPickupSessions {
      * findOwner when multiple players may be mining nearby simultaneously.
      */
     public static Player findOwnerByBreakPos(Vec3 spawnPos) {
-        long key = BlockPos.containing(spawnPos).asLong();
+        long key = new BlockPos(Mth.floor(spawnPos.x), Mth.floor(spawnPos.y), Mth.floor(spawnPos.z)).asLong();
         Integer id = BREAK_OWNERS.get(key);
         if (id == null) return null;
         Session s = SESSIONS.get(id);
@@ -435,7 +446,18 @@ public final class AutoPickupSessions {
     private static final int FALLING_BLOCK_EXPIRY_TICKS = 250;
     private static final int PENDING_FALL_EXPIRY_TICKS = 10;
 
-    private record FallingBlockEntry(WeakReference<Player> playerRef, int expiryTick) {}
+    private static final class FallingBlockEntry {
+        private final WeakReference<Player> playerRef;
+        private final int expiryTick;
+
+        FallingBlockEntry(WeakReference<Player> playerRef, int expiryTick) {
+            this.playerRef = playerRef;
+            this.expiryTick = expiryTick;
+        }
+
+        WeakReference<Player> playerRef() { return playerRef; }
+        int expiryTick() { return expiryTick; }
+    }
     private static final ConcurrentHashMap<Integer, FallingBlockEntry> FALLING_BLOCK_OWNERS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<BlockPos, FallingBlockEntry> PENDING_FALL_POSITIONS = new ConcurrentHashMap<>();
 
@@ -482,7 +504,7 @@ public final class AutoPickupSessions {
         if (s == null || s.recent.isEmpty() || s.lastTouchedTick != CURRENT_TICK || !s.brokeRecently()) return null;
         double sx = spawnPos.x, sy = spawnPos.y, sz = spawnPos.z;
         int checked = 0;
-        for (var itPos = s.recent.descendingIterator(); itPos.hasNext() && checked < 6; checked++) {
+        for (Iterator<Anchor> itPos = s.recent.descendingIterator(); itPos.hasNext() && checked < 6; checked++) {
             Anchor a = itPos.next();
             double dx = sx - (a.pos.getX() + 0.5);
             double dy = sy - (a.pos.getY() + 0.5);

@@ -1,0 +1,27 @@
+{
+  "required": true,
+  "package": "com.lukarbonite.autopickup.mixin",
+  "refmap": "autopickup.refmap.json",
+  "compatibilityLevel": "JAVA_8",
+  "plugin": "com.lukarbonite.autopickup.mixin.AutoPickupMixinPlugin",
+  "minVersion": "0.8",
+  "client": [
+    "client.ChatInterceptMixin"
+  ],
+  "mixins": [
+    "BlockMixin",
+    "BlockUseWithoutItemMixin",
+    "ItemFrameMixin",
+    "BlockDropExperienceMixin",
+    "ServerPlayerGameModeMixin",
+    "MobLootMixin",
+    "ServerTickMixin",
+    "ServerLevelMixin",
+    "LevelBreakBlockMixin",
+    "DamageTrackerMixin",
+    "ShearMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

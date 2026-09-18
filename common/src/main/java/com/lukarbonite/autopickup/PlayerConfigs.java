@@ -82,13 +82,15 @@ public class PlayerConfigs {
     public static void setAdminOverride(UUID uuid, String key, Boolean value) {
         PlayerState state = getState(uuid);
         switch (key.toLowerCase()) {
-            case "autopickup", "master", "all" -> state.overrideMaster = value;
-            case "blocks" -> state.overrideBlocks = value;
-            case "blockxp" -> state.overrideBlockXp = value;
-            case "mobloot" -> state.overrideMobLoot = value;
-            case "mobxp" -> state.overrideMobXp = value;
-            case "splitmobloot" -> state.overrideSplitMobLoot = value;
-            case "splitmobxp" -> state.overrideSplitMobXp = value;
+            case "autopickup":
+            case "master":
+            case "all": state.overrideMaster = value; break;
+            case "blocks": state.overrideBlocks = value; break;
+            case "blockxp": state.overrideBlockXp = value; break;
+            case "mobloot": state.overrideMobLoot = value; break;
+            case "mobxp": state.overrideMobXp = value; break;
+            case "splitmobloot": state.overrideSplitMobLoot = value; break;
+            case "splitmobxp": state.overrideSplitMobXp = value; break;
         }
         save();
     }

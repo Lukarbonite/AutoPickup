@@ -1,0 +1,98 @@
+// MC 1.16.5, Forge: Mojang mappings, Java 8 bytecode (compiled with the Java 21 toolchain)
+plugins {
+    id 'dev.architectury.loom' version "${arch_loom_version}"
+    id 'maven-publish'
+}
+
+version = "${mod_version}+${minecraft_version}"
+
+base {
+    archivesName = "${archives_base_name}-forge"
+}
+
+loom {
+    silentMojangMappingsLicense()
+
+    mixin {
+        useLegacyMixinAp  = true
+        defaultRefmapName = "autopickup.refmap.json"
+    }
+
+    forge {
+        // Forge 1.16 only picks mixin configs up from the jar manifest, which this writes.
+        mixinConfigs = [
+            "autopickup.mixins.json",
+            "autopickup.forge.mixins.json"
+        ]
+    }
+}
+
+// Unlike 1.20.1 and 1.21.0-1, this does not pull in the shared :forge sources: those target
+// 1.20+ Forge APIs and FallingTree compat, so 1.16.5 carries its own entry point instead.
+sourceSets {
+    main {
+        java {
+            srcDirs += [
+                project(':common').file('src/main/java'),
+                file('../src/main/java')
+            ]
+        }
+        resources {
+            srcDirs += [
+                file('../src/main/resources')
+            ]
+        }
+    }
+}
+
+java {
+    toolchain { languageVersion = JavaLanguageVersion.of(21) }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    // The vanilla launcher runs 1.16.5 on Java 8, so everything here, including common/, must be Java 8 bytecode.
+    options.release  = 8
+}
+
+configurations.all {
+    resolutionStrategy.force 'net.sf.jopt-simple:jopt-simple:5.0.4'
+    exclude group: 'net.fabricmc', module: 'fabric-log4j-util'
+}
+
+repositories {
+    maven { name = 'Forge'; url = 'https://maven.minecraftforge.net/' }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    forge "net.minecraftforge:forge:${forge_version}"
+
+    // Forge 36.2.34 ships Mixin 0.8.4 itself; only the annotation processor is needed for the refmap.
+    annotationProcessor "org.spongepowered:mixin:0.8.5:processor"
+}
+
+processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.property "version", project.version
+    filesMatching("META-INF/mods.toml") {
+        expand version: inputs.properties.version
+    }
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = "${archives_base_name}-forge"
+            from components.java
+        }
+    }
+}

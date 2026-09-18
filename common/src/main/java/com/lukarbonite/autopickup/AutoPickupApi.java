@@ -61,7 +61,7 @@ public final class AutoPickupApi {
     }
 
     public static List<ItemStack> tryPickup(Player player, List<ItemStack> drops) {
-        Level world = player.level();
+        Level world = VersionHelper.INSTANCE.getLevel(player);
         if (world.isClientSide() || !(world instanceof ServerLevel) || player.isSpectator()
                 || !isMasterEnabled(player) || !isBlocksEnabled(player)) {
             return drops;
@@ -70,7 +70,7 @@ public final class AutoPickupApi {
     }
 
     public static List<ItemStack> tryPickupFromMob(Player player, List<ItemStack> drops) {
-        Level world = player.level();
+        Level world = VersionHelper.INSTANCE.getLevel(player);
         if (world.isClientSide() || !(world instanceof ServerLevel) || player.isSpectator()
                 || !isMasterEnabled(player) || !isMobLootEnabled(player)) {
             return drops;
@@ -82,7 +82,7 @@ public final class AutoPickupApi {
         List<ItemStack> unpicked = new ArrayList<>();
         for (ItemStack stack : drops) {
             if (stack.isEmpty()) continue;
-            if (player.getInventory().add(stack)) {
+            if (VersionHelper.INSTANCE.getInventory(player).add(stack)) {
                 if (!stack.isEmpty()) unpicked.add(stack);
             } else {
                 unpicked.add(stack);
@@ -102,8 +102,9 @@ public final class AutoPickupApi {
     }
 
     private static void giveExperience(Player player, int experience) {
-        Level world = player.level();
-        if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel serverLevel)) return;
+        Level world = VersionHelper.INSTANCE.getLevel(player);
+        if (experience <= 0 || world.isClientSide() || !(world instanceof ServerLevel)) return;
+        ServerLevel serverLevel = (ServerLevel) world;
 
         VersionHelper vh = VersionHelper.INSTANCE;
 

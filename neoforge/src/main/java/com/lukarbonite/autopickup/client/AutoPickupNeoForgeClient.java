@@ -17,7 +17,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientChatReceivedEvent;
 import org.lwjgl.glfw.GLFW;
 
@@ -45,13 +45,18 @@ public final class AutoPickupNeoForgeClient {
         AutoPickupKeyBindings.toggleMaster = KEY_TOGGLE_AUTOPICKUP_MASTER;
     }
 
+    // Client-side connection events. PlayerEvent.PlayerLoggedIn/OutEvent are fired by the server,
+    // so on a client they only ever came from the integrated server: the join-time sync never ran
+    // when connecting to a dedicated server.
     @SubscribeEvent
-    public static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
+    public static void onLoggingIn(ClientPlayerNetworkEvent.LoggingIn event) {
+        ClientConfigManager.updateConnection();
         pendingSync = true;
     }
 
     @SubscribeEvent
-    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+    public static void onLoggingOut(ClientPlayerNetworkEvent.LoggingOut event) {
+        ClientConfigManager.updateConnection(); // Reverts to default
         // Reset state on disconnect
         pendingSync = false;
     }

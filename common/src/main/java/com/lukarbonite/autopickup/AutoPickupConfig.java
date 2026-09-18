@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import net.minecraft.server.MinecraftServer;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -65,7 +66,7 @@ public class AutoPickupConfig {
             return;
         }
         try {
-            String json = Files.readString(currentPath);
+            String json = new String(Files.readAllBytes(currentPath), StandardCharsets.UTF_8);
             INSTANCE = GSON.fromJson(json, AutoPickupConfig.class);
         } catch (IOException e) {
             AutoPickupCommon.LOGGER.error("Failed to load global config", e);
@@ -74,7 +75,7 @@ public class AutoPickupConfig {
 
     public void save() {
         try {
-            Files.writeString(currentPath, GSON.toJson(this));
+            Files.write(currentPath, GSON.toJson(this).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             AutoPickupCommon.LOGGER.error("Failed to save global config", e);
         }

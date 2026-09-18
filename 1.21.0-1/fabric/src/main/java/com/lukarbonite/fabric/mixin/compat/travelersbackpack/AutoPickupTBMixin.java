@@ -1,5 +1,7 @@
 package com.lukarbonite.fabric.mixin.compat.travelersbackpack;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.fabric.compat.travelersbackpack.AutoPickupTBBridge;
 import net.minecraft.world.entity.player.Inventory;
@@ -8,17 +10,16 @@ import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(value = AutoPickupApi.class, remap = false)
 public class AutoPickupTBMixin {
 
-    @Redirect(
+    @WrapOperation(
             method = "insertDrops",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;add(Lnet/minecraft/world/item/ItemStack;)Z"),
             remap = true
     )
-    private static boolean interceptInventoryAdd(Inventory inventory, ItemStack stack) {
+    private static boolean interceptInventoryAdd(Inventory inventory, ItemStack stack, Operation<Boolean> original) {
         Player player = inventory.player;
 
         // Pass a copy to prevent modifying the instance stored inside the backpack
@@ -34,7 +35,7 @@ public class AutoPickupTBMixin {
         }
 
         // Fall back to the vanilla inventory for whatever is left over.
-        return inventory.add(stack);
+        return original.call(inventory, stack);
     }
 
     @Unique

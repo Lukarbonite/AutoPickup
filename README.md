@@ -1,7 +1,7 @@
 # AutoPickup
 
 ![Fabric](https://img.shields.io/badge/modloaders-fabric-blue?style=for-the-badge)![Neoforge](https://img.shields.io/badge/neoforge-orange?style=for-the-badge)![Forge](https://img.shields.io/badge/forge-purple?style=for-the-badge)
-![Minecraft](https://img.shields.io/badge/minecraft-1.20%20--%2026.3-green?style=for-the-badge)
+![Minecraft](https://img.shields.io/badge/minecraft-1.16.5%20--%2026.3-green?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-AGPL%203.0-lightgrey?style=for-the-badge)
 
 **AutoPickup** is a highly configurable server-side mod that automates the collection of items and experience orbs. It features session tracking, a multi-tier permission system, and extensive mod compatibility to ensure drops are attributed to the correct players, even when using high-speed mining mods or engaging in group combat.

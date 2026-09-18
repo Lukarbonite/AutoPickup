@@ -1,0 +1,30 @@
+modLoader     = "javafml"
+loaderVersion = "[36,)"
+license       = "AGPL-3.0-only"
+issueTrackerURL = "https://github.com/Lukarbonite/AutoPickup/issues"
+
+[[mods]]
+    modId       = "autopickup"
+    version     = "${version}"
+    displayName = "AutoPickup"
+    displayURL  = "https://github.com/Lukarbonite/AutoPickup"
+    description = '''AutoPickup mod by lukarbonite'''
+    logoFile    = "assets/autopickup/icon.png"
+    authors     = "lukarbonite"
+
+[[dependencies.autopickup]]
+    modId        = "forge"
+    mandatory    = true
+    versionRange = "[36,)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies.autopickup]]
+    modId        = "minecraft"
+    mandatory    = true
+    versionRange = "[1.16.5,1.17)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+# Forge 1.16 reads mixin configs from the jar manifest (written by Loom's forge.mixinConfigs),
+# not from [[mixins]] entries here.

@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "package": "com.lukarbonite.forge.mixin",
+  "refmap": "autopickup.refmap.json",
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ShearsItemMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

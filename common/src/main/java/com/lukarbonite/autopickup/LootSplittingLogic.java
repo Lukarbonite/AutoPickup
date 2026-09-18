@@ -1,12 +1,14 @@
 package com.lukarbonite.autopickup;
 
 import com.lukarbonite.autopickup.accessor.DamageTrackerAccessor;
+import com.lukarbonite.autopickup.platform.VersionHelper;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.server.level.ServerLevel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,8 +53,8 @@ public class LootSplittingLogic {
         }
 
         // 2. Add other participants from history
-        if (mob instanceof DamageTrackerAccessor tracker) {
-            List<UUID> history = tracker.autopickup_getAttackers();
+        if (mob instanceof DamageTrackerAccessor) {
+            List<UUID> history = ((DamageTrackerAccessor) mob).autopickup_getAttackers();
 
             for (UUID uuid : history) {
                 if (uuid.equals(killer.getUUID())) continue;
@@ -60,7 +62,7 @@ public class LootSplittingLogic {
                 Player p = world.getServer().getPlayerList().getPlayer(uuid);
 
                 // Basic Validation
-                if (p != null && !p.isSpectator() && p.level() == world) {
+                if (p != null && !p.isSpectator() && VersionHelper.INSTANCE.getLevel(p) == world) {
 
                     // STRICT VALIDATION:
                     // Player must have Master ON, specific Pickup ON, AND specific Split ON.
@@ -88,7 +90,7 @@ public class LootSplittingLogic {
 
     public static List<ItemStack> distributeLoot(Player killer, LivingEntity mob, List<ItemStack> drops) {
         if (drops.isEmpty()) return drops;
-        ServerLevel world = (ServerLevel) killer.level();
+        ServerLevel world = (ServerLevel) VersionHelper.INSTANCE.getLevel(killer);
 
         List<Player> participants = getParticipants(mob, world, killer, SplitType.LOOT);
         List<ItemStack> unpicked = new ArrayList<>();
@@ -117,7 +119,7 @@ public class LootSplittingLogic {
                 // Attempt Pickup
                 // We re-check master/mob settings here just to be safe, though getParticipants filters mostly.
                 if (AutoPickupApi.isMasterEnabled(beneficiary) && AutoPickupApi.isMobLootEnabled(beneficiary)) {
-                    List<ItemStack> rem = AutoPickupApi.tryPickupFromMob(beneficiary, new ArrayList<>(List.of(splitStack)));
+                    List<ItemStack> rem = AutoPickupApi.tryPickupFromMob(beneficiary, new ArrayList<>(Collections.singletonList(splitStack)));
                     if (!rem.isEmpty()) {
                         unpicked.addAll(rem); // Inventory full -> drop
                     }
@@ -132,7 +134,7 @@ public class LootSplittingLogic {
 
     public static void distributeXp(Player killer, LivingEntity mob, int amount) {
         if (amount <= 0) return;
-        ServerLevel world = (ServerLevel) killer.level();
+        ServerLevel world = (ServerLevel) VersionHelper.INSTANCE.getLevel(killer);
 
         List<Player> participants = getParticipants(mob, world, killer, SplitType.XP);
         if (participants.isEmpty()) return;

@@ -17,6 +17,12 @@ include ':fabric'   // Fabric entry points, events, compat, platform impl
 include ':forge'    // Forge entry points, events, compat, platform impl (1.21.0-1)
 include ':neoforge' // NeoForge entry points, events, compat, platform impl
 
+// ─── MC 1.16.5: Fabric + Forge, Mojang mappings, Java 8 bytecode ────────────
+include ':mc1_16_5-fabric'
+project(':mc1_16_5-fabric').projectDir = file('1.16.5/fabric')
+include ':mc1_16_5-forge'
+project(':mc1_16_5-forge').projectDir  = file('1.16.5/forge')
+
 // ─── MC 1.20.1 — Fabric + Forge, Mojang mappings, Java 17 bytecode ──────────
 include ':mc1_20_1-fabric'
 project(':mc1_20_1-fabric').projectDir = file('1.20.1/fabric')
