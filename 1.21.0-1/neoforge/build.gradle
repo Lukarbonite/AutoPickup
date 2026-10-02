@@ -61,6 +61,7 @@ dependencies {
 
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/veinminer-neoforge-2.10.1+1.21.1.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.5.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/FallingTree-1.21.1-1.21.1.11.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/fallingtrees-neoforge-1.21.1-0.14.0.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/pandalib-neoforge-1.21.1-0.6.0.jar"))

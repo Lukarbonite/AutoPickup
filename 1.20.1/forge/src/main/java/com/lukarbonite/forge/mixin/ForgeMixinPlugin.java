@@ -22,7 +22,8 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
         System.out.println("AUTOPICKUP FORGE MIXIN PLUGIN EXECUTING!");
         System.out.println("========================================");
 
-        hasTreeHarvester = checkClass("com.natamus.treeharvester_common_forge.events.TreeCutEvents");
+        hasTreeHarvester = checkClass("com.natamus.treeharvester_common_forge.events.TreeCutEvents")
+                || checkClass("com.serilum.treeharvester_common_forge.events.TreeCutEvents");
         hasFallingTree = checkClass("fr.rakambda.fallingtree.common.tree.Tree");
         hasPandaFallingTrees = checkClass("me.pandamods.fallingtrees.entity.TreeEntity");
         hasTravelersBackpack = checkClass("com.tiviacz.travelersbackpack.TravelersBackpack");
@@ -33,6 +34,13 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        // TreeHarvester 9.5 moved from com.natamus to com.serilum: apply only the copy matching the installed jar
+        if (mixinClassName.contains(".compat.treeharvester.natamus.") && !checkClass("com.natamus.treeharvester_common_forge.config.ConfigHandler")) {
+            return false;
+        }
+        if (mixinClassName.contains(".compat.treeharvester.serilum.") && !checkClass("com.serilum.treeharvester_common_forge.config.ConfigHandler")) {
+            return false;
+        }
         if (mixinClassName.contains(".compat.treeharvester"))
             return hasTreeHarvester;
         if (mixinClassName.contains(".compat.fallingtree"))

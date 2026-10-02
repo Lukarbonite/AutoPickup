@@ -77,6 +77,7 @@ dependencies {
     implementation(include("io.github.llamalad7:mixinextras-forge:0.5.3"))
 
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.1.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/treeharvester-1.21.1-9.5.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/FallingTree-1.21.1-1.21.1.11.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.21.0-1/travelersbackpack-forge-1.21.1-10.1.11.jar"))
 }

@@ -17,6 +17,13 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        // TreeHarvester 9.5 moved from com.natamus to com.serilum: apply only the copy matching the installed jar
+        if (mixinClassName.contains(".compat.treeharvester.natamus.") && !classExists("com/natamus/treeharvester_common_forge/config/ConfigHandler.class")) {
+            return false;
+        }
+        if (mixinClassName.contains(".compat.treeharvester.serilum.") && !classExists("com/serilum/treeharvester_common_forge/config/ConfigHandler.class")) {
+            return false;
+        }
         if (mixinClassName.contains(".compat.treeharvester")) {
             return LoadingModList.get().getModFileById("treeharvester") != null;
         }
@@ -35,6 +42,10 @@ public class ForgeMixinPlugin implements IMixinConfigPlugin {
             return true;
         }
         return true;
+    }
+
+    private boolean classExists(String resourcePath) {
+        return getClass().getClassLoader().getResource(resourcePath) != null;
     }
 
     // Required Boilerplate

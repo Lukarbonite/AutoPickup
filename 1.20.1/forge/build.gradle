@@ -79,6 +79,7 @@ dependencies {
     compileOnly "dev.isxander:yet-another-config-lib:${yacl_forge_version}"
 
     compileOnly(files("${rootProject.projectDir}/libs/1.20.1/treeharvester-1.20.1-9.1.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/1.20.1/treeharvester-1.20.1-9.5.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.20.1/FallingTree-1.20.1-4.3.4.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.20.1/fallingtrees-forge-mc1.20-0.13.2-SNAPSHOT.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/1.20.1/pandalib-forge-mc1.20-0.5.2-SNAPSHOT.jar"))

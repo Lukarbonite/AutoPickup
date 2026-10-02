@@ -12,6 +12,13 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
+        // TreeHarvester 9.5 moved from com.natamus to com.serilum: apply only the copy matching the installed jar
+        if (mixinClassName.contains(".compat.treeharvester.natamus.") && !classExists("com/natamus/treeharvester_common_fabric/config/ConfigHandler.class")) {
+            return false;
+        }
+        if (mixinClassName.contains(".compat.treeharvester.serilum.") && !classExists("com/serilum/treeharvester_common_fabric/config/ConfigHandler.class")) {
+            return false;
+        }
         if (mixinClassName.contains(".compat.treeharvester")) {
             return FabricLoader.getInstance().isModLoaded("treeharvester");
         }
@@ -22,6 +29,10 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
             return FabricLoader.getInstance().isModLoaded("fallingtree");
         }
         return true;
+    }
+
+    private boolean classExists(String resourcePath) {
+        return getClass().getClassLoader().getResource(resourcePath) != null;
     }
 
     // Standard boilerplate for unused methods

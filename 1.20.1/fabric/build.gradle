@@ -66,6 +66,7 @@ dependencies {
 
     modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/Veinminer-2.0.7.jar"))
     modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/treeharvester-1.20.1-9.1.jar"))
+    modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/treeharvester-1.20.1-9.5.jar"))
     modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/FallingTree-1.20.1-4.3.4.jar"))
     modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/fallingtrees-fabric-1.20.1-0.14.0.jar"))
     modCompileOnly(files("${rootProject.projectDir}/libs/1.20.1/pandalib-fabric-1.20.1-0.6.1.jar"))

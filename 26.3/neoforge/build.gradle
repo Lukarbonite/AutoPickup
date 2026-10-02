@@ -59,7 +59,8 @@ repositories {
 dependencies {
     compileOnly "dev.isxander:yet-another-config-lib:${yacl_version}"
 
-    compileOnly(files("${rootProject.projectDir}/libs/26.3/treeharvester-26.2.0-9.4.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.3/treeharvester-26.3.0-9.4.jar"))
+    compileOnly(files("${rootProject.projectDir}/libs/26.3/treeharvester-26.3.0-9.5.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/26.3/travelersbackpack-neoforge-26.2-11.3.3.jar"))
     compileOnly(files("${rootProject.projectDir}/libs/26.3/FallingTree-26.3-25.jar"))
 }

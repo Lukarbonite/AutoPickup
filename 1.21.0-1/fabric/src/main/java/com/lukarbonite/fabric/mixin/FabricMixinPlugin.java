@@ -15,6 +15,13 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
         if (mixinClassName.contains(".compat.veinminer")) {
             return FabricLoader.getInstance().isModLoaded("veinminer");
         }
+        // TreeHarvester 9.5 moved from com.natamus to com.serilum: apply only the copy matching the installed jar
+        if (mixinClassName.contains(".compat.treeharvester.natamus.") && !classExists("com/natamus/treeharvester_common_fabric/config/ConfigHandler.class")) {
+            return false;
+        }
+        if (mixinClassName.contains(".compat.treeharvester.serilum.") && !classExists("com/serilum/treeharvester_common_fabric/config/ConfigHandler.class")) {
+            return false;
+        }
         if (mixinClassName.contains(".compat.treeharvester")) {
             return FabricLoader.getInstance().isModLoaded("treeharvester");
         }
@@ -28,6 +35,10 @@ public class FabricMixinPlugin implements IMixinConfigPlugin {
             return FabricLoader.getInstance().isModLoaded("fallingtrees");
         }
         return true;
+    }
+
+    private boolean classExists(String resourcePath) {
+        return getClass().getClassLoader().getResource(resourcePath) != null;
     }
 
     @Override public void onLoad(String mixinPackage) {}
