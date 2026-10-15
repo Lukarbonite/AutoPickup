@@ -38,7 +38,7 @@ public abstract class BlockMixin {
             return;
         }
 
-        // No context yet: this is a direct dropResources call from a mod (e.g. LiteMiner).
+        // No context yet: a general block breaker called dropResources with a player outside a normal break.
         // Handle manually and cancel to prevent double-spawning.
         AutoPickupSessions.begin(player);
         AutoPickupSessions.addBreak(player, pos);

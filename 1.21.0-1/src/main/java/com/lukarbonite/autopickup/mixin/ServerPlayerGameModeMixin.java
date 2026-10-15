@@ -32,10 +32,15 @@ public class ServerPlayerGameModeMixin {
         // Start or refresh a per-player mining session and record this break position.
         com.lukarbonite.autopickup.AutoPickupSessions.begin(this.player);
         com.lukarbonite.autopickup.AutoPickupSessions.addBreak(this.player, pos);
+        // Open a drop context for the entire destroyBlock call so NeoForge's XP
+        // pipeline (which runs after dropResources) reaches BlockDropExperienceMixin
+        // without BlockMixin needing to cancel dropResources.
+        com.lukarbonite.autopickup.AutoPickupSessions.beginDropContext(this.player, pos);
     }
 
     @Inject(method = "destroyBlock", at = @At("RETURN"))
     private void autopickup_onBreakBlockReturn(BlockPos pos, CallbackInfoReturnable<Boolean> cir) {
+        com.lukarbonite.autopickup.AutoPickupSessions.endDropContext(this.player);
         com.lukarbonite.autopickup.AutoPickupSessions.exitPlayerBreak();
     }
 }
