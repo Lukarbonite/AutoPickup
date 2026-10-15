@@ -15,6 +15,7 @@
     "BlockDropExperienceMixin",
     "ServerPlayerGameModeMixin",
     "MobLootMixin",
+    "MobDeathScopeMixin",
     "ServerTickMixin",
     "ServerLevelMixin",
     "LevelBreakBlockMixin",

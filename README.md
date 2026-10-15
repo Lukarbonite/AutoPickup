@@ -8,7 +8,8 @@
 
 ---
 
-## ✨ Features
+<details open>
+<summary><h2>✨ Features</h2></summary>
 
 ### Core Functionality
 - **🎒 Seamless Collection:** Items from broken blocks and mob kills are instantly added to your inventory
@@ -26,9 +27,12 @@
 
 ![One-Block Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/ONE_BLOCK.gif)
 
+</details>
+
 ---
 
-## ⚙️ Configuration
+<details>
+<summary><h2>⚙️ Configuration</h2></summary>
 
 AutoPickup uses a flexible three-tier permission system:
 
@@ -169,9 +173,12 @@ splitMobXp = false
 - **Mod Menu** - Access config screen in-game
 - **YetAnotherConfigLib (YACL)** - Required for YACL config GUI (Vanilla GUI fallback)
 
+</details>
+
 ---
 
-## ✅ Compatibility
+<details>
+<summary><h2>✅ Compatibility</h2></summary>
 
 AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mods out of the box.
 
@@ -186,6 +193,7 @@ AutoPickup hooks into core Minecraft mechanics and works seamlessly with most mo
 | **Panda's Falling Trees**  |    Full    | Tree items are handled by AutoPickup after fall animation                           |
 | **RightClickHarvest**      |    Full    | Right-click crop harvests (including tall sugarcane) picked up automatically        |
 | **LiteMiner**              |    Full    | Whole vein chain collected with XP, at any length                                   |
+| **Butchery**               |    Full    | Carcasses dropped by player-killed mobs go to the killer as mob loot                 |
 | **General Block Breakers** | Compatible | Any mod or mechanic that breaks blocks and attributes the break to the player       |
 
 > **VeinMiner** is handled in one of two ways depending on the Minecraft version. VeinMiner **2.12.1+** breaks each vein block through the vanilla player path (`ServerPlayerGameMode.destroyBlock`), so AutoPickup catches it automatically like any general block breaker, so no dedicated code needed. Current Minecraft versions of AutoPickup run against 2.12.1+ and rely on this implicit support, so the explicit compatibility mixin has been **removed in favor of it**. Older Minecraft versions, where VeinMiner has only been updated up to 2.12.0, keep AutoPickup's dedicated VeinMiner compatibility mixin. Either way, whole vein chains are collected with XP.
@@ -199,6 +207,7 @@ AutoPickup intercepts drops at these injection points:
 - `Level.destroyBlock()` - Non-player breaks from mods/vanilla (chain-miners like LiteMiner, and bamboo/sugarcane/cactus columns collapsing after their base is broken)
 - `ServerLevel.addFreshEntity()` - Item entity spawning and falling-block entity tracking (FallingTree and any mod that spawns drops directly)
 - `LivingEntity.dropFromLootTable()` - Mob loot generation
+- `LivingEntity.die()` - Scopes a player kill so drops spawned directly during the death (equipment, mods like Butchery spawning carcasses from the death event) count as mob loot. The corpse is then tracked until its next tick, so the lead a leashed mob drops then is collected too
 - `LivingEntity.dropExperience()` - Mob XP orbs
 - `Block.popExperience()` - Block XP orbs
 - `ExperienceOrb.award()` - Captures XP spawned directly by block-breaking mods that bypass the vanilla XP pipeline
@@ -208,15 +217,18 @@ AutoPickup intercepts drops at these injection points:
 - `BrushableBlockEntity.dropContent()` - Brushing suspicious sand/gravel
 - `LivingEntity.dropFromEntityInteractLootTable()` - Brushing armadillos for scutes
 
-On **1.12.2**, block and mob drops come from Forge's `HarvestDropsEvent`, `LivingDropsEvent` and `LivingExperienceDropEvent`, and the rest from the 1.12.2 equivalents of the hooks above (`PlayerInteractionManager.tryHarvestBlock()` / `processRightClickBlock()`, `World.destroyBlock()`, `WorldServer.spawnEntity()`, `Block.dropXpOnBlockBreak()`, `EntityItemFrame.attackEntityFrom()`, `ItemShears.itemInteractionForEntity()`). The mod compatibility above does not apply there.
+On **1.12.2**, block and mob drops come from Forge's `HarvestDropsEvent`, `LivingDropsEvent` and `LivingExperienceDropEvent`, and the rest from the 1.12.2 equivalents of the hooks above (`PlayerInteractionManager.tryHarvestBlock()` / `processRightClickBlock()`, `World.destroyBlock()`, `WorldServer.spawnEntity()`, `Block.dropXpOnBlockBreak()`, `EntityItemFrame.attackEntityFrom()`, `ItemShears.itemInteractionForEntity()`). `EntityLivingBase.onDeath()` is scoped from its call in `attackEntityFrom()`, so drops that horses, donkeys, llamas and pigs make after the drops event (inventory, chests, saddles) count as mob loot too, and leads dropped by the corpse on its next tick are collected the same way. The mod compatibility above does not apply there.
 
 This broad compatibility means **most mods work automatically** without explicit support.
 
 ![MultiBlock Mining](https://github.com/Lukarbonite/AutoPickup/raw/1.21.0-1/assets/MULTI_BLOCK.gif)
 
+</details>
+
 ---
 
-## 🎮 Mob Loot Splitting
+<details>
+<summary><h2>🎮 Mob Loot Splitting</h2></summary>
 
 When **Split Mob Loot** or **Split Mob XP** is enabled, rewards from mob kills are shared among participants:
 
@@ -244,9 +256,12 @@ Player A (killer), B, and C all damaged a zombie. Settings:
 
 **Result:** Only A and B receive split loot. Player C gets nothing because they disabled splitting.
 
+</details>
+
 ---
 
-## 👩‍💻 Developer API
+<details>
+<summary><h2>👩‍💻 Developer API</h2></summary>
 
 ### Adding as a Dependency
 
@@ -314,9 +329,12 @@ public class QuestRewards {
 
 > **Note:** All `try*` methods return lists of items that could not be picked up (full inventory).
 
+</details>
+
 ---
 
-## 📜 License
+<details>
+<summary><h2>📜 License</h2></summary>
 
 This project is licensed under the **GNU Affero General Public License v3.0** (AGPL-3.0).
 
@@ -326,3 +344,5 @@ You are free to:
 - ✅ Distribute modified versions (must also be AGPL-3.0)
 
 See the [LICENSE](LICENSE) file for full details.
+
+</details>

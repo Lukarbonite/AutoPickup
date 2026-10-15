@@ -7,6 +7,7 @@ import com.lukarbonite.autopickup.AutoPickupConfig;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import com.lukarbonite.autopickup.ExperienceCache;
 import com.lukarbonite.autopickup.LootSplittingLogic;
+import com.lukarbonite.autopickup.MobDeathDrops;
 import com.lukarbonite.autopickup.PlayerConfigs;
 import com.lukarbonite.autopickup.WorldConfigs;
 import net.minecraft.entity.EntityLivingBase;
@@ -75,6 +76,7 @@ public class AutoPickupForge {
         if (event.phase != TickEvent.Phase.END) return;
         ExperienceCache.onServerTick(FMLCommonHandler.instance().getMinecraftServerInstance());
         AutoPickupSessions.onServerTickEnd();
+        MobDeathDrops.onServerTickEnd();
         AutoPickupApi.clearBlockBreaker();
     }
 

@@ -9,6 +9,7 @@
     "ExperienceOrbAwardMixin",
     "ServerPlayerGameModeMixin",
     "MobLootMixin",
+    "MobDeathScopeMixin",
     "ServerTickMixin",
     "ServerLevelMixin",
     "LevelBreakBlockMixin",

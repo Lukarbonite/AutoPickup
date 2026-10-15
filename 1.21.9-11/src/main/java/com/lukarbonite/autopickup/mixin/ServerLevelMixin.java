@@ -2,6 +2,7 @@ package com.lukarbonite.autopickup.mixin;
 
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
+import com.lukarbonite.autopickup.MobDeathDrops;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -49,6 +50,13 @@ public abstract class ServerLevelMixin {
             // Skip items with an owner: player hand-drops, entity-produced items (e.g., chicken eggs)
             Entity ownerEntity = itemEntity.getOwner();
             if (ownerEntity != null) return;
+
+            // Items a player-killed mob or its corpse spawns directly (Butchery carcasses, leads) are mob loot.
+            if (MobDeathDrops.capture(itemEntity, (ServerLevel) (Object) this)) {
+                cir.setReturnValue(Boolean.TRUE);
+                cir.cancel();
+                return;
+            }
 
             // Only intercept if we are within an active player drop-context
             net.minecraft.world.phys.Vec3 spawnPos = new net.minecraft.world.phys.Vec3(itemEntity.getX(), itemEntity.getY(), itemEntity.getZ());

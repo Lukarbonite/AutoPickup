@@ -3,6 +3,7 @@ package com.lukarbonite.autopickup.mixin;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.ExperienceCache;
 import com.lukarbonite.autopickup.AutoPickupSessions;
+import com.lukarbonite.autopickup.MobDeathDrops;
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,6 +22,9 @@ public class ServerTickMixin {
 
         // Age and prune per-player mining sessions.
         AutoPickupSessions.onServerTickEnd();
+
+        // Close leftover mob-death scopes and age out tracked corpses.
+        MobDeathDrops.onServerTickEnd();
 
         // Clear the legacy block breaker context at the end of every tick (harmless if unused).
         AutoPickupApi.clearBlockBreaker();

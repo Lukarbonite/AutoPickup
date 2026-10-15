@@ -3,6 +3,7 @@ package com.lukarbonite.autopickup.mixin;
 import com.lukarbonite.autopickup.AutoPickupApi;
 import com.lukarbonite.autopickup.AutoPickupSessions;
 import com.lukarbonite.autopickup.ExperienceCache;
+import com.lukarbonite.autopickup.MobDeathDrops;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
@@ -40,6 +41,12 @@ public abstract class WorldServerMixin {
     private static void interceptItem(EntityItem itemEntity, CallbackInfoReturnable<Boolean> cir) {
         // Skip items with an owner: player hand-drops and the like
         if (itemEntity.getThrower() != null) return;
+
+        // Items a player-killed mob or its corpse spawns directly (donkey chests, leads, Butchery carcasses) are mob loot.
+        if (MobDeathDrops.capture(itemEntity)) {
+            cir.setReturnValue(Boolean.TRUE);
+            return;
+        }
 
         Vec3d spawnPos = new Vec3d(itemEntity.posX, itemEntity.posY, itemEntity.posZ);
 
